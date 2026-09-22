@@ -1,0 +1,52 @@
+{
+    "name": "connect-ttib-st-transfer-mr-source",
+    "config": {
+      "connector.class": "org.apache.kafka.connect.mirror.MirrorSourceConnector",
+      "topics": "azc-ttib-operation-online",
+  
+      "source.cluster.alias": "azc-ttib-operation-online",
+      "source.cluster.bootstrap.servers": "lkc-xzyppq.domqgq8xx6g.eastus2.azure.confluent.cloud:9092",
+      "source.cluster.security.protocol": "SASL_SSL",
+      "source.cluster.sasl.mechanism": "PLAIN",
+      "source.cluster.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/source.username}'   password='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/source.password}';",
+  
+      "target.cluster.alias": "cc-loc-ttib-transfer",
+      "target.cluster.group.id": "cc-connect-ttib-st-transfer-mr-source-group",
+      "target.cluster.bootstrap.servers": "pkc-lgwgm.eastus2.azure.confluent.cloud:9092",
+      "target.cluster.security.protocol": "SASL_SSL",
+      "target.cluster.sasl.mechanism": "PLAIN",
+      "target.cluster.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule   required username='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.username}'   password='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.password}';",
+  
+      "sync.topic.acls.enabled": false,
+      "sync.topic.configs.enabled": false,
+  
+      "tasks.max": "3",
+      "offset-syncs.topic.replication.factor": "1",
+      "replication.policy.class": "com.bcp.connect.mirror.RenameReplicationPolicy",
+  
+      "producer.override.bootstrap.servers": "pkc-lgwgm.eastus2.azure.confluent.cloud:9092",
+      "producer.override.security.protocol": "SASL_SSL",
+      "producer.override.sasl.mechanism": "PLAIN",
+      "producer.override.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule   required username='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.username}'   password='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.password}';",
+  
+      "value.converter": "io.confluent.connect.avro.AvroConverter",
+      "value.converter.schema.registry.url": "https://psrc-q2n1d.westus2.azure.confluent.cloud",
+      "value.converter.basic.auth.credentials.source": "USER_INFO",
+      "value.converter.basic.auth.user.info": "${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent-sr.username}:${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent-sr.password}",
+  
+      "value.converter.schemas.enable": false,
+      "value.converter.auto.register.schemas": false,
+      "value.converter.use.latest.version": true,
+  
+      "transforms": "jsonToAvroValue,filterProcess,filterEvent",
+      "transforms.filterProcess.type": "io.confluent.connect.transforms.Filter$Value",
+      "transforms.filterProcess.filter.condition": "$[?(@.process in ['490000', '491000', '492000', '495000', '496000', '497000'])]",
+      "transforms.filterProcess.filter.type": "include",
+      "transforms.filterProcess.missing.or.null.behavior": "exclude",
+      "transforms.filterEvent.type": "io.confluent.connect.transforms.Filter$Value",
+      "transforms.filterEvent.filter.condition": "$[?(@.event in ['COMPLETADA', 'RECHAZADA'])]",
+      "transforms.filterEvent.filter.type": "include",
+      "transforms.filterEvent.missing.or.null.behavior": "exclude",
+      "transforms.jsonToAvroValue.type": "com.bcp.ttib.kafka.connect.smt.TransformationFromJsonToMap$Value"
+    }
+  }

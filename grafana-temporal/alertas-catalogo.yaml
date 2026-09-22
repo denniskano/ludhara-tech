@@ -1,0 +1,248 @@
+# Alertas Temporal Cloud — BCP (solo temporal_cloud_v1_*)
+# Borrador Grafana Alerting / Prometheus. Ajustar umbrales, datasource y
+# nombres reales de namespace / task queue / workflow type.
+#
+# No copiar el YAML v0 de temporalio/dashboards (action costs PromQL).
+# v1 ya es rate por segundo (ventana 1 min) o gauge; no envolver en rate().
+
+groups:
+  - name: temporal-cloud-scrape
+    rules:
+      - alert: TemporalCloudMetricsScrapeDown
+        expr: up{job="temporal-cloud"} == 0
+        for: 5m
+        labels:
+          severity: p1
+          layer: cloud
+        annotations:
+          summary: No hay scrape a metrics.temporal.io
+          description: Ceguera de plataforma. Verificar API key, red hacia el endpoint y rol Metrics Read-Only.
+
+  - name: temporal-cloud-prod
+    rules:
+      - alert: TemporalCloudStartSignalErrorRate
+        expr: |
+          (
+            sum by (temporal_namespace) (
+              temporal_cloud_v1_service_error_count{operation=~"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution"}
+            )
+            /
+            sum by (temporal_namespace) (
+              temporal_cloud_v1_service_request_count{operation=~"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution"}
+            )
+          ) > 0.01
+          and
+          sum by (temporal_namespace) (
+            temporal_cloud_v1_service_request_count{operation=~"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution"}
+          ) > 0.1
+        for: 10m
+        labels:
+          severity: p1
+          layer: cloud
+        annotations:
+          summary: Error rate Start/Signal > 1% en {{ $labels.temporal_namespace }}
+
+      - alert: TemporalCloudResourceExhausted
+        expr: |
+          sum by (temporal_namespace) (temporal_cloud_v1_resource_exhausted_error_count) > 0
+        for: 2m
+        labels:
+          severity: p1
+          layer: cloud
+        annotations:
+          summary: Resource exhausted en {{ $labels.temporal_namespace }}
+          description: Burst absorbido por Cloud; la utilización media vs limit puede seguir verde.
+
+      - alert: TemporalCloudThrottled
+        expr: |
+          sum by (temporal_namespace) (temporal_cloud_v1_total_action_throttled_count) > 0
+          or
+          sum by (temporal_namespace) (temporal_cloud_v1_operations_throttled_count) > 0
+          or
+          sum by (temporal_namespace) (temporal_cloud_v1_service_request_throttled_count) > 0
+        for: 2m
+        labels:
+          severity: p1
+          layer: cloud
+        annotations:
+          summary: Throttle de actions/operations/RPS en {{ $labels.temporal_namespace }}
+
+      - alert: TemporalCloudNoPollerTasks
+        expr: |
+          sum by (temporal_namespace, temporal_task_queue, task_type) (
+            temporal_cloud_v1_no_poller_tasks_count{temporal_namespace=~"apoq-prod|nrem-prod"}
+          ) > 0
+        for: 3m
+        labels:
+          severity: p1
+          layer: cloud
+        annotations:
+          summary: Tareas sin poller en {{ $labels.temporal_task_queue }} ({{ $labels.temporal_namespace }})
+          description: Señal de Cloud (matching). Causa típica en el worker; se profundiza en el corte SDK.
+
+      - alert: TemporalCloudBacklogHigh
+        expr: |
+          sum by (temporal_namespace, temporal_task_queue, task_type) (
+            temporal_cloud_v1_approximate_backlog_count{temporal_namespace=~"apoq-prod|nrem-prod"}
+          ) > 100
+        for: 15m
+        labels:
+          severity: p2
+          layer: cloud
+        annotations:
+          summary: Backlog elevado (aprox.) en {{ $labels.temporal_task_queue }}
+          description: Métrica aproximada; puede sobrecontar tasks inválidas o resetear a 0 en TQ idle.
+
+      - alert: TemporalCloudWorkflowFailRate
+        # Sustituir por los temporal_workflow_type críticos de APOQ/NREM
+        expr: |
+          (
+            sum by (temporal_namespace, temporal_workflow_type) (temporal_cloud_v1_workflow_failed_count)
+            +
+            sum by (temporal_namespace, temporal_workflow_type) (temporal_cloud_v1_workflow_timeout_count)
+          )
+          /
+          clamp_min(
+            sum by (temporal_namespace, temporal_workflow_type) (temporal_cloud_v1_workflow_success_count)
+            +
+            sum by (temporal_namespace, temporal_workflow_type) (temporal_cloud_v1_workflow_failed_count)
+            +
+            sum by (temporal_namespace, temporal_workflow_type) (temporal_cloud_v1_workflow_timeout_count),
+            0.001
+          ) > 0.05
+        for: 15m
+        labels:
+          severity: p2
+          layer: cloud
+        annotations:
+          summary: Fail+timeout > 5% en {{ $labels.temporal_workflow_type }}
+
+      - alert: TemporalCloudScheduleMissedCatchup
+        expr: |
+          sum by (temporal_namespace) (temporal_cloud_v1_schedule_missed_catchup_window_count) > 0
+        for: 5m
+        labels:
+          severity: p2
+          layer: cloud
+        annotations:
+          summary: Schedule perdió catchup window en {{ $labels.temporal_namespace }}
+
+      - alert: TemporalCloudScheduleBufferOverrun
+        expr: |
+          sum by (temporal_namespace) (temporal_cloud_v1_schedule_buffer_overruns_count) > 0
+        for: 5m
+        labels:
+          severity: p2
+          layer: cloud
+        annotations:
+          summary: Schedule buffer overrun en {{ $labels.temporal_namespace }}
+
+      - alert: TemporalCloudReplicationLag
+        # Solo namespaces HA. Desactivar si no hay high availability.
+        expr: |
+          temporal_cloud_v1_replication_lag_p99 > 30
+        for: 10m
+        labels:
+          severity: p2
+          layer: cloud
+        annotations:
+          summary: Replication lag p99 > 30s en {{ $labels.temporal_namespace }}
+
+      - alert: TemporalCloudActionLimitHigh
+        expr: |
+          sum by (temporal_namespace) (temporal_cloud_v1_total_action_count{is_background="false"})
+          /
+          sum by (temporal_namespace) (temporal_cloud_v1_action_limit)
+          > 0.8
+        for: 15m
+        labels:
+          severity: p3
+          layer: cloud
+        annotations:
+          summary: Actions > 80% del límite en {{ $labels.temporal_namespace }}
+
+      - alert: TemporalCloudBillableVsBaseline7d
+        expr: |
+          sum by (temporal_namespace) (
+            temporal_cloud_v1_billable_action_count{temporal_namespace=~"apoq-prod|nrem-prod"}
+          )
+          >
+          1.5 * sum by (temporal_namespace) (
+            avg_over_time(
+              temporal_cloud_v1_billable_action_count{temporal_namespace=~"apoq-prod|nrem-prod"}[7d]
+            )
+          )
+          and
+          sum by (temporal_namespace) (
+            temporal_cloud_v1_billable_action_count{temporal_namespace=~"apoq-prod|nrem-prod"}
+          ) > 0.1
+        for: 2h
+        labels:
+          severity: p3
+          layer: cloud
+        annotations:
+          summary: Billable actions > 150% vs media 7d en {{ $labels.temporal_namespace }}
+          description: Ticket FinOps (D05). Revisar heartbeats, retry_activity y top workflow types. No es paging.
+
+      - alert: TemporalCloudOperationsLimitHigh
+        expr: |
+          sum by (temporal_namespace) (temporal_cloud_v1_operations_count{is_background="false"})
+          /
+          sum by (temporal_namespace) (temporal_cloud_v1_operations_limit)
+          > 0.8
+        for: 15m
+        labels:
+          severity: p3
+          layer: cloud
+        annotations:
+          summary: Operations > 80% del límite en {{ $labels.temporal_namespace }}
+
+      - alert: TemporalCloudPollerLimitHigh
+        expr: |
+          sum by (temporal_namespace) (temporal_cloud_v1_service_pending_requests)
+          /
+          sum by (temporal_namespace) (temporal_cloud_v1_poller_limit)
+          > 0.8
+        for: 15m
+        labels:
+          severity: p3
+          layer: cloud
+        annotations:
+          summary: Pollers pendientes > 80% del límite en {{ $labels.temporal_namespace }}
+
+      - alert: TemporalCloudScheduleOverlapSkipped
+        expr: |
+          sum by (temporal_namespace) (temporal_cloud_v1_schedule_overlap_skipped_count) > 0
+        for: 10m
+        labels:
+          severity: p2
+          layer: cloud
+        annotations:
+          summary: Schedule overlap skipped en {{ $labels.temporal_namespace }}
+          description: El schedule genera más rápido de lo que termina (SKIP / BUFFER_ONE).
+
+      - alert: TemporalCloudStartSilence
+        # Silenciar noches/finde en Grafana (mute timing America/Lima 20:00-08:00).
+        expr: |
+          sum by (temporal_namespace) (
+            temporal_cloud_v1_service_request_count{temporal_namespace=~"apoq-prod|nrem-prod", operation="StartWorkflowExecution"}
+          ) == 0
+        for: 15m
+        labels:
+          severity: p2
+          layer: cloud
+        annotations:
+          summary: Sin StartWorkflowExecution en {{ $labels.temporal_namespace }}
+          description: Silencio de API. Cruzar con horario hábil y con error rate. No es por sí solo Cloud caído.
+
+      - alert: TemporalCloudOpenWorkflowsJump
+        expr: |
+          sum by (temporal_namespace) (temporal_cloud_v1_namespace_open_workflows{temporal_namespace=~"apoq-prod|nrem-prod"})
+          >
+          1.5 * sum by (temporal_namespace) (temporal_cloud_v1_namespace_open_workflows{temporal_namespace=~"apoq-prod|nrem-prod"} offset 1d)
+        for: 30m
+        labels:
+          severity: p2
+          layer: cloud
+        annotations:
+          summary: Open workflows > 150% vs hace 24h en {{ $labels.temporal_namespace }}

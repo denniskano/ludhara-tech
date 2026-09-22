@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session brief — Temporal Cloud for BCP and Yape</title>
+  <style>
+    :root {
+      --text: #1a1a1a;
+      --muted: #444;
+      --line: #d8d8d8;
+      --bg: #f6f6f4;
+      --card: #fff;
+      --accent: #1f4e3d;
+      --no: #8a2b2b;
+      --yes: #1f4e3d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 16px/1.45 "Segoe UI", system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    main {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+    h1 { font-size: 1.45rem; margin: 0 0 0.75rem; }
+    h2 { font-size: 1.1rem; margin: 1.75rem 0 0.6rem; color: var(--accent); }
+    p, li { color: var(--muted); }
+    .note {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      padding: 0.85rem 1rem;
+      margin: 0.75rem 0;
+    }
+    .note strong { color: var(--text); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      font-size: 0.92rem;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 0.55rem 0.65rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #eef2ef; }
+    .no { color: var(--no); }
+    .yes { color: var(--yes); font-weight: 600; }
+    ol { padding-left: 1.25rem; }
+    ol li { margin: 0.45rem 0; }
+    pre {
+      background: #1a1a1a;
+      color: #f3f3f0;
+      padding: 0.9rem 1rem;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    .warn {
+      border-left-color: #8a2b2b;
+    }
+    @media print {
+      body { background: #fff; }
+      main { padding: 0; max-width: none; }
+      pre { color: #000; background: #f4f4f4; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Session brief — Temporal Cloud for BCP and Yape</h1>
+
+    <div class="note">
+      <p><strong>MSA</strong> = Master Service Agreement. That is the main contract with Temporal (support fee, legal terms). It is <strong>not</strong> a Temporal Cloud account.</p>
+      <p><strong>Goal:</strong> BCP and Yape work on their own: create namespaces, see metrics, see billing. They should not see each other. We still pay <strong>one</strong> monthly support fee.</p>
+    </div>
+
+    <h2>What to say first</h2>
+    <p>The contract can cover two companies. The <strong>product</strong> cannot hide two companies inside <strong>one</strong> Cloud account.</p>
+    <p>The isolation unit is the <strong>Account</strong>, not the namespace and not the contract.</p>
+    <p>Adam’s links (internal runbooks, <code>prod.cp</code>) are Temporal’s internal docs. For us, the public tools are: Billing API, Usage page, Invoices page, OpenMetrics. Those tools work <strong>inside one account</strong>. They are good for cost by namespace (for example APOQ vs NREM). They do <strong>not</strong> give Yape a separate company.</p>
+
+    <h2>One account vs two accounts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>What we need</th>
+          <th>One shared account</th>
+          <th>Two accounts (BCP + Yape) under one MSA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Each team creates namespaces without the other seeing them</td>
+          <td class="no">No. Account Owner / Global Admin see everything.</td>
+          <td class="yes">Yes.</td>
+        </tr>
+        <tr>
+          <td>Independent metrics</td>
+          <td class="no">No. One metrics API key sees all namespaces.</td>
+          <td class="yes">Yes. Two keys, two scrapes.</td>
+        </tr>
+        <tr>
+          <td>Independent billing in the UI</td>
+          <td class="no">No. One invoice. Tags are only internal chargeback.</td>
+          <td class="yes">Yes. Each account has Usage + Invoices.</td>
+        </tr>
+        <tr>
+          <td>One support fee</td>
+          <td>The contract does not create accounts.</td>
+          <td class="yes">Ask sales/support to attach <strong>both</strong> Account IDs. Adam already said: open a ticket for you <strong>and Yape</strong>.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Also: one email address can belong to <strong>only one</strong> account. Same email domain is OK (two SAML setups). People who need both accounts need two emails.</p>
+    <p><strong>Ask for this shape:</strong></p>
+    <pre>One contract (MSA + monthly support)
+   ├── Account BCP  → BCP namespaces → BCP metrics → BCP invoice
+   └── Account Yape → Yape namespaces → Yape metrics → Yape invoice</pre>
+    <p>Do not put both companies in one account with a tag <code>org=bcp</code> / <code>org=yape</code>. That is chargeback, not independence.</p>
+
+    <h2>Questions for this session (read these)</h2>
+    <ol>
+      <li>Please confirm in writing: the MSA covers <strong>two Account IDs</strong> (BCP and Yape) with <strong>one</strong> support fee. Share both Account IDs and the legal name on each invoice.</li>
+      <li>Does Yape use the same support SLA and ticket quota as BCP?</li>
+      <li>Usage invoices: one combined invoice, or two? Are Action commits and credits <strong>shared</strong> or <strong>per account</strong>?</li>
+      <li>Limits (namespaces, RPS, TRU): per account or shared?</li>
+      <li>Please create (or confirm) a <strong>separate Yape account</strong>: their Account Owner, their SAML.</li>
+      <li>Can corporate finance pull Billing API from <strong>both</strong> accounts without being Yape Account Owner? If not, we will sum two CSV files.</li>
+      <li>Confirm metrics: two Metrics Read-Only keys. No cross-account scrape.</li>
+      <li>Please turn on Billing API on <strong>each</strong> account, and explain it with <strong>customer</strong> steps (UI / Cloud Ops API), not internal runbooks.</li>
+      <li>PrivateLink / mTLS: per account or per namespace?</li>
+      <li>Before we leave: write down Account IDs, how support is billed vs usage, and the onboarding ticket number.</li>
+    </ol>
+
+    <h2>If they talk about tags and Billing API</h2>
+    <div class="note warn">
+      <p>That answers “how does BCP split cost across namespaces?”</p>
+      <p>That does <strong>not</strong> answer “how does Yape stay independent from BCP?”</p>
+    </div>
+  </main>
+</body>
+</html>

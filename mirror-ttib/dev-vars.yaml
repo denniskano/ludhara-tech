@@ -1,0 +1,256 @@
+# Groovy Main Config Values
+project: TTIB
+recipients:
+namespace: "ttib"
+
+# ocp | aks
+hosted: "aks"
+# for AKS Resource Group, for anything else: def aksRG = ""
+aksRG: "RSGREU2TTIBD01"
+# for AKS Cluster Name, for anything else: def aksCluster = ""
+aksCluster: "aksveu2ttibd01"
+# Azure Subscription ID (requerido para AKS)
+subscription: "1ab0f0aa-9aed-4f93-8f29-c8db2dba8f01"  # <--- AGREGA AQUÍ EL VALOR CORRECTO DE TU SUBSCRIPCIÓN
+
+#Kafka Config
+kafka_user_id: "5000"
+kafka_port: 8083
+
+# ServiceName or KafkaConnectName used for Deployment and PodName
+# Formato sugerido: connect-[COD4]-[USE-CASE]-[Type] connect-peve-cobro-coactivo-source
+# Este nombre debe ser UNICO entre los conectores que usen sus equipos
+kafkaConnectName: connect-ttib-st-transfer-mr-source
+monitoring_otel: 'yes'
+secretOpenTelemetry: pki-int-dev-certificate-cer
+ms_type: 'BS'
+
+# Habilitar el log para kibana, grafana (loki) o ambos
+log_monitoring_otel_filebeat: 'loki'  # valores posibles: kibana | loki | both
+
+## Image Info
+## ref: https://hub.docker.com/r/confluentinc/cp-kafka/
+containerRegistry: acrgeu2inctd01.azurecr.io
+imageName: kafka-connect-mirror
+image: peve/kafka-connect-mirror
+imageTag: 1.2.0.SR1
+
+## Image filbeat
+image_filebeat: peve/filebeat
+imageTag_filebeat: 7.17.3
+
+## Url del utilitario de transforms de PEVE, puede ser uno propio del squad
+transformer_url: "http://10.79.118.71:8082/artifactory/TTIB.Snapshot/com/bcp/ttib/connect-ttib-st-transfer-mr-source/1.3.0-SNAPSHOT/connect-ttib-st-transfer-mr-source-1.3.0-SNAPSHOT.jar"
+
+## Specify a imagePullPolicy
+## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+imagePullPolicy: IfNotPresent
+
+# Configurar estos valores de acuerdo a la documentación, seguir la guia en el siguiente link
+# https://bcp-ti.atlassian.net/wiki/spaces/PEVE/pages/346821045/Conector+Mirror+Source-+Gu+a+de+configuraci+n
+connectGroupId: cc-connect-ttib-st-transfer-mr-source-group
+connectConfigStorageTopic: cfg-cc-connect-ttib-st-transfer-mr-source-config
+connectOffsetStorageTopic: cfg-cc-connect-ttib-st-transfer-mr-source-offset
+connectStatusStorageTopic: cfg-cc-connect-ttib-st-transfer-mr-source-status
+
+# Jenkins Credentials Id para Certificado y master key
+connectKeyAndTruststoreJenkinsId: APPTINTTIBKAFKADES
+connectMasterKeyJenkinsId: apptinttibkafkades-master-key
+
+## Secrets/Certificates Deployment
+jenkinsCredentials:
+  sourceUsernamePassword:
+    id: ccloud/SA_AZC_DES_TTIB_TRANSFER_03/AK_AZC_DES_TTIB_KAFKA_TRANSFER_01
+    type: usernamePassword
+    varkey: "source.username,source.password"
+  targetUsernamePassword:
+      id: ccloud/APPTINTTIBKAFKADES_TTIBCLUSTERKAFKA01
+      type: usernamePassword
+      varkey: "confluent.username,confluent.password"
+  srtUsernamePassword:
+      id: ccloud/SA_AZC_DES_TTIB_TRANSFER_03/AK_AZC_DES_TTIB_SREGI_TRANSFER_01
+      type: usernamePassword
+      varkey: "confluent-sr.username,confluent-sr.password"
+
+#Kafka Config Environment
+kafka_connect_environment:
+  CONNECT_BOOTSTRAP_SERVERS: "pkc-lgwgm.eastus2.azure.confluent.cloud:9092"
+  CONNECT_REST_ADVERTISED_HOST_NAME: localhost
+  CONNECT_REST_PORT: 8083
+  CONNECT_GROUP_ID: ${connectGroupId}
+  CONNECT_CONFIG_STORAGE_TOPIC: ${connectConfigStorageTopic}
+  CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+  CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
+  CONNECT_OFFSET_STORAGE_TOPIC: ${connectOffsetStorageTopic}
+  CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+  CONNECT_STATUS_STORAGE_TOPIC: ${connectStatusStorageTopic}
+  CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
+  CONNECT_SCHEMA_REGISTRY_URL: https://psrc-q2n1d.westus2.azure.confluent.cloud
+  CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.converters.ByteArrayConverter"
+  CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+  CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: https://psrc-q2n1d.westus2.azure.confluent.cloud
+  CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+  CLASSPATH: "/usr/share/java/monitoring-interceptors/*:/usr/share/java/kafka-connect/*:/etc/kafka-connect/smt/*"
+  CUB_CLASSPATH: "/etc/confluent/docker/docker-utils.jar:/usr/share/java/monitoring-interceptors/*:/usr/share/java/kafka-connect/*:/usr/share/java/cp-base-new/*:/etc/kafka-connect/smt/*"
+  CONNECT_SECURITY_PROTOCOL: SASL_SSL
+  CONNECT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule   required username='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.username}'   password='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.password}';"
+  CONNECT_SASL_MECHANISM: PLAIN
+  CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
+  CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule   required username='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.username}'   password='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.password}';"
+  CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
+  CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_SSL
+  CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule   required username='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.username}'   password='${securepass:/opt/security/secrets/security-secrets.properties:encrypted-config-file.properties/confluent.password}';"
+  CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
+  CONNECT_CLIENT_ID: "2"
+  CONFLUENT_SECURITY_MASTER_KEY:
+  CONNECT_CONFIG_PROVIDERS: "securepass"
+  CONNECT_CONFIG_PROVIDERS_SECUREPASS_CLASS: "io.confluent.kafka.security.config.provider.SecurePassConfigProvider"
+  OTEL_RESOURCE_ATTRIBUTES: ms_type=BS, environment=dev, app_group=TTIB
+  CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+  CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+  KAFKA_JVM_PERFORMANCE_OPTS: "-XX:MetaspaceSize=96m -XX:G1HeapRegionSize=16M -XX:MinMetaspaceFreeRatio=50 -XX:MaxMetaspaceFreeRatio=80"
+
+
+## Secret with multiple keys to serve the purpose of multiple secrets
+## Values for all the keys will be base64 encoded when the Secret is created or updated
+## ref: https://kubernetes.io/docs/concepts/configuration/secret/
+secrets:
+  confluentSecurityMasterKey:
+    filePath: devops/scripts/master-key.txt
+    secretName: ${kafkaConnectName}-master-key
+    secretKey: CONFLUENT_SECURITY_MASTER_KEY
+  confluentSecretFileEncrypted:
+    filePath: devops/scripts/security-secrets.properties
+    secretName: ${kafkaConnectName}-file-encripted
+    secretKey: CONFLUENT_SECRET_FILE_ENCRYPTED
+  confluentSecretConfigFile:
+    filePath: devops/scripts/encrypted-config-file.properties
+    secretName: ${kafkaConnectName}-secret-config-file
+    secretKey: CONFLUENT_SECRET_CONFIG_FILE
+
+## List of volumeMounts for connect server container
+## ref: https://kubernetes.io/docs/concepts/storage/volumes/
+volumeMounts:
+  - name: keystore
+    mountPath: /opt/security/certs/keystore
+  - name: truststore
+    mountPath: /opt/security/certs/truststore
+  - name: kafkaconnect-config-json
+    mountPath: /etc/kafka-connect/configs
+  - name: secrets-volume
+    mountPath: /opt/security/secrets
+  - name: connect-log4j
+    mountPath: /etc/confluent/docker/log4j.properties.template
+    subPath: connect-log4j.properties
+  - name: kafkaconnect-logs
+    mountPath: /var/log/kafka
+  - name: kafkaconnect-smt-jar
+    mountPath: /etc/kafka-connect/smt
+  - name: certs-opentelemetry
+    mountPath: /opt/security/certs/opentelemetry
+  - name: otel-config-metric
+    mountPath: /etc/otel-config
+
+## List of volumeMounts for connect server container
+## List of volumeMounts for filebeat container
+volumeMounts_filebeat:
+  - name: kafkaconnect-logs
+    mountPath: /var/log/kafka
+  - name: filebeat-config
+    mountPath: /usr/share/filebeat/filebeat.yml
+    subPath: filebeat.yml
+  - name: cert-logstash-crt
+    mountPath: /usr/share/filebeat/cert-logstash-crt
+  - name: cert-logstash-key
+    mountPath: /usr/share/filebeat/cert-logstash-key
+  - name: cert-logstash-ca-crt
+    mountPath: /usr/share/filebeat/cert-logstash-ca-crt
+
+## ref: https://kubernetes.io/docs/concepts/storage/volumes/
+volumes:
+  - name: keystore
+    secret:
+      secretName: ${kafkaConnectName}-keystore
+  - name: truststore
+    secret:
+      secretName: ${kafkaConnectName}-truststore
+  - name: kafkaconnect-config-json
+    configMap:
+      name: ${kafkaConnectName}-kafkaconnect-config-json
+  - name: kafkaconnect-smt-jar
+    configMap:
+      name: ${kafkaConnectName}-kafkaconnect-smt-jar
+  - name: secrets-volume
+    projected:
+      sources:
+        - secret:
+            secretName: ${kafkaConnectName}-file-encripted
+        - secret:
+            secretName: ${kafkaConnectName}-secret-config-file
+  - name: connect-log4j
+    configMap:
+      name: ${kafkaConnectName}-log4j-config
+      list:
+        - connect-log4j.properties
+  ## List of volumes for filebeat container
+  - name: kafkaconnect-logs
+    emptyDir: { }
+  - name: filebeat-config
+    configMap:
+      name: ${kafkaConnectName}-filebeat-configmap
+      list:
+        - filebeat.yml
+  - name: cert-logstash-ca-crt
+    secret:
+      secretName: ${kafkaConnectName}-cert-logstash-ca-crt
+  - name: cert-logstash-key
+    secret:
+      secretName: ${kafkaConnectName}-cert-logstash-key
+  - name: cert-logstash-crt
+    secret:
+      secretName: ${kafkaConnectName}-cert-logstash-crt
+  - name: otel-config-metric
+    configMap:
+      name: ${kafkaConnectName}-kc-jmx-config
+  - name: certs-opentelemetry
+    projected:
+      sources:
+        - secret:
+            secretName: ${secretOpenTelemetry}
+
+## Additional env variables
+## CUSTOM_SCRIPT_PATH is the path of the custom shell script to be run mounted in a volume
+customEnv:
+  CUSTOM_SCRIPT_PATH: /etc/kafka-connect/scripts/create-connectors.sh
+#  CUSTOM_RESTART_WORKER_TASK: /etc/kafka-connect/scripts/run-restart-failed-connector-tasks.sh
+
+#Data for readiness and liveness probe
+readiness_probe:
+  failureThreshold: 2
+  initialDelaySeconds: 120
+  periodSeconds: 60
+  successThreshold: 1
+  timeoutSeconds: 25
+
+liveness_probe:
+  initialDelaySeconds: 90
+  periodSeconds: 30
+
+resources_plan:
+  cpu_limits: 2
+  cpu_requests: 40m
+  memory_limits: 3840M
+  memory_requests: 1920M
+
+replicas_plan:
+  replicas: 1
+
+## Kafka Connect JVM Heap Option
+heapOptions: "-Xms640M -Xmx2688M"
+
+javaToolOptions: "-Dfile.encoding=UTF8 -Dotel.jmx.config=/etc/otel-config/kc-jmx-config.yaml -XX:MaxDirectMemorySize=512M -XX:MaxMetaspaceSize=348M"
+## Monitoring
+## Kafka Connect JMX Settings
+## ref: https://kafka.apache.org/documentation/#connect_monitoring
+jmx:
+  port: 5555
+  opts: "-Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false"

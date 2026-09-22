@@ -1,0 +1,451 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Datasource del scrape OpenMetrics Temporal Cloud (v1)",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.0.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" }
+  ],
+  "annotations": { "list": [] },
+  "description": "FinOps Temporal Cloud: billable actions, cuotas APS y TRU. No sustituye D01 ni D02. No usar JSON v0 de action costs.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Totales estimados (métrica ya es rate/s; no usar rate())",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Suma de samples en el rango × 60 s. Aproximado.",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1000000 },
+              { "color": "red", "value": 10000000 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 2,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(sum_over_time(temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"}[$__range]) * 60) or vector(0)",
+          "legendFormat": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Billable en el rango",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1000000 },
+              { "color": "red", "value": 10000000 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 3,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(sum_over_time(temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"}[7d]) / (7 * 24 * 60) * 7 * 24 * 60 * 60) or vector(0)",
+          "legendFormat": "7d",
+          "refId": "A"
+        }
+      ],
+      "title": "Billable 7d",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1000000 },
+              { "color": "red", "value": 10000000 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "id": 4,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(sum_over_time(temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"}[30d]) / (30 * 24 * 60) * 30 * 24 * 60 * 60) or vector(0)",
+          "legendFormat": "30d",
+          "refId": "A"
+        }
+      ],
+      "title": "Billable 30d (forecast)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Solo is_background=false cuenta contra action_limit.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.6 },
+              { "color": "red", "value": 0.8 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 5,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(temporal_cloud_v1_total_action_count{temporal_namespace=~\"$temporal_namespace\", is_background=\"false\"}) / clamp_min(sum(temporal_cloud_v1_action_limit{temporal_namespace=~\"$temporal_namespace\"}), 0.001)",
+          "legendFormat": "% limit",
+          "refId": "A"
+        }
+      ],
+      "title": "Actions vs action_limit",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Heartbeats inflan factura. Subida = activities que pegan demasiado seguido.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.2 },
+              { "color": "red", "value": 0.4 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 6,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "(sum(temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\", action_type=~\"record_activity_heartbeat|record_activity_heartbeat_by_id|record_standalone_activity_heartbeat|record_standalone_activity_heartbeat_by_id\"}) or vector(0)) / clamp_min((sum(temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"}) or vector(0)), 0.001)",
+          "legendFormat": "heartbeat",
+          "refId": "A"
+        }
+      ],
+      "title": "Heartbeat / billable",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "retry_activity. Subida = workers/core reintentando, no más tráfico de negocio.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.1 },
+              { "color": "red", "value": 0.25 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 7,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "(sum(temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\", action_type=\"retry_activity\"}) or vector(0)) / clamp_min((sum(temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"}) or vector(0)), 0.001)",
+          "legendFormat": "retry",
+          "refId": "A"
+        }
+      ],
+      "title": "Retry / billable",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 8,
+      "title": "Tendencia vs baseline 7d",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" },
+        "overrides": [
+          { "matcher": { "id": "byRegexp", "options": "baseline.*" }, "properties": [{ "id": "custom.lineStyle", "value": { "dash": [10, 10], "fill": "dash" } }] }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "sum by (temporal_namespace) (temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"})",
+          "legendFormat": "billable {{temporal_namespace}}",
+          "refId": "A"
+        },
+        {
+          "expr": "1.5 * sum by (temporal_namespace) (avg_over_time(temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"}[7d]))",
+          "legendFormat": "baseline 7d ×1.5 {{temporal_namespace}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Billable / s vs media 7d × 1.5 (P3)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "sum by (temporal_namespace) (temporal_cloud_v1_total_action_count{temporal_namespace=~\"$temporal_namespace\", is_background=\"false\"})",
+          "legendFormat": "actions {{temporal_namespace}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (temporal_namespace) (temporal_cloud_v1_action_limit{temporal_namespace=~\"$temporal_namespace\"})",
+          "legendFormat": "limit {{temporal_namespace}}",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by (temporal_namespace) (temporal_cloud_v1_total_action_throttled_count{temporal_namespace=~\"$temporal_namespace\"})",
+          "legendFormat": "throttled {{temporal_namespace}}",
+          "refId": "C"
+        }
+      ],
+      "title": "Actions (cuota) vs action_limit + throttle",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 11,
+      "title": "Quién gasta (cardinalidad alta: no habilitar activity_type en scrape 24x7)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 20, "spanNulls": true, "stacking": { "mode": "normal", "group": "A" } }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "id": 12,
+      "targets": [
+        {
+          "expr": "sum by (action_type) (temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"})",
+          "legendFormat": "{{action_type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Billable por action_type",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 20, "spanNulls": true, "stacking": { "mode": "normal", "group": "A" } }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "id": 13,
+      "targets": [
+        {
+          "expr": "sum by (temporal_workflow_type) (temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"})",
+          "legendFormat": "{{temporal_workflow_type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Billable por workflow type",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "decimals": 0 },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 23 },
+      "id": 14,
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "Est. Count", "desc": true }] },
+      "targets": [
+        {
+          "expr": "topk(20, $__range_s * sum by (temporal_workflow_type, action_type) (avg_over_time(temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Top 20 workflow type × action_type en el rango",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "renameByName": {
+              "temporal_workflow_type": "Workflow Type",
+              "action_type": "Action Type",
+              "Value": "Est. Count"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "id": 15,
+      "title": "Capacidad — TRU / on-demand (TRU=0 es normal en on-demand)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "0 = namespace on-demand. Provisioned: Actions mínimas/hora por TRU extra (ns_capacity:tru).",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 32 },
+      "id": 16,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(temporal_cloud_v1_provisioned_capacity_tru_count{temporal_namespace=~\"$temporal_namespace\"}) or vector(0)",
+          "legendFormat": "TRU",
+          "refId": "A"
+        }
+      ],
+      "title": "TRU provisionados",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Si action_limit ≠ envelope, el namespace está en provisioned capacity.",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 10, "x": 6, "y": 32 },
+      "id": 17,
+      "targets": [
+        {
+          "expr": "sum by (temporal_namespace) (temporal_cloud_v1_action_limit{temporal_namespace=~\"$temporal_namespace\"})",
+          "legendFormat": "action_limit {{temporal_namespace}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (temporal_namespace) (temporal_cloud_v1_action_on_demand_envelope_limit{temporal_namespace=~\"$temporal_namespace\"})",
+          "legendFormat": "envelope on-demand {{temporal_namespace}}",
+          "refId": "B"
+        }
+      ],
+      "title": "action_limit vs envelope on-demand",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Actions cobradas por capacidad no usada. Vacío si todo on-demand.",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 32 },
+      "id": 18,
+      "targets": [
+        {
+          "expr": "sum by (temporal_namespace, action_type) (temporal_cloud_v1_billable_action_count{temporal_namespace=~\"$temporal_namespace\", action_type=~\".*ns_capacity.*|.*:tru\"})",
+          "legendFormat": "{{temporal_namespace}} {{action_type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Billable capacidad (ns_capacity / TRU)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "tags": ["temporal-cloud", "finops"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values(temporal_cloud_v1_billable_action_count, temporal_namespace)",
+        "includeAll": true,
+        "label": "Namespace",
+        "multi": true,
+        "name": "temporal_namespace",
+        "query": "label_values(temporal_cloud_v1_billable_action_count, temporal_namespace)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-7d", "to": "now" },
+  "timezone": "browser",
+  "title": "Temporal Cloud FinOps — Actions / TRU",
+  "uid": "temporal-cloud-finops",
+  "version": 2
+}

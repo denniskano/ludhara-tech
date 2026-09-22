@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monitoreo Temporal Cloud — guía de implementación</title>
+  <style>
+    :root {
+      --text: #1a1a1a;
+      --muted: #444;
+      --line: #d8d8d8;
+      --bg: #f6f6f4;
+      --card: #fff;
+      --accent: #1f4e3d;
+      --p1: #8a2b2b;
+      --p2: #8a5a12;
+      --p3: #3d5a7a;
+      --code: #f0f2ef;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font: 16px/1.45 "Segoe UI", system-ui, sans-serif; color: var(--text); background: var(--bg); }
+    main { max-width: 920px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    h1 { font-size: 1.5rem; margin: 0 0 0.5rem; }
+    h2 { font-size: 1.15rem; margin: 2rem 0 0.55rem; color: var(--accent); border-top: 1px solid var(--line); padding-top: 1.1rem; }
+    h3 { font-size: 1.02rem; margin: 1.25rem 0 0.4rem; }
+    h4 { font-size: 0.95rem; margin: 1rem 0 0.3rem; }
+    p, li { color: var(--muted); }
+    .lead { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); padding: 0.85rem 1rem; }
+    .note { background: var(--card); border: 1px solid var(--line); padding: 0.75rem 1rem; margin: 0.7rem 0 1rem; }
+    .warn { border-left: 4px solid var(--p2); }
+    .ok { border-left: 4px solid var(--accent); }
+    nav.toc { background: var(--card); border: 1px solid var(--line); padding: 0.85rem 1.1rem; margin: 1rem 0 1.4rem; }
+    nav.toc ol { margin: 0.3rem 0 0; padding-left: 1.3rem; }
+    nav.toc a { color: var(--accent); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 0.88rem; margin: 0.6rem 0 1rem; }
+    th, td { border: 1px solid var(--line); padding: 0.45rem 0.55rem; text-align: left; vertical-align: top; }
+    th { background: #eef2ef; }
+    .p1 { color: var(--p1); font-weight: 600; }
+    .p2 { color: var(--p2); font-weight: 600; }
+    .p3 { color: var(--p3); font-weight: 600; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.82rem; }
+    code { background: var(--code); padding: 0.08rem 0.28rem; border-radius: 3px; }
+    pre { background: #1e2420; color: #e8eee9; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; line-height: 1.4; }
+    pre code { background: none; padding: 0; color: inherit; }
+    ul, ol { padding-left: 1.25rem; }
+    .meta { font-size: 0.85rem; color: var(--muted); }
+    @media print {
+      body { background: #fff; }
+      main { padding: 0; max-width: none; }
+      nav.toc { break-after: page; }
+      h2 { break-before: page; }
+      h2:first-of-type { break-before: auto; }
+      pre { white-space: pre-wrap; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Monitoreo Temporal Cloud — guía de implementación</h1>
+    <p class="meta">Carpeta <code>grafana-temporal/</code> · solo métricas <code>temporal_cloud_v1_*</code> (OpenMetrics) · PromQL v0 se apaga el <strong>5 oct 2026</strong>.</p>
+    <div class="lead">
+      <p><strong>Implementado:</strong> D01 (overview mixin, ya en Grafana) · D02 (guardia SLO, JSON genérico) · D05 (FinOps Actions/TRU, JSON genérico) · catálogo de alertas P1–P3 en YAML.</p>
+      <p><strong>No implementado:</strong> D03/D04 (tablero por aplicación) · D06–D11 · scrape SDK / workers / Private Link. Las métricas son las mismas que D01; D02 y D05 no son un segundo overview: recortan guardia y factura.</p>
+      <p>Los dashboards D02/D05 listan <em>cualquier</em> namespace del scrape. Algunas reglas del YAML aún traen ejemplos <code>apoq-prod|nrem-prod</code>: hay que sustituirlos por los namespaces de guardia reales.</p>
+    </div>
+
+    <nav class="toc">
+      <strong>Índice</strong>
+      <ol>
+        <li><a href="#estado">Estado y archivos</a></li>
+        <li><a href="#fuente">Fuente de métricas (OpenMetrics)</a></li>
+        <li><a href="#d01">D01 — overview (instalado)</a></li>
+        <li><a href="#d02">D02 — guardia SLO</a></li>
+        <li><a href="#d05">D05 — FinOps</a></li>
+        <li><a href="#importar">Cómo importar un JSON en Grafana</a></li>
+        <li><a href="#alertas-setup">Cómo configurar alertas</a></li>
+        <li><a href="#catalogo">Catálogo de alertas (qué hace cada una)</a></li>
+        <li><a href="#uso">Cómo usarlas en guardia / Finanzas</a></li>
+        <li><a href="#sli">SLI / umbrales de partida</a></li>
+        <li><a href="#pendiente">Fuera de este corte</a></li>
+        <li><a href="#refs">Referencias</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="estado">1. Estado y archivos</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Qué es</th><th>Audiencia</th><th>Estado</th><th>Artefacto</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>D01</td>
+          <td>Temporal Cloud Overview (mixin Grafana). Exploración del account.</td>
+          <td>PEVE / SRE</td>
+          <td>Instalado</td>
+          <td>Integración Grafana. No hay JSON en este repo.</td>
+        </tr>
+        <tr>
+          <td>D02</td>
+          <td>Guardia: ¿pagino ahora? Error rate Start/Signal, exhausted, throttle, no poller, backlog, fail/timeout, Actions vs límite.</td>
+          <td>Guardia</td>
+          <td>JSON listo. Falta importar.</td>
+          <td><code>dashboards/d02-slo.json</code> · uid <code>temporal-cloud-slo</code></td>
+        </tr>
+        <tr>
+          <td>D05</td>
+          <td>FinOps: billable 7d/30d, quién gasta, heartbeats/retries, TRU vs on-demand.</td>
+          <td>Finanzas / PEVE</td>
+          <td>JSON listo. Falta importar.</td>
+          <td><code>dashboards/d05-finops.json</code> · uid <code>temporal-cloud-finops</code></td>
+        </tr>
+        <tr>
+          <td>Alertas</td>
+          <td>P1 paging · P2 SRE/PO · P3 ticket. Borrador PromQL v1.</td>
+          <td>Grafana Alerting</td>
+          <td>YAML listo. Falta crear reglas y contact points.</td>
+          <td><code>alertas-catalogo.yaml</code></td>
+        </tr>
+        <tr>
+          <td>D03 / D04</td>
+          <td>Tablero por app (namespace fijo + workflow types de negocio).</td>
+          <td>PO + ops</td>
+          <td>No construido</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>D06–D11</td>
+          <td>Sala de incidente, schedules, cuotas, error budget, cert vs prod, HA.</td>
+          <td>Según dueño</td>
+          <td>Diseño, no JSON</td>
+          <td>Ver §11</td>
+        </tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Archivo</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td><code>d01-siguiente.md</code></td><td>Validar que D01 pinta v1</td></tr>
+        <tr><td><code>d02-importar.md</code></td><td>Checklist corto de D02</td></tr>
+        <tr><td><code>d05-importar.md</code></td><td>Checklist corto de D05</td></tr>
+        <tr><td><code>paquete-bcp-apoq-nrem.md</code></td><td>Scrape, SLI, mapa de métricas</td></tr>
+        <tr><td><code>inventario-dashboards.md</code></td><td>Qué trae el mixin vs JSON oficiales de Temporal</td></tr>
+        <tr><td><code>README.md</code></td><td>Índice del directorio</td></tr>
+      </tbody>
+    </table>
+    <div class="note ok">
+      <p><strong>Valor vs D01.</strong> Mismas series. D01 es el mapa (scroll largo, sin umbral de paging). D02 es una pantalla de guardia con stats verde/rojo. D05 es totales y desglose de factura. No importar <code>temporal_cloud_openmetrics.json</code> además de D01. No importar <code>temporal_cloud.json</code> ni <code>temporal_cloud_action_costs.json</code> (PromQL v0).</p>
+    </div>
+
+    <h2 id="fuente">2. Fuente de métricas (OpenMetrics)</h2>
+    <p>Un scrape a <code>https://metrics.temporal.io/v1/metrics</code> con API key (rol Metrics Read-Only). Si el overview D01 ya pinta <code>temporal_cloud_v1_*</code>, el scrape está hecho. Intervalo <strong>60 s</strong>: Cloud agrega a 1 minuto; scrapear más seguido no da más resolución y sube DPM / puede pegar el rate limit del endpoint (≈ 180 req/hora por account).</p>
+    <p>Las series v1 ya son <strong>rates por segundo</strong> (ventana 1 min) o gauges. En dashboards y alertas <strong>no</strong> usar <code>rate()</code> / <code>increase()</code> / <code>irate()</code>. Usar <code>sum</code>, <code>avg</code>, <code>clamp_min</code>, <code>avg_over_time</code>, <code>sum_over_time</code>.</p>
+    <p>Ejemplo de job Prometheus (si no es la integración Grafana Cloud). Ajustar <code>namespaces</code> al inventario; omitir el param para scrapear todo el account:</p>
+<pre><code>scrape_configs:
+  - job_name: temporal-cloud
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    honor_timestamps: true
+    scheme: https
+    metrics_path: /v1/metrics
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/temporal-metrics-api-key
+    params:
+      namespaces:
+        - apoq-prod
+        - nrem-prod
+    static_configs:
+      - targets: ["metrics.temporal.io"]</code></pre>
+    <ul>
+      <li>El nombre del job (<code>temporal-cloud</code>) entra en <code>up{job="temporal-cloud"}</code>. En Grafana Cloud suele ser otro. En Explore: <code>up{job=~".*temporal.*"}</code> y copiar el valor exacto a la alerta de scrape.</li>
+      <li>Labels opt-in (<code>temporal_activity_type</code>, worker deployment) <strong>no</strong> en el scrape 24×7. Job de diagnóstico aparte.</li>
+      <li><code>temporal_cloud_v1_billable_action_count</code> es de alta cardinalidad (namespace × workflow type × action_type). Si D05 sale vacío y D01 sí pinta Actions, el relabel puede estar droppeando esa métrica.</li>
+      <li>Retention prod recomendada ≥ 90 días (totales 30d de D05 y SLO mensual).</li>
+      <li>Los percentiles v1 <strong>no</strong> se re-agregan entre namespaces ni a ventanas más largas.</li>
+    </ul>
+    <div class="note warn">
+      <p>Si en Explore aparece <code>temporal_cloud_v0_*</code>, el datasource sigue en el PromQL legado. D02/D05 no funcionan contra v0. Apagado: <strong>5 oct 2026</strong>.</p>
+    </div>
+
+    <h2 id="d01">3. D01 — overview (instalado)</h2>
+    <p>Es el dashboard que Grafana Cloud instala con la integración Temporal (mixin OpenMetrics). Exploración de plataforma: requests, backlog, workflows, activities, pollers, cuotas, schedules, latencias Start/Signal, billable, TRU.</p>
+    <p><strong>No es</strong> tablero de guardia, no trae alertas, no es tablero de una app.</p>
+    <h3>Validar (15 min)</h3>
+    <ol>
+      <li>Explore o un panel: queries <code>temporal_cloud_v1_*</code>, no <code>v0</code>.</li>
+      <li>Scrape ~60 s.</li>
+      <li>Variable <code>temporal_namespace</code> lista los namespaces reales. Si no salen, el job filtra otros nombres o el account no los tiene.</li>
+      <li>Con un namespace prod: hay datos en Open Workflows, Failed, Task backlog, Actions, Service requests. Vacío en Activities = puede no haber activities en la ventana. Vacío en TRU = on-demand (normal).</li>
+      <li>No usar p95/p99 de Start/Signal como paging si hay pocos requests/min.</li>
+    </ol>
+    <h3>Orden de lectura en incidente (si aún no está D02)</h3>
+    <ol>
+      <li>Failed workflows / failed by type y task queue.</li>
+      <li>Task backlog + <code>no_poller_tasks_count</code>.</li>
+      <li>Sync match rate.</li>
+      <li>Resource exhausted + actions/operations/RPS throttled vs <code>*_limit</code>.</li>
+      <li>Service errors en Start / Signal / SignalWithStart.</li>
+      <li>Replication lag solo si el namespace es HA multi-región.</li>
+    </ol>
+    <p><code>no_poller</code> y backlog son señales <em>de Cloud</em> (el matching no encuentra poller / hay cola). No diagnostican el worker en AKS; eso es el corte SDK.</p>
+
+    <h2 id="d02">4. D02 — guardia SLO</h2>
+    <p>JSON: <code>dashboards/d02-slo.json</code> · título <em>Temporal Cloud SLO</em> · uid <code>temporal-cloud-slo</code> · refresh 1m · rango por defecto 6h.</p>
+    <p>Variable <code>temporal_namespace</code>: <code>label_values</code> sobre <code>temporal_cloud_v1_service_request_count</code>. <strong>All = <code>.*</code></strong> (todos los namespaces scrapeados). Multi-select. Para acotar a prod, editar la regex de la variable a <code>.*-prod$</code>; no hace falta otro JSON.</p>
+    <h3>Paneles</h3>
+    <table>
+      <thead><tr><th>Panel</th><th>Métrica / idea</th><th>Umbral visual</th></tr></thead>
+      <tbody>
+        <tr><td>Error rate Start/Signal</td><td><code>service_error_count / service_request_count</code> en Start, Signal, SignalWithStart</td><td>Amarillo 0.5% · rojo 1%</td></tr>
+        <tr><td>Resource exhausted / s</td><td><code>resource_exhausted_error_count</code></td><td>Rojo si &gt; 0</td></tr>
+        <tr><td>Throttle (actions+ops+RPS) / s</td><td>Suma de <code>*_throttled_count</code></td><td>Rojo si &gt; 0</td></tr>
+        <tr><td>No poller tasks / s</td><td><code>no_poller_tasks_count</code></td><td>Rojo si &gt; 0</td></tr>
+        <tr><td>Error rate por namespace</td><td>Misma ratio, <code>sum by (temporal_namespace)</code></td><td>—</td></tr>
+        <tr><td>Requests Start/Signal / s</td><td>Piso de volumen (sin tráfico el error rate miente)</td><td>—</td></tr>
+        <tr><td>Backlog aproximado</td><td><code>approximate_backlog_count</code> por namespace y task queue</td><td>Métrica aproximada; puede resetear en TQ idle</td></tr>
+        <tr><td>No poller por task queue</td><td>Matching Cloud</td><td>—</td></tr>
+        <tr><td>Open workflows</td><td><code>namespace_open_workflows</code></td><td><strong>No es SLO</strong></td></tr>
+        <tr><td>Failed + timeout por workflow type</td><td><code>workflow_failed_count</code> + <code>workflow_timeout_count</code></td><td>No distingue fallo de negocio</td></tr>
+        <tr><td>Actions vs action_limit</td><td><code>total_action_count{is_background="false"}</code> vs <code>action_limit</code></td><td>Cuota SaaS</td></tr>
+      </tbody>
+    </table>
+    <p>D02 <strong>no</strong> incluye panel de scrape <code>up</code> (está en la alerta P1). <strong>No</strong> sustituye D03/D04.</p>
+    <h3>Cómo usarlo</h3>
+    <ol>
+      <li>Star / pin en Grafana para la guardia.</li>
+      <li>En incidente: Namespace = el de la app (no All, para no mezclar cert).</li>
+      <li>Stats rojos primero, luego timeseries del mismo síntoma, luego D01 si hace falta profundidad.</li>
+      <li>Si Error rate y Requests salen vacíos: Explore <code>temporal_cloud_v1_service_request_count</code> y copiar el label <code>temporal_namespace</code> exacto.</li>
+    </ol>
+
+    <h2 id="d05">5. D05 — FinOps</h2>
+    <p>JSON: <code>dashboards/d05-finops.json</code> · título <em>Temporal Cloud FinOps — Actions / TRU</em> · uid <code>temporal-cloud-finops</code> · refresh 1m · rango por defecto <strong>7d</strong>.</p>
+    <p>Variable Namespace igual de genérica (All = <code>.*</code>), sobre <code>temporal_cloud_v1_billable_action_count</code>.</p>
+    <p>Temporal <strong>no exporta precio</strong> en OpenMetrics. El tablero es volumen de Actions para cruzar con la factura del account.</p>
+    <h3>Paneles</h3>
+    <table>
+      <thead><tr><th>Panel</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td>Billable en el rango / 7d / 30d</td><td>Totales estimados (<code>sum_over_time × 60</code> o media × segundos). El 30d necesita retention ≥ 30d.</td></tr>
+        <tr><td>Actions vs action_limit</td><td>% de cuota APS. Amarillo 60%, rojo 80% (= P3).</td></tr>
+        <tr><td>Heartbeat / billable</td><td>% de Actions que son heartbeats. Subida ≠ más negocio.</td></tr>
+        <tr><td>Retry / billable</td><td><code>action_type="retry_activity"</code>. Core/workers reintentando.</td></tr>
+        <tr><td>Billable / s vs media 7d × 1.5</td><td>Misma lógica que la alerta P3 de baseline.</td></tr>
+        <tr><td>Actions vs limit + throttle</td><td>El % medio puede verse verde y haber burst (throttle &gt; 0).</td></tr>
+        <tr><td>Billable por action_type / workflow type</td><td>Quién gasta.</td></tr>
+        <tr><td>Top 20 workflow × action_type</td><td>Tabla del rango seleccionado.</td></tr>
+        <tr><td>TRU provisionados</td><td><code>0</code> = on-demand. Normal.</td></tr>
+        <tr><td>action_limit vs envelope on-demand</td><td>Si difieren, el namespace está en capacidad provisionada.</td></tr>
+        <tr><td>Billable capacidad (ns_capacity / TRU)</td><td>Actions cobradas por capacidad no usada. Vacío en on-demand.</td></tr>
+      </tbody>
+    </table>
+    <h3>Cómo usarlo</h3>
+    <ol>
+      <li>Desmarcar All y elegir un namespace (prod vs prod, no mezclar).</li>
+      <li>Mirar 7d/30d y el top 20: el type que más Actions come.</li>
+      <li>Si heartbeat % o retry % suben, la factura no es “más transferencias”.</li>
+      <li>TRU / ns_capacity vacíos: on-demand. No es error.</li>
+      <li>No alertar TRU=0. No alertar p95 aquí. Throttle/exhaustion son P1 de D02.</li>
+    </ol>
+
+    <h2 id="importar">6. Cómo importar un JSON en Grafana</h2>
+    <ol>
+      <li>Grafana → <strong>Dashboards</strong> → <strong>New</strong> → <strong>Import</strong>.</li>
+      <li>Upload <code>d02-slo.json</code> o <code>d05-finops.json</code> (no pegar el YAML de alertas aquí).</li>
+      <li>Datasource: el <strong>mismo Prometheus</strong> que pinta el Temporal overview (D01).</li>
+      <li>Import. Comprobar uid (si ya existe un dashboard con ese uid, Grafana pedirá overwrite o cambiar uid).</li>
+      <li>Arriba: Namespace = All o un namespace concreto. Refresh 1m.</li>
+      <li>Opcional: folder “Temporal Cloud”, star para guardia (D02) o Finanzas (D05).</li>
+    </ol>
+    <p>Si al importar pide un datasource que no existe, crear/seleccionar el Prometheus del scrape OpenMetrics. Los paneles usan <code>${DS_PROMETHEUS}</code>.</p>
+
+    <h2 id="alertas-setup">7. Cómo configurar alertas</h2>
+    <p>El archivo <code>alertas-catalogo.yaml</code> es un <strong>borrador</strong> Prometheus / Grafana Alerting. No se “importa” como dashboard. Hay que crear reglas (a mano o vía provisioning) sobre el <strong>mismo datasource</strong> de D01.</p>
+    <div class="note warn">
+      <p><strong>Antes de pegar exprs.</strong> (1) Sustituir <code>job="temporal-cloud"</code> por el job real. (2) Sustituir <code>temporal_namespace=~"apoq-prod|nrem-prod"</code> por los namespaces de guardia, o quitar el filtro para alertar todos (más ruido en cert). (3) Acotar <code>TemporalCloudWorkflowFailRate</code> a los <code>temporal_workflow_type</code> críticos; si no, pagina types de prueba. (4) Apagar <code>TemporalCloudReplicationLag</code> si no hay HA.</p>
+    </div>
+
+    <h3>7.1 Contact points y ruteo</h3>
+    <ol>
+      <li><strong>Alerting → Contact points.</strong> Tres destinos, no uno:
+        <ul>
+          <li><code>guardia-p1</code> — PagerDuty / Opsgenie / teléfono. Solo P1.</li>
+          <li><code>sre-p2</code> — Slack/Teams canal SRE + PO. P2.</li>
+          <li><code>finops-p3</code> — ticket / canal Finanzas. P3. Nunca paging.</li>
+        </ul>
+      </li>
+      <li><strong>Notification policies.</strong> Árbol por label <code>severity</code>:
+        <ul>
+          <li><code>severity=p1</code> → <code>guardia-p1</code> (y opcional copia a Slack).</li>
+          <li><code>severity=p2</code> → <code>sre-p2</code>.</li>
+          <li><code>severity=p3</code> → <code>finops-p3</code>.</li>
+        </ul>
+      </li>
+      <li>Todas las reglas del YAML ya ponen <code>severity: p1|p2|p3</code> y <code>layer: cloud</code>.</li>
+      <li><strong>Mute timings</strong> para <code>TemporalCloudStartSilence</code>: America/Lima 20:00–08:00 y fines de semana, o la alerta dispara todas las noches. El resto de P1 <em>no</em> se silencian de noche.</li>
+      <li>Grupo por <code>temporal_namespace</code> para no recibir 20 páginas del mismo namespace.</li>
+    </ol>
+
+    <h3>7.2 Crear una regla en Grafana Alerting (recomendado para empezar: las 5 P1)</h3>
+    <ol>
+      <li>Alerting → <strong>Alert rules</strong> → New alert rule.</li>
+      <li>Folder p.ej. <code>temporal-cloud</code>.</li>
+      <li>Query: datasource Prometheus de D01. Pegar la <code>expr</code> del YAML (sin el <code>for</code>).</li>
+      <li>Condition: umbral ya va en la expr (<code>&gt; 0.01</code>, <code>== 0</code>, etc.). En Grafana 10+: “Alert if” / reduce last / IS ABOVE 0 si la expr ya es booleana 0/1; si la expr ya compara, usar “WHEN last() OF A IS ABOVE 0” sobre una query que devuelve 1 cuando dispara, <em>o</em> pegar la expr y umbral 0 con “classic condition”. Lo más simple: expr que devuelve series que cumplen, y “Has no value” no alerta; “Alert if query is not empty” / threshold &gt; 0 según UI.</li>
+      <li>En la práctica Grafana Cloud: pestaña <em>Set alert evaluation behavior</em>:
+        <ul>
+          <li>Pending period = el <code>for</code> del YAML (5m, 10m, 2m, 3m…).</li>
+          <li>Evaluate every = 1m (alineado al scrape).</li>
+        </ul>
+      </li>
+      <li>Labels: <code>severity=p1</code>, <code>layer=cloud</code>. Summary/description de <code>annotations</code> (Grafana usa <code>{{ $labels.temporal_namespace }}</code> igual que Prometheus).</li>
+      <li>Save. Probar con <strong>Preview</strong> / Explore pegando la misma expr.</li>
+    </ol>
+    <p>Orden de creación: las cinco P1 primero. Luego P3 de D05. P2 cuando el ruido de P1 esté controlado y existan types críticos.</p>
+
+    <h3>7.3 Grafana Cloud: mimir / ruler (opcional)</h3>
+    <p>Si hay provisioning GitOps, el YAML se puede cargar como Prometheus rule group (nombres de grupo <code>temporal-cloud-scrape</code> y <code>temporal-cloud-prod</code>). Ajustar datasource/tenant. No mezclar con el YAML v0 de Temporal (<code>temporal_cloud_action_costs_alerts.yaml</code>).</p>
+
+    <h3>7.4 Comprobar que no están ciegos</h3>
+    <ol>
+      <li>Explore: la expr P1 de error rate debe devolver nada en calma, o valores &lt; 0.01.</li>
+      <li>Forzar una prueba: expr <code>vector(1)</code> 1m a un contact point de prueba, no a PagerDuty real.</li>
+      <li>Confirmar que <code>up</code> del job es 1. Si <code>up</code> no existe, la P1 de scrape nunca dispara y el resto puede quedarse en “sin datos” = verde falso.</li>
+    </ol>
+    <p>Datos OpenMetrics llegan con ~1–3 min de retraso. El <code>for</code> ya incluye holgura; no bajar P1 a 0s.</p>
+
+    <h2 id="catalogo">8. Catálogo de alertas</h2>
+    <p>Fuente: <code>alertas-catalogo.yaml</code>. Prefijo de métricas omitido en la tabla: <code>temporal_cloud_v1_</code>.</p>
+
+    <h3>P1 — paging (crear primero)</h3>
+    <p>Destino: guardia + equipo de la app. Tablero: <strong>D02</strong>.</p>
+    <table>
+      <thead>
+        <tr><th>Nombre</th><th>Señal</th><th>For</th><th>Qué hacer</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="p1"><code>TemporalCloudMetricsScrapeDown</code></td>
+          <td><code>up{job="temporal-cloud"} == 0</code></td>
+          <td>5m</td>
+          <td>Ceguera. API key, red a <code>metrics.temporal.io</code>, rol Metrics Read-Only, nombre del job. No asumas que Cloud está sano porque los paneles “no cambian”.</td>
+        </tr>
+        <tr>
+          <td class="p1"><code>TemporalCloudStartSignalErrorRate</code></td>
+          <td>errors/requests Start+Signal+SignalWithStart &gt; 1% <strong>y</strong> requests/s &gt; 0.1</td>
+          <td>10m</td>
+          <td>Cloud rechaza o falla aceptación. D02 error rate + requests (¿hay tráfico?). D01 service errors por operation. El piso 0.1/s evita paging en namespaces casi idle.</td>
+        </tr>
+        <tr>
+          <td class="p1"><code>TemporalCloudResourceExhausted</code></td>
+          <td><code>resource_exhausted_error_count</code> &gt; 0</td>
+          <td>2m</td>
+          <td>Burst que el % medio vs limit no muestra. SDKs reintentan; igual es saturación. No esperes a que Actions % se ponga rojo.</td>
+        </tr>
+        <tr>
+          <td class="p1"><code>TemporalCloudThrottled</code></td>
+          <td>actions <em>o</em> operations <em>o</em> service RPS throttled &gt; 0</td>
+          <td>2m</td>
+          <td>Cuota SaaS. D02 / D05 Actions vs limit. Subir límites o bajar APS (heartbeats, retries).</td>
+        </tr>
+        <tr>
+          <td class="p1"><code>TemporalCloudNoPollerTasks</code></td>
+          <td><code>no_poller_tasks_count</code> &gt; 0 (YAML de ejemplo filtra apoq/nrem prod)</td>
+          <td>3m</td>
+          <td>Matching Cloud sin poller. Causa típica: worker caído, TQ mal nombrada, deploy. Cloud está “verde”; el worker no. Corte SDK después. Quitar o cambiar el filtro de namespace al inventario real.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>P2 — canal SRE / PO, no teléfono a las 3am salvo que el banco lo decida</h3>
+    <table>
+      <thead>
+        <tr><th>Nombre</th><th>Señal</th><th>For</th><th>Notas</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="p2"><code>TemporalCloudBacklogHigh</code></td>
+          <td>backlog aprox. &gt; 100 por TQ</td>
+          <td>15m</td>
+          <td>Métrica aproximada; puede sobrecontar. Ajustar umbral. Filtro de namespace de ejemplo en YAML.</td>
+        </tr>
+        <tr>
+          <td class="p2"><code>TemporalCloudWorkflowFailRate</code></td>
+          <td>(failed+timeout)/(success+failed+timeout) &gt; 5% por type</td>
+          <td>15m</td>
+          <td><strong>Obligatorio</strong> filtrar types críticos. <code>workflow_failed_count</code> incluye fallos de negocio (compensación). Sin filtro es ruido.</td>
+        </tr>
+        <tr>
+          <td class="p2"><code>TemporalCloudScheduleMissedCatchup</code></td>
+          <td>missed catchup &gt; 0</td>
+          <td>5m</td>
+          <td>Schedule perdió la ventana. Cut-off / compensaciones. Apagar si no hay schedules.</td>
+        </tr>
+        <tr>
+          <td class="p2"><code>TemporalCloudScheduleBufferOverrun</code></td>
+          <td>buffer overrun &gt; 0</td>
+          <td>5m</td>
+          <td>Buffer interno del schedule lleno.</td>
+        </tr>
+        <tr>
+          <td class="p2"><code>TemporalCloudScheduleOverlapSkipped</code></td>
+          <td>overlap skipped &gt; 0</td>
+          <td>10m</td>
+          <td>SKIP / BUFFER_ONE: genera más rápido de lo que termina.</td>
+        </tr>
+        <tr>
+          <td class="p2"><code>TemporalCloudReplicationLag</code></td>
+          <td>lag p99 &gt; 30s</td>
+          <td>10m</td>
+          <td>Solo HA. <strong>Desactivar</strong> si no hay namespace multi-región.</td>
+        </tr>
+        <tr>
+          <td class="p2"><code>TemporalCloudStartSilence</code></td>
+          <td>StartWorkflowExecution == 0</td>
+          <td>15m</td>
+          <td>Silencio de API. No es Cloud caído por sí solo. Mute noches/finde. Cruzar con error rate. Filtro de namespace de ejemplo.</td>
+        </tr>
+        <tr>
+          <td class="p2"><code>TemporalCloudOpenWorkflowsJump</code></td>
+          <td>open workflows &gt; 150% vs hace 24h</td>
+          <td>30m</td>
+          <td>Runaway / CAN / no cierran. No es SLO. Filtro de namespace de ejemplo.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>P3 — ticket FinOps / capacidad (D05)</h3>
+    <table>
+      <thead>
+        <tr><th>Nombre</th><th>Señal</th><th>For</th><th>Notas</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="p3"><code>TemporalCloudActionLimitHigh</code></td>
+          <td>actions (no background) / action_limit &gt; 80%</td>
+          <td>15m</td>
+          <td>Todos los namespaces que scrapeas (sin filtro en YAML). Ticket, no paging.</td>
+        </tr>
+        <tr>
+          <td class="p3"><code>TemporalCloudBillableVsBaseline7d</code></td>
+          <td>billable &gt; 150% vs media 7d <strong>y</strong> billable/s &gt; 0.1</td>
+          <td>2h</td>
+          <td>D05: heartbeats, retries, top types. YAML con filtro de ejemplo apoq/nrem. No P1.</td>
+        </tr>
+        <tr>
+          <td class="p3"><code>TemporalCloudOperationsLimitHigh</code></td>
+          <td>operations / operations_limit &gt; 80%</td>
+          <td>15m</td>
+          <td>Misma familia que Actions.</td>
+        </tr>
+        <tr>
+          <td class="p3"><code>TemporalCloudPollerLimitHigh</code></td>
+          <td>pending requests / poller_limit &gt; 80%</td>
+          <td>15m</td>
+          <td>Pollers pendientes vs cuota.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>No alertar:</strong> p95/p99 de latencia en cert ni sin piso de QPS · TRU = 0 · open workflows como SLO · percentil re-agregado entre namespaces.</p>
+
+    <h3>Exprs P1 (para copiar; ajustar job y namespaces)</h3>
+<pre><code># Scrape down — cambiar job=
+up{job="temporal-cloud"} == 0
+
+# Error rate Start/Signal
+(
+  sum by (temporal_namespace) (
+    temporal_cloud_v1_service_error_count{operation=~"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution"}
+  )
+  /
+  sum by (temporal_namespace) (
+    temporal_cloud_v1_service_request_count{operation=~"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution"}
+  )
+) &gt; 0.01
+and
+sum by (temporal_namespace) (
+  temporal_cloud_v1_service_request_count{operation=~"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution"}
+) &gt; 0.1
+
+# Exhausted
+sum by (temporal_namespace) (temporal_cloud_v1_resource_exhausted_error_count) &gt; 0
+
+# Throttle
+sum by (temporal_namespace) (temporal_cloud_v1_total_action_throttled_count) &gt; 0
+or
+sum by (temporal_namespace) (temporal_cloud_v1_operations_throttled_count) &gt; 0
+or
+sum by (temporal_namespace) (temporal_cloud_v1_service_request_throttled_count) &gt; 0
+
+# No poller — cambiar el regex de namespace a prod de guardia
+sum by (temporal_namespace, temporal_task_queue, task_type) (
+  temporal_cloud_v1_no_poller_tasks_count{temporal_namespace=~"apoq-prod|nrem-prod"}
+) &gt; 0</code></pre>
+
+    <h2 id="uso">9. Cómo usarlas en guardia y Finanzas</h2>
+    <h3>Turno de guardia</h3>
+    <ol>
+      <li>D02 en un monitor. Namespace de prod (no All si hay cert ruidoso).</li>
+      <li>Página P1 → abrir D02 filtrado al <code>temporal_namespace</code> de la alerta.</li>
+      <li>Mapa rápido:
+        <ul>
+          <li>Scrape down → no mires workflows; arregla métricas.</li>
+          <li>Error rate → ¿Cloud acepta Start/Signal?</li>
+          <li>Exhausted / throttle → cuota / burst.</li>
+          <li>No poller → workers / TQ, no “Temporal Cloud caído”.</li>
+        </ul>
+      </li>
+      <li>Si hace falta el mapa completo: D01. Si hace falta el type de negocio: hoy Explore por <code>temporal_workflow_type</code>; mañana D03/D04.</li>
+      <li>P2 de fail-rate: confirmar que el type es de negocio, no un workflow de prueba.</li>
+    </ol>
+    <h3>Review FinOps (semanal)</h3>
+    <ol>
+      <li>D05, 7d, un namespace prod a la vez.</li>
+      <li>Totales vs factura Temporal (fuera de Grafana).</li>
+      <li>Top 20 + % heartbeat/retry.</li>
+      <li>P3 de baseline 7d: ¿deploy, retry storm, TRU ocioso?</li>
+      <li>Actions &gt; 80% del límite: pedir headroom o bajar APS, no esperar al throttle P1.</li>
+    </ol>
+    <h3>Falsos verdes / falsos rojos</h3>
+    <ul>
+      <li>Error rate 0% y Start/s = 0: cliente parado o Cloud inalcanzable. Por eso existe StartSilence (P2) y el piso 0.1/s en P1.</li>
+      <li>% de action_limit verde + throttle P1: la rate de 1 min suaviza bursts.</li>
+      <li>D01 verde + no poller P1: worker/PE caído; Cloud solo ve matching.</li>
+      <li>Fail-rate P2 en compensación esperada: filtrar types.</li>
+    </ul>
+
+    <h2 id="sli">10. SLI / umbrales de partida</h2>
+    <p>Propuesta para discutir con Continuidad y PO. <strong>No contractual.</strong></p>
+    <table>
+      <thead><tr><th>SLI</th><th>Métrica</th><th>Objetivo inicial</th></tr></thead>
+      <tbody>
+        <tr><td>Disponibilidad API</td><td>1 − errors/requests en Start/Signal/SignalWithStart</td><td>99.9% mensual por namespace prod</td></tr>
+        <tr><td>Éxito de workflow</td><td>success / (success+failed+timeout) por type crítico</td><td>99.5% (excluir cancel/terminate operativos)</td></tr>
+        <tr><td>Matching</td><td>no_poller = 0</td><td>100% con pollers en prod</td></tr>
+        <tr><td>Cola</td><td>backlog aprox.</td><td>Sin crecimiento 15 min sobre umbral de TQ</td></tr>
+        <tr><td>Throttle / exhaustion</td><td>*_throttled, resource_exhausted</td><td>0 sostenido &gt; 2 min</td></tr>
+        <tr><td>Latencia aceptación</td><td>service_latency_p95 Start/Signal + piso de QPS</td><td>p95 &lt; 500 ms (ajustar). No paging en este corte.</td></tr>
+        <tr><td>HA</td><td>replication_lag_p99</td><td>Objetivo Continuidad. Solo HA.</td></tr>
+        <tr><td>Scrape</td><td><code>up</code></td><td>100%</td></tr>
+      </tbody>
+    </table>
+    <p>Error budget / burn-rate 1h/6h = D09 (no construido). Open workflows no es SLO.</p>
+
+    <h2 id="pendiente">11. Fuera de este corte</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Dashboard</th><th>Cuándo</th></tr></thead>
+      <tbody>
+        <tr><td>D03 / D04</td><td>Una app, namespace fijo, types nominados (débito/crédito vs emisión/recepción)</td><td>Tras inventario real de <code>temporal_workflow_type</code></td></tr>
+        <tr><td>D06</td><td>Sala de incidente: 6 paneles, sin scroll, links a D03/D04</td><td>Cuando D02 ya esté en guardia</td></tr>
+        <tr><td>D07</td><td>Schedules / cut-off</td><td>Si hay schedules de negocio</td></tr>
+        <tr><td>D08</td><td>Saturación de las cuatro cuotas (D05 ya cubre Actions)</td><td>Si Finanzas/SRE lo piden aparte</td></tr>
+        <tr><td>D09</td><td>Error budget mensual para Continuidad</td><td>Tras acordar SLO</td></tr>
+        <tr><td>D10</td><td>Cert vs prod post-deploy</td><td>Cuando haya ancla de CI</td></tr>
+        <tr><td>D11</td><td>Replication lag</td><td>Solo namespaces HA</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Siguiente corte (no Cloud):</strong> métricas SDK (<code>temporal_*</code>), slots de worker, schedule-to-start, AKS, Private Link Azure, lag Event Hubs/Kafka. Un D01 verde con worker caído es el fallo típico; D02 lo señala con <code>no_poller</code>, no lo diagnostica.</p>
+    <h3>Orden práctico ahora</h3>
+    <ol>
+      <li>Validar D01 (v1, namespaces, no v0).</li>
+      <li>Importar D02. Star en guardia.</li>
+      <li>Cinco alertas P1 + contact point de paging. Ajustar job y namespaces.</li>
+      <li>Importar D05. Alertas P3 (Actions 80%, billable vs 7d).</li>
+      <li>P2 con types reales. D03/D04.</li>
+      <li>Retirar dashboards/scrape v0 antes del 5 oct 2026.</li>
+    </ol>
+
+    <h2 id="refs">12. Referencias</h2>
+    <ul>
+      <li><a href="https://docs.temporal.io/cloud/metrics/openmetrics">OpenMetrics Temporal Cloud</a></li>
+      <li><a href="https://docs.temporal.io/cloud/metrics/openmetrics/metrics-reference">Catálogo <code>temporal_cloud_v1_*</code></a></li>
+      <li><a href="https://docs.temporal.io/cloud/metrics/openmetrics/migration-guide">Migración v0 → v1</a></li>
+      <li><a href="https://github.com/grafana/jsonnet-libs/blob/master/temporal-mixin/dashboards/temporal-overview.json">Mixin Grafana (D01)</a></li>
+      <li>YAML y JSON de este pack: <code>alertas-catalogo.yaml</code>, <code>dashboards/d02-slo.json</code>, <code>dashboards/d05-finops.json</code></li>
+    </ul>
+  </main>
+</body>
+</html>
