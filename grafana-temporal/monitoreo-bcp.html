@@ -75,6 +75,7 @@
         <li><a href="#d01">D01 — overview (instalado)</a></li>
         <li><a href="#d02">D02 — guardia SLO</a></li>
         <li><a href="#d05">D05 — FinOps</a></li>
+        <li><a href="#metricas">Métricas D02 y D05 (detalle)</a></li>
         <li><a href="#importar">Cómo importar un JSON en Grafana</a></li>
         <li><a href="#alertas-setup">Cómo configurar alertas</a></li>
         <li><a href="#catalogo">Catálogo de alertas (qué hace cada una)</a></li>
@@ -97,6 +98,13 @@
           <td>PEVE / SRE</td>
           <td>Instalado</td>
           <td>Integración Grafana. No hay JSON en este repo.</td>
+        </tr>
+        <tr>
+          <td>D01-app</td>
+          <td>Template overview recortado a <code>{app}-(dev\|desa\|cert\|prod)</code>.</td>
+          <td>Equipo de cada app</td>
+          <td>JSON listo. Save as por código.</td>
+          <td><code>dashboards/d01-aplicacion.json</code></td>
         </tr>
         <tr>
           <td>D02</td>
@@ -205,7 +213,7 @@
 
     <h2 id="d02">4. D02 — guardia SLO</h2>
     <p>JSON: <code>dashboards/d02-slo.json</code> · título <em>Temporal Cloud SLO</em> · uid <code>temporal-cloud-slo</code> · refresh 1m · rango por defecto 6h.</p>
-    <p>Variable <code>temporal_namespace</code>: <code>label_values</code> sobre <code>temporal_cloud_v1_service_request_count</code>. <strong>All = <code>.*</code></strong> (todos los namespaces scrapeados). Multi-select. Para acotar a prod, editar la regex de la variable a <code>.*-prod$</code>; no hace falta otro JSON.</p>
+    <p>Variable <code>temporal_namespace</code>: todos los namespaces del scrape (<code>All = .*</code>). El recorte por aplicación no va en D02: template <code>dashboards/d01-aplicacion.json</code>.</p>
     <h3>Paneles</h3>
     <table>
       <thead><tr><th>Panel</th><th>Métrica / idea</th><th>Umbral visual</th></tr></thead>
@@ -234,7 +242,7 @@
 
     <h2 id="d05">5. D05 — FinOps</h2>
     <p>JSON: <code>dashboards/d05-finops.json</code> · título <em>Temporal Cloud FinOps — Actions / TRU</em> · uid <code>temporal-cloud-finops</code> · refresh 1m · rango por defecto <strong>7d</strong>.</p>
-    <p>Variable Namespace igual de genérica (All = <code>.*</code>), sobre <code>temporal_cloud_v1_billable_action_count</code>.</p>
+    <p>Variable Namespace igual de genérica que D02 (<code>All = .*</code>), sobre <code>temporal_cloud_v1_billable_action_count</code>.</p>
     <p>Temporal <strong>no exporta precio</strong> en OpenMetrics. El tablero es volumen de Actions para cruzar con la factura del account.</p>
     <h3>Paneles</h3>
     <table>
@@ -261,6 +269,144 @@
       <li>TRU / ns_capacity vacíos: on-demand. No es error.</li>
       <li>No alertar TRU=0. No alertar p95 aquí. Throttle/exhaustion son P1 de D02.</li>
     </ol>
+    <p>Texto largo de cada métrica: <code>d02-importar.md</code>, <code>d05-importar.md</code>. En Grafana, “i” del panel.</p>
+
+    <h2 id="metricas">Métricas D02 y D05 (detalle)</h2>
+    <p>Prefijo <code>temporal_cloud_v1_</code>. Cloud publica ya agregado a 1 minuto: las <strong>rate</strong> son eventos/s (media del minuto); los <strong>gauge</strong> son valor puntual. No usar <code>rate()</code> / <code>increase()</code>. Un <code>0.5</code> en una rate ≈ 30 eventos en ese minuto. Los bursts de pocos segundos se diluyen: por eso se alerta throttle/exhaustion, no solo el % medio del límite.</p>
+
+    <h3>D02 — guardia</h3>
+    <table>
+      <thead><tr><th>Métrica</th><th>Tipo</th><th>Qué mide</th><th>Cómo leerla</th><th>No es</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>service_request_count</code></td>
+          <td>Rate</td>
+          <td>RPC/s al frontend. D02 filtra Start, Signal, SignalWithStart.</td>
+          <td>Volumen. 0 = no hay tráfico (el error rate verde no prueba nada). Piso P1: &gt; 0.1/s.</td>
+          <td>Éxito del débito/remesa en el core.</td>
+        </tr>
+        <tr>
+          <td><code>service_error_count</code></td>
+          <td>Rate</td>
+          <td>Errores gRPC/s de esas operations.</td>
+          <td>Cloud no aceptó o no completó el RPC. Error rate = errors / requests. Amarillo 0.5%, rojo 1%, P1 10 min.</td>
+          <td><code>workflow_failed_count</code> (el workflow ya había arrancado).</td>
+        </tr>
+        <tr>
+          <td><code>resource_exhausted_error_count</code></td>
+          <td>Rate</td>
+          <td>Burst que un recurso no absorbió. SDK reintenta.</td>
+          <td>Rojo si &gt; 0. P1 2 min. El % de cuota puede seguir verde.</td>
+          <td>Throttle por <code>action_limit</code> (métricas <code>*_throttled</code>).</td>
+        </tr>
+        <tr>
+          <td><code>total_action_throttled_count</code><br><code>operations_throttled_count</code><br><code>service_request_throttled_count</code></td>
+          <td>Rate</td>
+          <td>Freno por cuota de Actions, operations o RPS frontend.</td>
+          <td>D02 suma las tres. Rojo si cualquiera &gt; 0. P1 2 min.</td>
+          <td>Exhausted (otro mecanismo).</td>
+        </tr>
+        <tr>
+          <td><code>no_poller_tasks_count</code></td>
+          <td>Rate</td>
+          <td>Tareas/s sin poller en la task queue.</td>
+          <td>Worker caído, TQ mal, deploy. D01 puede estar verde. P1 3 min. Desglose por TQ.</td>
+          <td>Diagnóstico del pod (eso es SDK).</td>
+        </tr>
+        <tr>
+          <td><code>approximate_backlog_count</code></td>
+          <td>Gauge</td>
+          <td>Cola aproximada por TQ.</td>
+          <td>Tendencia (¿crece 15 min?). Puede sobrecontar y resetear a 0 en idle. P2 &gt; 100 / 15 min.</td>
+          <td>SLO exacto de cola.</td>
+        </tr>
+        <tr>
+          <td><code>namespace_open_workflows</code></td>
+          <td>Gauge</td>
+          <td>Workflows abiertos ahora.</td>
+          <td>Subida = no cierran (bucle, CAN). P2 si &gt; 150% vs 24 h.</td>
+          <td>Disponibilidad. <strong>No es SLO.</strong></td>
+        </tr>
+        <tr>
+          <td><code>workflow_failed_count</code></td>
+          <td>Rate</td>
+          <td>Cierres Failed/s por <code>temporal_workflow_type</code>.</td>
+          <td>Incluye fallos de negocio. El PO elige qué type es P2.</td>
+          <td>Error de Start/Signal. Cancel/terminate no van aquí.</td>
+        </tr>
+        <tr>
+          <td><code>workflow_timeout_count</code></td>
+          <td>Rate</td>
+          <td>Cierres por timeout (start-to-close).</td>
+          <td>El workflow se venció; no “decidió” fallar.</td>
+          <td>Timeout de un RPC de frontend.</td>
+        </tr>
+        <tr>
+          <td><code>total_action_count</code></td>
+          <td>Rate</td>
+          <td>Actions/s. Solo <code>is_background=false</code> topa el límite.</td>
+          <td>Cuota operativa vs <code>action_limit</code>. &gt; 80% = P3.</td>
+          <td><code>billable_action_count</code> (factura, D05).</td>
+        </tr>
+        <tr>
+          <td><code>action_limit</code></td>
+          <td>Gauge</td>
+          <td>Tope de Actions/s del namespace.</td>
+          <td>Línea de referencia del panel de cuota.</td>
+          <td>Precio ni TRU (ver envelope).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>D05 — FinOps</h3>
+    <table>
+      <thead><tr><th>Métrica</th><th>Tipo</th><th>Qué mide</th><th>Cómo leerla</th><th>No es</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>billable_action_count</code></td>
+          <td>Rate</td>
+          <td>Actions facturables/s por <code>action_type</code> y workflow type. Alta cardinalidad.</td>
+          <td>Totales rango/7d/30d ≈ <code>sum_over_time × 60</code>. Baseline P3: actual &gt; 1.5 × media 7d, 2 h, piso 0.1/s. Temporal excluye algunos cargos.</td>
+          <td>Dólares. Tampoco es la cuota APS.</td>
+        </tr>
+        <tr>
+          <td><code>action_type</code> heartbeat</td>
+          <td>—</td>
+          <td><code>record_activity_heartbeat</code> y variantes <code>*_by_id</code> / standalone.</td>
+          <td>% del billable. Amarillo 20%, rojo 40%. Subida = ping agresivo, no más negocio.</td>
+          <td>Éxito de la activity.</td>
+        </tr>
+        <tr>
+          <td><code>action_type=retry_activity</code></td>
+          <td>—</td>
+          <td>Reintentos de activity cobrados.</td>
+          <td>% del billable. Amarillo 10%, rojo 25%. Cruzar con fail/timeout de D02.</td>
+          <td>Más transferencias.</td>
+        </tr>
+        <tr>
+          <td><code>action_type</code> <code>ns_capacity:tru</code></td>
+          <td>—</td>
+          <td>Cargo por TRU provisionado y no usado en la hora.</td>
+          <td>Vacío en on-demand. Si hay serie con poco tráfico: devolver TRU.</td>
+          <td>Uso real de workflows.</td>
+        </tr>
+        <tr>
+          <td><code>provisioned_capacity_tru_count</code></td>
+          <td>Gauge</td>
+          <td>TRU contratados.</td>
+          <td><strong>0 = on-demand. Normal.</strong> No alertar 0.</td>
+          <td>Fallo de scrape.</td>
+        </tr>
+        <tr>
+          <td><code>action_on_demand_envelope_limit</code></td>
+          <td>Gauge</td>
+          <td>Qué <code>action_limit</code> tendrías en on-demand.</td>
+          <td>Si ≠ <code>action_limit</code>, el namespace está provisioned.</td>
+          <td>El gasto (eso es billable).</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Detalle aún más largo (labels, queries, falsos verdes): <code>d02-importar.md</code> y <code>d05-importar.md</code>.</p>
 
     <h2 id="importar">6. Cómo importar un JSON en Grafana</h2>
     <ol>

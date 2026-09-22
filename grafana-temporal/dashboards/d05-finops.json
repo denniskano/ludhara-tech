@@ -31,7 +31,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "description": "Suma de samples en el rango × 60 s. Aproximado.",
+      "description": "billable_action_count: Actions facturables/s (ya es rate; no usar rate()). Total estimado = sum_over_time del rango × 60 s. No es el monto en dólares ni coincide 1:1 con la factura (Temporal excluye algunos tipos). Vacío + D01 con Actions = la métrica se droppeó por cardinalidad.",
       "fieldConfig": {
         "defaults": {
           "thresholds": {
@@ -85,6 +85,7 @@
           "refId": "A"
         }
       ],
+      "description": "Mismo billable_action_count, estimado a 7 días: media de samples × segundos de la semana. Cruzar con la factura semanal. Elegir un namespace (no All) para no mezclar prod y cert.",
       "title": "Billable 7d",
       "type": "stat"
     },
@@ -114,12 +115,13 @@
           "refId": "A"
         }
       ],
+      "description": "Estimado a 30 días. Requiere retención Grafana ≥ 30d (recomendado 90d). Si sale corto o vacío, no es que no haya gasto: el datasource no guarda el mes. Sirve de forecast de volumen, no de precio.",
       "title": "Billable 30d (forecast)",
       "type": "stat"
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "description": "Solo is_background=false cuenta contra action_limit.",
+      "description": "total_action_count{is_background=false} / action_limit. Cuota APS operativa, no factura (eso es billable). Background no topa el límite. Amarillo 60%, rojo 80% = P3 a 15 min. % medio verde no contradice throttle (burst de 1 min).",
       "fieldConfig": {
         "defaults": {
           "decimals": 1,
@@ -150,7 +152,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "description": "Heartbeats inflan factura. Subida = activities que pegan demasiado seguido.",
+      "description": "% de billable_action_count cuyo action_type es record_activity_heartbeat (y variantes by_id / standalone). Cada heartbeat es una Action. Subida = activities que pingan demasiado; no es más tráfico de negocio. Amarillo 20%, rojo 40%.",
       "fieldConfig": {
         "defaults": {
           "decimals": 1,
@@ -181,7 +183,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "description": "retry_activity. Subida = workers/core reintentando, no más tráfico de negocio.",
+      "description": "% de billable con action_type=retry_activity. Worker/core reintentando o timeouts cortos. No es más transferencias. Amarillo 10%, rojo 25%. Cruzar con fail/timeout de D02 del mismo type.",
       "fieldConfig": {
         "defaults": {
           "decimals": 1,
@@ -239,6 +241,7 @@
           "refId": "B"
         }
       ],
+      "description": "billable_action_count actual vs 1.5 × avg_over_time 7d. P3 si la actual supera la línea 2 h y billable/s > 0.1. Revisar heartbeats, retry_activity y el top 20. No es paging.",
       "title": "Billable / s vs media 7d × 1.5 (P3)",
       "type": "timeseries"
     },
@@ -264,6 +267,7 @@
           "refId": "C"
         }
       ],
+      "description": "total_action_count{is_background=false} vs action_limit y total_action_throttled_count. Cuota, no factura. Throttle > 0 con % verde = burst. El P1 de throttle vive en D02.",
       "title": "Actions (cuota) vs action_limit + throttle",
       "type": "timeseries"
     },
@@ -286,6 +290,7 @@
           "refId": "A"
         }
       ],
+      "description": "billable_action_count sum by action_type. Alta cardinalidad. Heartbeats, retries y ns_capacity:tru se ven aquí. No habilitar temporal_activity_type en el scrape 24×7.",
       "title": "Billable por action_type",
       "type": "timeseries"
     },
@@ -301,6 +306,7 @@
           "refId": "A"
         }
       ],
+      "description": "billable_action_count sum by temporal_workflow_type. Qué proceso de negocio come Actions. Un type de prueba ruidoso puede dominar el gasto sin ser crítico.",
       "title": "Billable por workflow type",
       "type": "timeseries"
     },
@@ -321,6 +327,7 @@
           "refId": "A"
         }
       ],
+      "description": "topk(20) de avg_over_time(billable) × segundos del rango. Conteo estimado por par workflow type × action_type. Es el mapa de quién gasta en la ventana seleccionada.",
       "title": "Top 20 workflow type × action_type en el rango",
       "transformations": [
         {
@@ -346,7 +353,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "description": "0 = namespace on-demand. Provisioned: Actions mínimas/hora por TRU extra (ns_capacity:tru).",
+      "description": "provisioned_capacity_tru_count. 0 = on-demand (normal; no alertar). > 0 = capacidad provisionada: hay mínimo de Actions/hora por TRU extra; si no se usan, factura ns_capacity:tru.",
       "fieldConfig": {
         "defaults": {
           "decimals": 0,
@@ -373,7 +380,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "description": "Si action_limit ≠ envelope, el namespace está en provisioned capacity.",
+      "description": "action_limit vs action_on_demand_envelope_limit. Si difieren, el namespace está provisioned (TRU). Si coinciden, on-demand. El envelope es el tope que tendrías sin TRU.",
       "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 10, "x": 6, "y": 32 },
       "id": 17,
@@ -394,7 +401,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "description": "Actions cobradas por capacidad no usada. Vacío si todo on-demand.",
+      "description": "billable_action_count filtrado a action_type de capacidad (ns_capacity / :tru). Actions cobradas por TRU no usado. Vacío en on-demand. Si hay serie aquí con poco tráfico, devolver TRU al pool.",
       "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 32 },
       "id": 18,
@@ -447,5 +454,5 @@
   "timezone": "browser",
   "title": "Temporal Cloud FinOps — Actions / TRU",
   "uid": "temporal-cloud-finops",
-  "version": 2
+  "version": 5
 }

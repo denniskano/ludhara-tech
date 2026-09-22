@@ -1,0 +1,319 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Datasource del scrape OpenMetrics Temporal Cloud (v1)",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.0.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" }
+  ],
+  "annotations": { "list": [] },
+  "description": "Template de overview Temporal Cloud (mismas preguntas que D01) recortado a una aplicación: {código4}-(dev|desa|cert|prod). No sustituye D01 (plataforma), D02 (guardia) ni D05 (FinOps). Cada equipo: Save as, fijar Aplicación, ocultar el dropdown.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Resumen (esta aplicación)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "namespace_open_workflows. Gauge. No es SLO.",
+      "fieldConfig": { "defaults": { "decimals": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }, "unit": "none" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 2,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(temporal_cloud_v1_namespace_open_workflows{temporal_namespace=~\"$temporal_namespace\"}) or vector(0)", "legendFormat": "open", "refId": "A" }],
+      "title": "Open workflows",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "workflow_failed_count + workflow_timeout_count. Incluye fallos de negocio.",
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.001 }] }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 3,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(temporal_cloud_v1_workflow_failed_count{temporal_namespace=~\"$temporal_namespace\"}) + sum(temporal_cloud_v1_workflow_timeout_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "fail+timeout", "refId": "A" }],
+      "title": "Failed + timeout / s",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "service_error_count / service_request_count en Start, Signal, SignalWithStart.",
+      "fieldConfig": { "defaults": { "decimals": 2, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.005 }, { "color": "red", "value": 0.01 }] }, "unit": "percentunit" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "id": 4,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(temporal_cloud_v1_service_error_count{temporal_namespace=~\"$temporal_namespace\", operation=~\"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution\"}) / clamp_min(sum(temporal_cloud_v1_service_request_count{temporal_namespace=~\"$temporal_namespace\", operation=~\"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution\"}), 0.001)", "legendFormat": "error rate", "refId": "A" }],
+      "title": "Error rate Start/Signal",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "no_poller_tasks_count. Matching Cloud sin worker.",
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.001 }] }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 5,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(temporal_cloud_v1_no_poller_tasks_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "no poller", "refId": "A" }],
+      "title": "No poller / s",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "resource_exhausted + throttles de actions/ops/RPS.",
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.001 }] }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 6,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(temporal_cloud_v1_resource_exhausted_error_count{temporal_namespace=~\"$temporal_namespace\"}) + sum(temporal_cloud_v1_total_action_throttled_count{temporal_namespace=~\"$temporal_namespace\"}) + sum(temporal_cloud_v1_operations_throttled_count{temporal_namespace=~\"$temporal_namespace\"}) + sum(temporal_cloud_v1_service_request_throttled_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "sat", "refId": "A" }],
+      "title": "Exhausted + throttle / s",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "total_action_count{is_background=false} / action_limit.",
+      "fieldConfig": { "defaults": { "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.6 }, { "color": "red", "value": 0.8 }] }, "unit": "percentunit" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 7,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(temporal_cloud_v1_total_action_count{temporal_namespace=~\"$temporal_namespace\", is_background=\"false\"}) / clamp_min(sum(temporal_cloud_v1_action_limit{temporal_namespace=~\"$temporal_namespace\"}), 0.001)", "legendFormat": "%", "refId": "A" }],
+      "title": "Actions vs limit",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 8,
+      "title": "Frontend (Request intensity / operations)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "service_request_count por operation. Misma idea que Request Intensity / Operations del mixin.",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 9,
+      "targets": [{ "expr": "sum by (operation) (temporal_cloud_v1_service_request_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "{{operation}}", "refId": "A" }],
+      "title": "Requests por operation",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "service_error_count por operation.",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 10,
+      "targets": [{ "expr": "sum by (operation) (temporal_cloud_v1_service_error_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "{{operation}}", "refId": "A" }],
+      "title": "Errors por operation",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 11,
+      "title": "Workflows",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
+      "id": 12,
+      "targets": [{ "expr": "sum by (temporal_namespace) (temporal_cloud_v1_namespace_open_workflows{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "{{temporal_namespace}}", "refId": "A" }],
+      "title": "Open workflows",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Completions por type. Failed no distingue negocio vs plataforma.",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 15 },
+      "id": 13,
+      "targets": [
+        { "expr": "sum by (temporal_workflow_type) (temporal_cloud_v1_workflow_success_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "ok {{temporal_workflow_type}}", "refId": "A" },
+        { "expr": "sum by (temporal_workflow_type) (temporal_cloud_v1_workflow_failed_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "fail {{temporal_workflow_type}}", "refId": "B" },
+        { "expr": "sum by (temporal_workflow_type) (temporal_cloud_v1_workflow_timeout_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "timeout {{temporal_workflow_type}}", "refId": "C" },
+        { "expr": "sum by (temporal_workflow_type) (temporal_cloud_v1_workflow_cancel_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "cancel {{temporal_workflow_type}}", "refId": "D" },
+        { "expr": "sum by (temporal_workflow_type) (temporal_cloud_v1_workflow_continued_as_new_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "CAN {{temporal_workflow_type}}", "refId": "E" }
+      ],
+      "title": "Completions por workflow type",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 14,
+      "title": "Task backlog y pollers",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "approximate_backlog_count. Aproximado; puede resetear en TQ idle.",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "id": 15,
+      "targets": [{ "expr": "sum by (temporal_task_queue) (temporal_cloud_v1_approximate_backlog_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "{{temporal_task_queue}}", "refId": "A" }],
+      "title": "Backlog por task queue",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "id": 16,
+      "targets": [{ "expr": "sum by (temporal_task_queue) (temporal_cloud_v1_no_poller_tasks_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "{{temporal_task_queue}}", "refId": "A" }],
+      "title": "No poller por task queue",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "poll_success_sync / (poll_success + poll_timeout). Sync match del mixin.",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "percentunit" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "id": 17,
+      "targets": [{ "expr": "sum(temporal_cloud_v1_poll_success_sync_count{temporal_namespace=~\"$temporal_namespace\"}) / clamp_min(sum(temporal_cloud_v1_poll_success_count{temporal_namespace=~\"$temporal_namespace\"}) + sum(temporal_cloud_v1_poll_timeout_count{temporal_namespace=~\"$temporal_namespace\"}), 0.001)", "legendFormat": "sync match", "refId": "A" }],
+      "title": "Sync match rate",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "id": 18,
+      "title": "Activities",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Sin temporal_activity_type (opt-in, no scrape 24x7). Si está vacío: no hay activities en la ventana.",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 33 },
+      "id": 19,
+      "targets": [
+        { "expr": "sum by (temporal_workflow_type) (temporal_cloud_v1_activity_success_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "ok {{temporal_workflow_type}}", "refId": "A" },
+        { "expr": "sum by (temporal_workflow_type) (temporal_cloud_v1_activity_fail_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "fail {{temporal_workflow_type}}", "refId": "B" },
+        { "expr": "sum by (temporal_workflow_type) (temporal_cloud_v1_activity_timeout_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "timeout {{temporal_workflow_type}}", "refId": "C" }
+      ],
+      "title": "Activities success / fail / timeout",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 41 },
+      "id": 20,
+      "title": "Schedules",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 42 },
+      "id": 21,
+      "targets": [
+        { "expr": "sum(temporal_cloud_v1_schedule_action_success_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "success", "refId": "A" },
+        { "expr": "sum(temporal_cloud_v1_schedule_buffer_overruns_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "buffer overrun", "refId": "B" },
+        { "expr": "sum(temporal_cloud_v1_schedule_missed_catchup_window_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "missed catchup", "refId": "C" },
+        { "expr": "sum(temporal_cloud_v1_schedule_overlap_skipped_count{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "overlap skipped", "refId": "D" }
+      ],
+      "title": "Schedules (success / overrun / catchup / overlap)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 50 },
+      "id": 22,
+      "title": "Usage y service latency",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "ops" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 51 },
+      "id": 23,
+      "targets": [
+        { "expr": "sum by (temporal_namespace) (temporal_cloud_v1_total_action_count{temporal_namespace=~\"$temporal_namespace\", is_background=\"false\"})", "legendFormat": "actions {{temporal_namespace}}", "refId": "A" },
+        { "expr": "sum by (temporal_namespace) (temporal_cloud_v1_action_limit{temporal_namespace=~\"$temporal_namespace\"})", "legendFormat": "limit {{temporal_namespace}}", "refId": "B" }
+      ],
+      "title": "Actions vs action_limit",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "service_latency_p95 por operation. No re-agregar entre namespaces. No paging sin piso de QPS.",
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "spanNulls": true }, "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 51 },
+      "id": 24,
+      "targets": [{ "expr": "max by (operation) (temporal_cloud_v1_service_latency_p95{temporal_namespace=~\"$temporal_namespace\", operation=~\"StartWorkflowExecution|SignalWorkflowExecution|SignalWithStartWorkflowExecution\"})", "legendFormat": "p95 {{operation}}", "refId": "A" }],
+      "title": "Service latency p95 Start/Signal",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "tags": ["temporal-cloud", "overview", "aplicacion"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "allValue": "[a-z0-9]{4}",
+        "current": { "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values(temporal_cloud_v1_service_request_count, temporal_namespace)",
+        "includeAll": true,
+        "label": "Aplicación",
+        "multi": false,
+        "name": "aplicacion",
+        "query": "label_values(temporal_cloud_v1_service_request_count, temporal_namespace)",
+        "refresh": 2,
+        "regex": "/^([a-z0-9]{4})-(?:dev|desa|cert|prod)$/",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": "${aplicacion}-(dev|desa|cert|prod)",
+        "current": { "text": "All", "value": "$__all" },
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "definition": "label_values(temporal_cloud_v1_service_request_count{temporal_namespace=~\"${aplicacion}-(dev|desa|cert|prod)\"}, temporal_namespace)",
+        "includeAll": true,
+        "label": "Namespace",
+        "multi": true,
+        "name": "temporal_namespace",
+        "query": "label_values(temporal_cloud_v1_service_request_count{temporal_namespace=~\"${aplicacion}-(dev|desa|cert|prod)\"}, temporal_namespace)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "Temporal Cloud Overview — aplicación",
+  "uid": "temporal-cloud-overview-app",
+  "version": 1
+}

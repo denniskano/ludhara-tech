@@ -56,6 +56,7 @@
           "refId": "A"
         }
       ],
+      "description": "service_error_count / service_request_count en Start, Signal y SignalWithStart. Es el RPC hacia Cloud, no el fail del workflow en el core. Amarillo 0.5%, rojo 1%. Si Requests/s = 0 este % no sirve (no hay tráfico). P1 a 10 min con piso 0.1 req/s. v1 ya es rate/s: no usar rate().",
       "title": "Error rate Start/Signal",
       "type": "stat"
     },
@@ -85,6 +86,7 @@
           "refId": "A"
         }
       ],
+      "description": "resource_exhausted_error_count: Cloud rechazó un burst que un recurso no absorbió. Los SDK reintentan. No es el throttle por action_limit (eso es el panel de al lado). El % medio de cuota puede seguir verde. Rojo si > 0. P1 a 2 min.",
       "title": "Resource exhausted / s",
       "type": "stat"
     },
@@ -113,6 +115,7 @@
           "refId": "A"
         }
       ],
+      "description": "Suma de total_action_throttled_count + operations_throttled_count + service_request_throttled_count. Cloud frenó por cuota de Actions, operations o RPS del frontend. Distinto de exhausted (burst de un recurso). Rojo si > 0. P1 a 2 min.",
       "title": "Throttle (actions+ops+RPS) / s",
       "type": "stat"
     },
@@ -141,6 +144,7 @@
           "refId": "A"
         }
       ],
+      "description": "no_poller_tasks_count: matching de Cloud no encontró poller en la task queue. Worker caído, TQ mal nombrada, deploy, HPA a 0. Cloud puede estar sano (D01 verde). No diagnostica el pod. Rojo si > 0. P1 a 3 min.",
       "title": "No poller tasks / s",
       "type": "stat"
     },
@@ -156,6 +160,7 @@
           "refId": "A"
         }
       ],
+      "description": "Misma ratio errors/requests de Start+Signal+SignalWithStart, sum by temporal_namespace. Con All seleccionado, un namespace malo no se diluye en el stat de arriba. No re-agregar entre namespaces para percentiles (aquí no hay p95).",
       "title": "Error rate Start/Signal por namespace",
       "type": "timeseries"
     },
@@ -171,6 +176,7 @@
           "refId": "A"
         }
       ],
+      "description": "service_request_count de Start, Signal y SignalWithStart. Piso de volumen: sin tráfico el error rate 0% no prueba que Cloud acepte trabajo. La P1 de error rate exige > 0.1/s. Caída a 0 en horario hábil = StartSilence (P2), no paging solo por esto.",
       "title": "Requests Start/Signal / s (piso de volumen)",
       "type": "timeseries"
     },
@@ -193,6 +199,7 @@
           "refId": "A"
         }
       ],
+      "description": "approximate_backlog_count por namespace y task queue. Gauge aproximado: puede sobrecontar tasks inválidas y resetear a 0 en TQ idle. Útil como tendencia (¿crece 15 min?), no como SLO exacto. P2 de ejemplo: > 100 por 15 min.",
       "title": "Backlog aproximado (Cloud)",
       "type": "timeseries"
     },
@@ -208,6 +215,7 @@
           "refId": "A"
         }
       ],
+      "description": "no_poller_tasks_count desglosado por temporal_task_queue. Identifica qué cola no tiene worker (workflow vs activity). Señal de matching Cloud; la causa está en el worker/SDK (corte siguiente).",
       "title": "No poller por task queue",
       "type": "timeseries"
     },
@@ -223,6 +231,7 @@
           "refId": "A"
         }
       ],
+      "description": "namespace_open_workflows: cuántos están abiertos ahora. Gauge. No es disponibilidad ni éxito. Subida sostenida = no cierran (bucle, CAN, worker que no avanza). P2 si > 150% vs hace 24 h. No paginar por el valor absoluto.",
       "title": "Open workflows (no es SLO)",
       "type": "timeseries"
     },
@@ -243,6 +252,7 @@
           "refId": "B"
         }
       ],
+      "description": "workflow_failed_count y workflow_timeout_count por temporal_workflow_type. Failed incluye fallos de negocio (ApplicationFailure, compensación). Timeout = se venció start-to-close. El PO elige qué type es P2. Cancel/terminate no están aquí.",
       "title": "Failed + timeout por workflow type",
       "type": "timeseries"
     },
@@ -263,6 +273,7 @@
           "refId": "B"
         }
       ],
+      "description": "total_action_count{is_background=false} vs action_limit. Solo las no-background topan la cuota APS. Distinto de billable_action_count (factura, D05). % medio verde + throttle > 0 = burst de 1 min. > 80% sostenido = P3.",
       "title": "Actions vs action_limit",
       "type": "timeseries"
     }
@@ -305,5 +316,5 @@
   "timezone": "browser",
   "title": "Temporal Cloud SLO",
   "uid": "temporal-cloud-slo",
-  "version": 2
+  "version": 5
 }

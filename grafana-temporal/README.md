@@ -19,9 +19,11 @@ Referencia: [OpenMetrics](https://docs.temporal.io/cloud/metrics/openmetrics), [
 | Archivo | Contenido |
 |---|---|
 | [d01-siguiente.md](./d01-siguiente.md) | Overview: validar v1 y namespaces |
-| [d02-importar.md](./d02-importar.md) | Cómo importar D02 y crear alertas P1 |
+| [dashboards/d01-aplicacion.json](./dashboards/d01-aplicacion.json) | Template: overview D01 recortado por aplicación |
+| [dashboards-por-aplicacion.md](./dashboards-por-aplicacion.md) | Cómo instanciar el template por código de 4 caracteres |
+| [d02-importar.md](./d02-importar.md) | Importar D02, alertas P1 y detalle de métricas |
 | [dashboards/d02-slo.json](./dashboards/d02-slo.json) | Grafana: SLO (cualquier namespace) |
-| [d05-importar.md](./d05-importar.md) | Cómo importar D05 y alertas P3 de gasto |
+| [d05-importar.md](./d05-importar.md) | Importar D05, alertas P3 y detalle de métricas |
 | [dashboards/d05-finops.json](./dashboards/d05-finops.json) | Grafana: FinOps Actions / TRU |
 | [inventario-dashboards.md](./inventario-dashboards.md) | Qué cubre cada JSON publicado (solo Cloud) |
 | [paquete-bcp-apoq-nrem.md](./paquete-bcp-apoq-nrem.md) | Cinco dashboards Cloud, SLO, scrape, alertas |
