@@ -18,6 +18,8 @@ Referencia: [OpenMetrics](https://docs.temporal.io/cloud/metrics/openmetrics), [
 
 | Archivo | Contenido |
 |---|---|
+| [arquitectura-metricas.drawio](./arquitectura-metricas.drawio) | Diagrama Draw.io: v0 + certificado vs v1 + API key |
+| [arquitectura-metricas.md](./arquitectura-metricas.md) | Misma historia en texto / Mermaid |
 | [d01-siguiente.md](./d01-siguiente.md) | Overview: validar v1 y namespaces |
 | [dashboards/d01-aplicacion.json](./dashboards/d01-aplicacion.json) | Template: overview D01 recortado por aplicación |
 | [dashboards-por-aplicacion.md](./dashboards-por-aplicacion.md) | Cómo instanciar el template por código de 4 caracteres |
