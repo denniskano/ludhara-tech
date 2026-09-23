@@ -62,8 +62,8 @@
     <h1>Monitoreo Temporal Cloud — guía de implementación</h1>
     <p class="meta">Carpeta <code>grafana-temporal/</code> · solo métricas <code>temporal_cloud_v1_*</code> (OpenMetrics) · PromQL v0 se apaga el <strong>5 oct 2026</strong>.</p>
     <div class="lead">
-      <p><strong>Implementado:</strong> D01 (overview mixin, ya en Grafana) · D01-app (overview por código de aplicación) · D02 (guardia SLO, JSON genérico) · D03 (FinOps Actions/TRU, JSON genérico) · catálogo de alertas P1–P3 en YAML.</p>
-      <p><strong>No va:</strong> tablero por type nominado ni D06–D11 (misma señal que D01 / D01-app / D02 / D03). El recorte es por aplicación. <strong>Fuera de Cloud:</strong> scrape SDK / workers / Private Link. D02 y D03 recortan guardia y factura, no son un segundo overview.</p>
+      <p><strong>Implementado:</strong> D01 (overview mixin, ya en Grafana) · D01-app · D02 (guardia SLO) · D03 (FinOps) · alertas P1–P3 · SDK Java+OTel (plataforma y por app). Copia del mixin: <code>dashboards/d01-overview.json</code>.</p>
+      <p><strong>No va:</strong> tablero por type nominado ni D06–D11. El recorte es por aplicación. SDK usa Prometheus de AKS, no el de D01. D02 y D03 recortan guardia y factura.</p>
       <p>Los dashboards D02/D03 listan <em>cualquier</em> namespace del scrape. Algunas reglas del YAML aún traen ejemplos <code>apoq-prod|nrem-prod</code>: hay que sustituirlos por los namespaces de guardia reales.</p>
     </div>
 

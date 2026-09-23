@@ -8,11 +8,23 @@ Readme: https://github.com/tsurdilo/temporal-server-operations/blob/main/observa
 
 No usar el de Micrometer: los histograms no se llaman igual.
 
-## Importar
+## Importar (plataforma)
 
 1. Prometheus que scrapea el `/metrics` OTel de los pods (AKS). **No** el datasource de D01.
 2. Grafana → Import → `dashboards/temporal-sdk-java-otel.json`.
-3. Namespace / task queue de la app.
+3. Namespace lista todos los del scrape.
+
+## Por aplicación
+
+JSON: [dashboards/temporal-sdk-java-otel-aplicacion.json](./dashboards/temporal-sdk-java-otel-aplicacion.json)
+
+1. Mismo Prometheus de AKS (no D01).
+2. **Código de aplicación:** `apoq`. Filtra `namespace=~apoq*`. No cambia el título.
+3. **Name:** Grafana deja `Temporal Java SDK (OTel) — ${APP_CODE}`. Reemplazar a mano (`… — apoq`).
+4. **UID:** `temporal-sdk-java-otel-${APP_CODE}` → `temporal-sdk-java-otel-apoq`.
+5. Combo **Namespace** solo sus prefijos. All = todos los de ese código.
+
+`temporal_num_pollers` (Active Pollers) requiere Java SDK ≥ 1.30.0. Cache vacío al inicio: esperar WFT o Explore `{__name__=~"temporal_sticky_cache.*"}`.
 
 D01/D02: Cloud (`no_poller`). Este tablero: pollers, slots, cache sticky, schedule-to-start, workflow/activity task del proceso Java.
 

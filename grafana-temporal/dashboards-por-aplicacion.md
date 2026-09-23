@@ -2,7 +2,7 @@
 
 Documento para el equipo de APOQ, NREM, CPCA, etc. PEVE ya tiene la integración Temporal Cloud → Grafana (OpenMetrics + API key de plataforma). **Ustedes no crean API key, no piden certificado y no montan un scrape.**
 
-Archivo: [dashboards/d01-aplicacion.json](./dashboards/d01-aplicacion.json)
+Archivos: [dashboards/d01-aplicacion.json](./dashboards/d01-aplicacion.json) (Cloud) · [dashboards/temporal-sdk-java-otel-aplicacion.json](./dashboards/temporal-sdk-java-otel-aplicacion.json) (worker Java+OTel)
 
 ## Qué es esto
 
@@ -31,6 +31,8 @@ Si D01 de plataforma ya pinta `v1_*`, usen ese Prometheus. Si D01 está vacío: 
 6. Import. La fila de arriba dice `Resumen — apoq`. Solo combo **Namespace**.
 
 NREM: Name `Temporal Cloud Overview — nrem`. APTI y TUPI: dos imports.
+
+Worker Java+OTel (Prometheus de AKS, no D01): importar `temporal-sdk-java-otel-aplicacion.json` con el mismo código. Name `Temporal Java SDK (OTel) — apoq`. UID `temporal-sdk-java-otel-apoq`. Detalle: [dashboards-sdk.md](./dashboards-sdk.md).
 
 ## Qué ven después
 
@@ -76,7 +78,8 @@ Explore al mismo Prometheus puede pedir otro namespace: este dashboard no es un 
 | Quién | Documento |
 |---|---|
 | Equipo de aplicación (este) | `dashboards-por-aplicacion.md` |
-| JSON | `dashboards/d01-aplicacion.json` |
+| JSON Cloud | `dashboards/d01-aplicacion.json` |
+| JSON worker | `dashboards/temporal-sdk-java-otel-aplicacion.json` · [dashboards-sdk.md](./dashboards-sdk.md) |
 | PEVE: D01, scrape, v0 | `d01-siguiente.md`, `arquitectura-metricas.md` |
 | PEVE: guardia / FinOps | `d02-importar.md`, `d03-importar.md` |
 | Pack completo | `monitoreo-bcp.html` |

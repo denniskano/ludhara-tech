@@ -1,6 +1,6 @@
 # Inventario de dashboards Temporal Cloud
 
-Fuera de este corte: métricas SDK (`temporal_*`), workers en AKS y Private Link.
+SDK Java+OTel: [dashboards-sdk.md](./dashboards-sdk.md). Private Link / scrape AKS: operación del worker, no este inventario Cloud.
 
 ## 1. Grafana mixin — Temporal overview (OpenMetrics)
 
@@ -29,9 +29,9 @@ El overview es **exploración del account** (variables: datasource, account, nam
 Lo que hay que construir encima, todavía con métricas Cloud:
 
 - Salud del scrape (`up` del job contra `metrics.temporal.io`).
-- SLO / error budget por `apoq-prod` y `nrem-prod`.
-- Vista fija por aplicación (workflow types de negocio).
-- Alertas con dueño.
+- SLO: [d02-slo.json](./dashboards/d02-slo.json). FinOps: [d03-finops.json](./dashboards/d03-finops.json).
+- Vista por aplicación: [d01-aplicacion.json](./dashboards/d01-aplicacion.json) (código al importar).
+- Alertas: [alertas-catalogo.yaml](./alertas-catalogo.yaml).
 
 ## 2. temporalio — Temporal Cloud External Metrics
 
@@ -70,4 +70,4 @@ El mixin OpenMetrics ya cubre `temporal_cloud_v1_billable_action_count` y TRU. C
 | ¿SLO / error budget? | No | No | No |
 | ¿Alertas? | No | No | Costs YAML (v0) |
 
-Importar overview y el JSON OpenMetrics de Temporal responde las mismas preguntas de exploración. El hueco de este corte se cierra con SLO, tableros por namespace productivo y alertas v1, no con un segundo overview.
+Importar overview y el JSON OpenMetrics de Temporal responde las mismas preguntas de exploración. No duplicar. Encima: D02, D03, D01-app y alertas v1.

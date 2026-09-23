@@ -26,12 +26,13 @@ Referencia: [OpenMetrics](https://docs.temporal.io/cloud/metrics/openmetrics), [
 | [dashboards-por-aplicacion.md](./dashboards-por-aplicacion.md) | Guía para equipos: importar, sin API key ni combo de otras apps |
 | [dashboards-sdk.md](./dashboards-sdk.md) | Worker Java + OTel: origen y cómo importar |
 | [dashboards/temporal-sdk-java-otel.json](./dashboards/temporal-sdk-java-otel.json) | Copia v1.4.0 de `tsurdilo/temporal-server-operations` (`observability/dashboards/sdk/`) |
+| [dashboards/temporal-sdk-java-otel-aplicacion.json](./dashboards/temporal-sdk-java-otel-aplicacion.json) | Mismo SDK, recortado por código de aplicación |
 | [d02-importar.md](./d02-importar.md) | Importar D02, alertas P1 y detalle de métricas |
 | [dashboards/d02-slo.json](./dashboards/d02-slo.json) | Grafana: SLO (cualquier namespace) |
 | [d03-importar.md](./d03-importar.md) | Importar D03, alertas P3 y detalle de métricas |
 | [dashboards/d03-finops.json](./dashboards/d03-finops.json) | Grafana: FinOps Actions / TRU |
 | [inventario-dashboards.md](./inventario-dashboards.md) | Qué cubre cada JSON publicado (solo Cloud) |
-| [paquete-bcp-apoq-nrem.md](./paquete-bcp-apoq-nrem.md) | Cinco dashboards Cloud, SLO, scrape, alertas |
+| [paquete-bcp-apoq-nrem.md](./paquete-bcp-apoq-nrem.md) | Pack Cloud (D01 / D01-app / D02 / D03), scrape, SLI, alertas |
 | [monitoreo-bcp.html](./monitoreo-bcp.html) | Guía completa: D01/D02/D03, importar, alertas, runbook (abrir en el navegador) |
 | [alertas-catalogo.yaml](./alertas-catalogo.yaml) | Alertas P1–P3 sobre `temporal_cloud_v1_*` |
 
@@ -40,4 +41,4 @@ Referencia: [OpenMetrics](https://docs.temporal.io/cloud/metrics/openmetrics), [
 1. Un scrape a `https://metrics.temporal.io/v1/metrics` (API key, rol Metrics Read-Only). **Hecho** si el overview pinta `temporal_cloud_v1_*`.
 2. Un solo overview OpenMetrics (el mixin). **Hecho.** No importar también `temporal_cloud_openmetrics.json`.
 3. Retirar `temporal_cloud.json` (v0) si existe, antes del 5 oct 2026. No copiar queries `rate()` de v0.
-4. Encima de D01: **D02 + alertas P1** y/o **D03 FinOps**. Cada equipo importa [D01-app](./dashboards/d01-aplicacion.json) con su código. El recorte es por aplicación, no por type nominado.
+4. Encima de D01: **D02 + alertas P1** y/o **D03 FinOps**. Cada equipo importa [D01-app](./dashboards/d01-aplicacion.json) y, si hay scrape AKS, [SDK-app](./dashboards/temporal-sdk-java-otel-aplicacion.json) con su código.
