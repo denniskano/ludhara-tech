@@ -17,7 +17,7 @@ D01 (el mixin que ya está en Grafana) es del account entero: lo usa PEVE. D02 y
 | Crear API key en Temporal Cloud | La key (rol Metrics Read-Only) es de PEVE. Un scrape, un Prometheus. |
 | Pedir certificado mTLS de métricas | Eso era el PromQL v0. Ya no aplica. |
 | Configurar cada workflow a mano | Los paneles agrupan por `temporal_workflow_type`. Si Cloud emite la serie, aparece. |
-| Duplicar el JSON en git por ambiente | Un dashboard. El dropdown Namespace elige `dev` / `desa` / `cert` / `prod`. |
+| Duplicar el JSON en git por ambiente | Un dashboard. Namespace lista **todos** los que empiezan con su código. |
 | Importar D02 o D05 “para su app” | Esos son de guardia y FinOps de account. |
 
 Si D01 (overview de plataforma) ya pinta `temporal_cloud_v1_*`, el datasource sirve. Si D01 está vacío, no es un tema del equipo: avisar a PEVE.
@@ -37,25 +37,24 @@ Listo. No hay un paso 6 de “registrar workflows”.
 
 ## Varios namespaces y varios workflows
 
-La nomenclatura es `{código4}-{dev|desa|cert|prod}`.
+El filtro es solo el **prefijo de 4 caracteres**. No se exige `dev`, `cert` ni `prod`. Entra todo namespace del scrape que empiece con ese código: `apoq-prod`, `apoq-qa`, `apoq-prod-b`, `apoqalgo`.
 
-Ejemplo, un equipo con tres ambientes y muchos types:
+Ejemplo:
 
-| Namespace | Qué es |
+| Namespace en Cloud | ¿Lo ve Aplicación = `apoq`? |
 |---|---|
-| `apoq-desa` | Desarrollo |
-| `apoq-cert` | Certificación |
-| `apoq-prod` | Producción |
+| `apoq-desa`, `apoq-cert`, `apoq-prod` | Sí |
+| `apoq-qa`, `apoq-prod-dr` | Sí |
+| `nrem-prod` | No |
 
-- **Aplicación = `apoq`** → el dropdown Namespace lista solo esos tres (o los que existan en el scrape).
-- **Namespace = All** → los paneles suman desa+cert+prod de *esa* app, no de NREM.
-- **Namespace = `apoq-prod`** → solo producción (lo habitual en ops).
-- Los **workflow types** salen solos en “Completions por workflow type” y en activities. Débito, crédito, compensación, un type de prueba: cada uno es una serie. No se configuran en el dashboard.
-- Varias **task queues** igual: backlog y no poller se parten por `temporal_task_queue`.
+- **Aplicación = `apoq`** → Namespace lista todos los `apoq*`.
+- **Namespace = All** → suma esos, no NREM.
+- **Namespace = uno solo** → un ambiente o variante.
+- Los **workflow types** y **task queues** salen solos. No se configuran.
 
-Si el equipo tiene dos códigos (`apti` y `tupi`), son **dos copias** del template (o dejan Aplicación visible y cambian el código). Un dashboard = un código de 4.
+Dos códigos (`apti` y `tupi`) = dos copias del template. Un dashboard = un prefijo de 4.
 
-Si un namespace no aparece: el nombre no cumple `{4}-{dev|desa|cert|prod}` (`APOQ-PROD`, `apoq-qa`, `apoq-prod-b`). En Explore, mismo Prometheus:
+Si un namespace no aparece: no empieza por esos 4 caracteres (mayúsculas, otro código) o no está en el scrape. En Explore, mismo Prometheus:
 
 ```
 label_values(temporal_cloud_v1_service_request_count, temporal_namespace)
@@ -66,7 +65,7 @@ Si el nombre está en Explore y no en el dropdown, avisar a PEVE para ajustar la
 ## Cómo lo usan el día a día
 
 1. Abrir *su* overview (la copia, no el template ni D01).
-2. Elegir el ambiente en Namespace. En incidente: `*-prod`.
+2. Elegir en Namespace el o los namespaces del incidente (All = todos los de su código).
 3. Lectura: stats de arriba (open, fail+timeout, error rate Start/Signal, no poller, throttle, Actions). Luego el type o la TQ que se movió.
 4. El icono **i** de cada panel dice qué métrica es.
 
@@ -84,7 +83,7 @@ Si el equipo no debe ver series de otra app: folder Grafana del equipo + Team Vi
 - [ ] Import con el Prometheus de D01. Sin API key nueva.
 - [ ] *Save as* con el nombre de la app.
 - [ ] `aplicacion` = código de 4, All off, variable oculta.
-- [ ] Namespace lista `dev`/`desa`/`cert`/`prod` de ese código.
+- [ ] Namespace lista todos los que empiezan con ese código (sin filtrar ambiente).
 - [ ] En prod hay open / requests / actions (o se entiende por qué está vacío).
 - [ ] Los workflow types que el equipo conoce aparecen en completions.
 

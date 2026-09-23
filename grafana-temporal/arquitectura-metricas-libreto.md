@@ -42,7 +42,7 @@ Sobre ese datasource:
 
 - **D01** es el mixin, overview del account. Ya está instalado.
 - **D02** es guardia SLO. **D05** es FinOps. Mismo account, no recortados por app.
-- **D01-app** es el template para que cada aplicación vea solo `{código}-(dev|desa|cert|prod)`.
+- **D01-app** es el template para que cada aplicación vea todos los namespaces que empiezan con su código de 4 caracteres.
 - Las alertas P1 a P3 del YAML van contra `v1_*`, sin `rate()`.
 
 ---

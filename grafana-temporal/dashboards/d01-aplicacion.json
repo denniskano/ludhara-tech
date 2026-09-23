@@ -14,7 +14,7 @@
     { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" }
   ],
   "annotations": { "list": [] },
-  "description": "Template de overview Temporal Cloud (mismas preguntas que D01) recortado a una aplicación: {código4}-(dev|desa|cert|prod). No sustituye D01 (plataforma), D02 (guardia) ni D05 (FinOps). Cada equipo: Save as, fijar Aplicación, ocultar el dropdown.",
+  "description": "Template de overview Temporal Cloud (mismas preguntas que D01) recortado por prefijo de código de aplicación (4 caracteres). Carga todos los namespaces que empiezan con ese código. No filtra por ambiente. No sustituye D01, D02 ni D05. Save as, fijar Aplicación, ocultar el dropdown.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -290,20 +290,20 @@
         "name": "aplicacion",
         "query": "label_values(temporal_cloud_v1_service_request_count, temporal_namespace)",
         "refresh": 2,
-        "regex": "/^([a-z0-9]{4})-(?:dev|desa|cert|prod)$/",
+        "regex": "/^([a-z0-9]{4}).*/",
         "sort": 1,
         "type": "query"
       },
       {
-        "allValue": "${aplicacion}-(dev|desa|cert|prod)",
+        "allValue": "${aplicacion}.*",
         "current": { "text": "All", "value": "$__all" },
         "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "definition": "label_values(temporal_cloud_v1_service_request_count{temporal_namespace=~\"${aplicacion}-(dev|desa|cert|prod)\"}, temporal_namespace)",
+        "definition": "label_values(temporal_cloud_v1_service_request_count{temporal_namespace=~\"${aplicacion}.*\"}, temporal_namespace)",
         "includeAll": true,
         "label": "Namespace",
         "multi": true,
         "name": "temporal_namespace",
-        "query": "label_values(temporal_cloud_v1_service_request_count{temporal_namespace=~\"${aplicacion}-(dev|desa|cert|prod)\"}, temporal_namespace)",
+        "query": "label_values(temporal_cloud_v1_service_request_count{temporal_namespace=~\"${aplicacion}.*\"}, temporal_namespace)",
         "refresh": 2,
         "regex": "",
         "sort": 1,
@@ -315,5 +315,5 @@
   "timezone": "browser",
   "title": "Temporal Cloud Overview — aplicación",
   "uid": "temporal-cloud-overview-app",
-  "version": 1
+  "version": 2
 }
