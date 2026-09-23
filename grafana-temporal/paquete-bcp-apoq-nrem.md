@@ -138,6 +138,6 @@ Ver [alertas-catalogo.yaml](./alertas-catalogo.yaml). Síntoma + namespace + (si
 2. Importar D01. **Hecho.** Validar: [d01-siguiente.md](./d01-siguiente.md).
 3. Alertas P1 y D02 SLO **o** D03 FinOps.
 4. Cada app importa D01-app con su código.
-5. Worker Java+OTel: [temporal-sdk-java-otel.json](./dashboards/temporal-sdk-java-otel.json) (plataforma) o […-aplicacion.json](./dashboards/temporal-sdk-java-otel-aplicacion.json). Prometheus de AKS, no D01. Guía: [dashboards-sdk.md](./dashboards-sdk.md).
+5. Worker Java+OTel: [temporal-sdk-java-otel.json](./dashboards/temporal-sdk-java-otel.json) (plataforma) o […-aplicacion.json](./dashboards/temporal-sdk-java-otel-aplicacion.json). Grafana Cloud del entorno; Prometheus de workers (1+ AKS), no D01. Guía: [dashboards-sdk.md](./dashboards-sdk.md).
 
 Private Link y scrape de pods: operación AKS, no Cloud.

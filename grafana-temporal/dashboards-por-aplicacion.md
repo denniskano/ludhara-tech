@@ -32,7 +32,7 @@ Si D01 de plataforma ya pinta `v1_*`, usen ese Prometheus. Si D01 está vacío: 
 
 NREM: Name `Temporal Cloud Overview — nrem`. APTI y TUPI: dos imports.
 
-Worker Java+OTel (Prometheus de AKS, no D01): importar `temporal-sdk-java-otel-aplicacion.json` con el mismo código. Name `Temporal Java SDK (OTel) — apoq`. UID `temporal-sdk-java-otel-apoq`. Detalle: [dashboards-sdk.md](./dashboards-sdk.md).
+Worker Java+OTel: hay 3 Grafana Cloud (DESA / CERT / PROD). Importar `temporal-sdk-java-otel-aplicacion.json` en el stack **del entorno donde están los workers** (no PEVE / D01), mismo código. El tablero es **por aplicación** en ese entorno: todos sus AKS y namespaces `apoq*`. Name `Temporal Java SDK (OTel) — apoq`. UID `temporal-sdk-java-otel-apoq`. Detalle: [dashboards-sdk.md](./dashboards-sdk.md).
 
 ## Qué ven después
 

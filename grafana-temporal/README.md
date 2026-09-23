@@ -19,7 +19,7 @@ Referencia: [OpenMetrics](https://docs.temporal.io/cloud/metrics/openmetrics), [
 | Archivo | Contenido |
 |---|---|
 | [arquitectura-metricas.drawio](./arquitectura-metricas.drawio) | Diagrama Draw.io: v0 + certificado vs v1 + API key |
-| [monitoreo-por-aplicacion.drawio](./monitoreo-por-aplicacion.drawio) | Por app: D01-app (Cloud, todos los entornos) vs SDK-app (Grafana por entorno AKS) |
+| [monitoreo-por-aplicacion.drawio](./monitoreo-por-aplicacion.drawio) | Por app: D01-app (Grafana Cloud PEVE, todos los ns) vs SDK-app (Grafana Cloud por entorno; 1+ AKS) |
 | [arquitectura-metricas-libreto.md](./arquitectura-metricas-libreto.md) | Libreto para explicar el diagrama |
 | [arquitectura-metricas.md](./arquitectura-metricas.md) | Misma historia en texto / Mermaid |
 | [d01-siguiente.md](./d01-siguiente.md) | Overview: validar v1 y namespaces |
