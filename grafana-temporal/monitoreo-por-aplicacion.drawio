@@ -1,134 +1,83 @@
 <mxfile host="app.diagrams.net" agent="Cursor" version="22.1.11">
   <diagram id="app-monitoring" name="Monitoreo por aplicación">
-    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1020" math="0" shadow="0">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="780" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
 
-        <mxCell id="title" value="Cómo cada aplicación ve sus métricas Temporal" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="40" y="16" width="1100" height="36" as="geometry"/>
-        </mxCell>
-        <mxCell id="sub" value="Cloud: un dashboard por app, todos los entornos. Worker: un Grafana por entorno, solo ese AKS. Cada app vive en su propio espacio Azure." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="40" y="50" width="1200" height="24" as="geometry"/>
-        </mxCell>
-
-        <mxCell id="leg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#AAAAAA;" vertex="1" parent="1">
-          <mxGeometry x="1480" y="16" width="480" height="58" as="geometry"/>
+        <mxCell id="title" value="Monitoreo por aplicación" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=18;fontColor=#1a1a1a;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="40" y="16" width="400" height="28" as="geometry"/>
         </mxCell>
         <mxCell id="leg-g" value="" style="endArrow=block;endFill=1;strokeColor=#1F4E3D;strokeWidth=2;html=1;" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry"><mxPoint x="1500" y="36" as="sourcePoint"/><mxPoint x="1560" y="36" as="targetPoint"/></mxGeometry>
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1280" y="28" as="sourcePoint"/><mxPoint x="1336" y="28" as="targetPoint"/></mxGeometry>
         </mxCell>
-        <mxCell id="leg-gt" value="OpenMetrics Cloud  temporal_cloud_v1_*" style="text;html=1;align=left;fontSize=10;fontColor=#1F4E3D;" vertex="1" parent="1">
-          <mxGeometry x="1566" y="24" width="380" height="20" as="geometry"/>
+        <mxCell id="leg-gt" value="Cloud" style="text;html=1;align=left;fontSize=11;fontColor=#1F4E3D;" vertex="1" parent="1">
+          <mxGeometry x="1344" y="16" width="50" height="20" as="geometry"/>
         </mxCell>
         <mxCell id="leg-o" value="" style="endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;html=1;" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry"><mxPoint x="1500" y="58" as="sourcePoint"/><mxPoint x="1560" y="58" as="targetPoint"/></mxGeometry>
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1410" y="28" as="sourcePoint"/><mxPoint x="1466" y="28" as="targetPoint"/></mxGeometry>
         </mxCell>
-        <mxCell id="leg-ot" value="SDK Java+OTel  temporal_*  (scrape AKS)" style="text;html=1;align=left;fontSize=10;fontColor=#8A5A12;" vertex="1" parent="1">
-          <mxGeometry x="1566" y="48" width="380" height="20" as="geometry"/>
-        </mxCell>
-
-        <mxCell id="cloud" value="TEMPORAL CLOUD  ·  1 account BCP  ·  1 Grafana de plataforma (PEVE)" style="swimlane;horizontal=1;startSize=40;fillColor=#EEF2EF;strokeColor=#1F4E3D;fontColor=#1F4E3D;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="40" y="88" width="1920" height="300" as="geometry"/>
+        <mxCell id="leg-ot" value="SDK" style="text;html=1;align=left;fontSize=11;fontColor=#8A5A12;" vertex="1" parent="1">
+          <mxGeometry x="1474" y="16" width="50" height="20" as="geometry"/>
         </mxCell>
 
-        <mxCell id="ico-t" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/temporal/000000;" vertex="1" parent="cloud">
-          <mxGeometry x="28" y="58" width="36" height="36" as="geometry"/>
-        </mxCell>
-        <mxCell id="ns-box" value="Namespaces del account&#xa;&lt;b&gt;apoq-desa · apoq-cert · apoq-prod&lt;/b&gt;&#xa;&lt;b&gt;nrem-desa · nrem-cert · nrem-prod&lt;/b&gt;&#xa;+ otras apps (cpca, apti…)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=11;align=left;spacingLeft=10;fontFamily=Helvetica;" vertex="1" parent="cloud">
-          <mxGeometry x="76" y="52" width="250" height="100" as="geometry"/>
+        <mxCell id="cloud" value="Temporal Cloud" style="swimlane;horizontal=1;startSize=36;fillColor=#EEF2EF;strokeColor=#1F4E3D;fontColor=#1F4E3D;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="40" y="56" width="1520" height="220" as="geometry"/>
         </mxCell>
 
-        <mxCell id="ico-om" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/prometheus/E6522C;" vertex="1" parent="cloud">
-          <mxGeometry x="380" y="58" width="32" height="32" as="geometry"/>
+        <mxCell id="ns-box" value="Namespaces" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/temporal/000000;" vertex="1" parent="cloud">
+          <mxGeometry x="140" y="70" width="48" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="om" value="OpenMetrics&#xa;metrics.temporal.io/v1&#xa;API key PEVE (Bearer)&#xa;scrape 60 s" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="cloud">
-          <mxGeometry x="360" y="96" width="180" height="78" as="geometry"/>
+        <mxCell id="prom-c" value="Prometheus" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/prometheus/E6522C;" vertex="1" parent="cloud">
+          <mxGeometry x="460" y="70" width="48" height="48" as="geometry"/>
         </mxCell>
-
-        <mxCell id="ico-promc" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/prometheus/E6522C;" vertex="1" parent="cloud">
-          <mxGeometry x="594" y="58" width="32" height="32" as="geometry"/>
+        <mxCell id="graf-plat" value="Grafana" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/grafana/F46800;" vertex="1" parent="cloud">
+          <mxGeometry x="780" y="70" width="48" height="48" as="geometry"/>
         </mxCell>
-        <mxCell id="prom-c" value="Prometheus PEVE&#xa;temporal_cloud_v1_*&#xa;todos los ns del account" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="cloud">
-          <mxGeometry x="560" y="96" width="180" height="78" as="geometry"/>
+        <mxCell id="d01app-a" value="apoq*" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F6F4;strokeColor=#1F4E3D;fontStyle=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="cloud">
+          <mxGeometry x="1100" y="56" width="120" height="44" as="geometry"/>
         </mxCell>
-
-        <mxCell id="ico-gf" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/grafana/F46800;" vertex="1" parent="cloud">
-          <mxGeometry x="794" y="58" width="32" height="32" as="geometry"/>
-        </mxCell>
-        <mxCell id="graf-plat" value="Grafana plataforma&#xa;1 instancia · 1 datasource Cloud" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontStyle=1;fontSize=12;fontFamily=Helvetica;" vertex="1" parent="cloud">
-          <mxGeometry x="760" y="96" width="200" height="78" as="geometry"/>
+        <mxCell id="d01app-n" value="nrem*" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F6F4;strokeColor=#1F4E3D;fontStyle=1;fontSize=14;fontFamily=Helvetica;" vertex="1" parent="cloud">
+          <mxGeometry x="1100" y="124" width="120" height="44" as="geometry"/>
         </mxCell>
 
-        <mxCell id="d01app-a" value="d01-aplicacion.json&#xa;&lt;b&gt;Temporal Cloud Overview — apoq&lt;/b&gt;&#xa;Namespace All = apoq*&#xa;desa + cert + prod en UN tablero" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F6F4;strokeColor=#1F4E3D;fontSize=11;align=left;spacingLeft=8;fontFamily=Helvetica;" vertex="1" parent="cloud">
-          <mxGeometry x="1000" y="52" width="280" height="88" as="geometry"/>
-        </mxCell>
-        <mxCell id="d01app-n" value="d01-aplicacion.json&#xa;&lt;b&gt;Temporal Cloud Overview — nrem&lt;/b&gt;&#xa;Namespace All = nrem*&#xa;otro import, otro código" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F6F4;strokeColor=#1F4E3D;fontSize=11;align=left;spacingLeft=8;fontFamily=Helvetica;" vertex="1" parent="cloud">
-          <mxGeometry x="1000" y="150" width="280" height="80" as="geometry"/>
-        </mxCell>
-
-        <mxCell id="peve" value="PEVE (mismo Grafana)&#xa;D01 mixin account&#xa;D02 SLO · D03 FinOps" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#888888;fontSize=11;fontColor=#444444;fontFamily=Helvetica;" vertex="1" parent="cloud">
-          <mxGeometry x="1300" y="52" width="180" height="88" as="geometry"/>
-        </mxCell>
-        <mxCell id="call-c" value="Un import por app. Ve &lt;b&gt;todos&lt;/b&gt; sus entornos Cloud.&#xa;No crea API key. Prometheus = el de D01." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#888888;fontSize=11;align=left;spacingLeft=8;fontFamily=Helvetica;" vertex="1" parent="cloud">
-          <mxGeometry x="1500" y="52" width="390" height="88" as="geometry"/>
-        </mxCell>
-
-        <mxCell id="e-c1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F4E3D;strokeWidth=2;" edge="1" parent="cloud" source="ns-box" target="om">
+        <mxCell id="e-c1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F4E3D;strokeWidth=2;" edge="1" parent="cloud" source="ns-box" target="prom-c">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e-c2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F4E3D;strokeWidth=2;" edge="1" parent="cloud" source="om" target="prom-c">
+        <mxCell id="e-c2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F4E3D;strokeWidth=2;" edge="1" parent="cloud" source="prom-c" target="graf-plat">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e-c3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F4E3D;strokeWidth=2;" edge="1" parent="cloud" source="prom-c" target="graf-plat">
+        <mxCell id="e-c4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F4E3D;strokeWidth=2;" edge="1" parent="cloud" source="graf-plat" target="d01app-a">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e-c4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F4E3D;" edge="1" parent="cloud" source="graf-plat" target="d01app-a">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="e-c5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F4E3D;" edge="1" parent="cloud" source="graf-plat" target="d01app-n">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="e-c6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#888888;dashed=1;" edge="1" parent="cloud" source="graf-plat" target="peve">
+        <mxCell id="e-c5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F4E3D;strokeWidth=2;" edge="1" parent="cloud" source="graf-plat" target="d01app-n">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
 
-        <mxCell id="az-a" value="" style="swimlane;horizontal=1;startSize=44;fillColor=#F0F4F8;strokeColor=#3D5A73;fontColor=#3D5A73;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="40" y="410" width="1920" height="540" as="geometry"/>
-        </mxCell>
-        <mxCell id="ico-az-a" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/microsoftazure/0078D4;" vertex="1" parent="az-a">
-          <mxGeometry x="12" y="8" width="28" height="28" as="geometry"/>
-        </mxCell>
-        <mxCell id="az-a-lab" value="AZURE — espacio de la aplicación (subscription / RG propio) · ejemplo APOQ · workers Java + OTel en AKS" style="text;html=1;align=left;fontStyle=1;fontSize=13;fontColor=#3D5A73;fontFamily=Helvetica;" vertex="1" parent="az-a">
-          <mxGeometry x="48" y="8" width="1400" height="28" as="geometry"/>
+        <mxCell id="az-a" value="Azure  ·  APOQ" style="swimlane;horizontal=1;startSize=36;fillColor=#F0F4F8;strokeColor=#3D5A73;fontColor=#3D5A73;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="1520" height="440" as="geometry"/>
         </mxCell>
 
         <mxCell id="desa" value="DESA" style="swimlane;horizontal=1;startSize=28;fillColor=#FFFFFF;strokeColor=#AAAAAA;fontColor=#333333;fontStyle=1;fontSize=12;" vertex="1" parent="az-a">
-          <mxGeometry x="40" y="60" width="600" height="460" as="geometry"/>
+          <mxGeometry x="40" y="52" width="460" height="360" as="geometry"/>
         </mxCell>
-        <mxCell id="ico-aks-d" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/kubernetes/326CE5;" vertex="1" parent="desa">
-          <mxGeometry x="24" y="44" width="36" height="36" as="geometry"/>
+        <mxCell id="aks-d" value="AKS" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/kubernetes/326CE5;" vertex="1" parent="desa">
+          <mxGeometry x="80" y="56" width="40" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="ico-java-d" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/openjdk/437291;" vertex="1" parent="desa">
-          <mxGeometry x="68" y="48" width="28" height="28" as="geometry"/>
+          <mxGeometry x="132" y="62" width="28" height="28" as="geometry"/>
         </mxCell>
         <mxCell id="ico-otel-d" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/opentelemetry/425CC7;" vertex="1" parent="desa">
-          <mxGeometry x="104" y="48" width="28" height="28" as="geometry"/>
+          <mxGeometry x="168" y="62" width="28" height="28" as="geometry"/>
         </mxCell>
-        <mxCell id="aks-d" value="AKS desa&#xa;workers APOQ&#xa;/metrics OTel" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="desa">
-          <mxGeometry x="40" y="90" width="200" height="70" as="geometry"/>
+        <mxCell id="prom-d" value="Prometheus" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/prometheus/E6522C;" vertex="1" parent="desa">
+          <mxGeometry x="206" y="56" width="40" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="prom-d" value="Prometheus&#xa;del cluster desa" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="desa">
-          <mxGeometry x="320" y="90" width="200" height="70" as="geometry"/>
+        <mxCell id="gf-d" value="Grafana" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/grafana/F46800;" vertex="1" parent="desa">
+          <mxGeometry x="206" y="160" width="40" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="ico-gf-d" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/grafana/F46800;" vertex="1" parent="desa">
-          <mxGeometry x="284" y="186" width="32" height="32" as="geometry"/>
-        </mxCell>
-        <mxCell id="gf-d" value="Grafana DESA&#xa;(instancia del entorno)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontStyle=1;fontSize=12;fontFamily=Helvetica;" vertex="1" parent="desa">
-          <mxGeometry x="120" y="226" width="360" height="56" as="geometry"/>
-        </mxCell>
-        <mxCell id="sdk-d" value="temporal-sdk-java-otel-aplicacion.json&#xa;&lt;b&gt;Java SDK (OTel) — apoq&lt;/b&gt;&#xa;solo namespaces APOQ de &lt;b&gt;este&lt;/b&gt; AKS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F7F3EC;strokeColor=#8A5A12;fontSize=11;align=left;spacingLeft=8;fontFamily=Helvetica;" vertex="1" parent="desa">
-          <mxGeometry x="50" y="304" width="500" height="80" as="geometry"/>
+        <mxCell id="sdk-d" value="Java SDK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F3EC;strokeColor=#8A5A12;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="desa">
+          <mxGeometry x="166" y="250" width="120" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="e-d1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;" edge="1" parent="desa" source="aks-d" target="prom-d">
           <mxGeometry relative="1" as="geometry"/>
@@ -136,36 +85,30 @@
         <mxCell id="e-d2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;" edge="1" parent="desa" source="prom-d" target="gf-d">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e-d3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;dashed=1;" edge="1" parent="desa" source="gf-d" target="sdk-d">
+        <mxCell id="e-d3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;" edge="1" parent="desa" source="gf-d" target="sdk-d">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
 
         <mxCell id="cert" value="CERT" style="swimlane;horizontal=1;startSize=28;fillColor=#FFFFFF;strokeColor=#AAAAAA;fontColor=#333333;fontStyle=1;fontSize=12;" vertex="1" parent="az-a">
-          <mxGeometry x="660" y="60" width="600" height="460" as="geometry"/>
+          <mxGeometry x="530" y="52" width="460" height="360" as="geometry"/>
         </mxCell>
-        <mxCell id="ico-aks-c" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/kubernetes/326CE5;" vertex="1" parent="cert">
-          <mxGeometry x="24" y="44" width="36" height="36" as="geometry"/>
+        <mxCell id="aks-c" value="AKS" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/kubernetes/326CE5;" vertex="1" parent="cert">
+          <mxGeometry x="80" y="56" width="40" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="ico-java-c" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/openjdk/437291;" vertex="1" parent="cert">
-          <mxGeometry x="68" y="48" width="28" height="28" as="geometry"/>
+          <mxGeometry x="132" y="62" width="28" height="28" as="geometry"/>
         </mxCell>
         <mxCell id="ico-otel-c" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/opentelemetry/425CC7;" vertex="1" parent="cert">
-          <mxGeometry x="104" y="48" width="28" height="28" as="geometry"/>
+          <mxGeometry x="168" y="62" width="28" height="28" as="geometry"/>
         </mxCell>
-        <mxCell id="aks-c" value="AKS cert&#xa;workers APOQ&#xa;/metrics OTel" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="cert">
-          <mxGeometry x="40" y="90" width="200" height="70" as="geometry"/>
+        <mxCell id="prom-c2" value="Prometheus" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/prometheus/E6522C;" vertex="1" parent="cert">
+          <mxGeometry x="206" y="56" width="40" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="prom-c2" value="Prometheus&#xa;del cluster cert" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="cert">
-          <mxGeometry x="320" y="90" width="200" height="70" as="geometry"/>
+        <mxCell id="gf-c" value="Grafana" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/grafana/F46800;" vertex="1" parent="cert">
+          <mxGeometry x="206" y="160" width="40" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="ico-gf-c" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/grafana/F46800;" vertex="1" parent="cert">
-          <mxGeometry x="284" y="186" width="32" height="32" as="geometry"/>
-        </mxCell>
-        <mxCell id="gf-c" value="Grafana CERT&#xa;(otra instancia)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontStyle=1;fontSize=12;fontFamily=Helvetica;" vertex="1" parent="cert">
-          <mxGeometry x="120" y="226" width="360" height="56" as="geometry"/>
-        </mxCell>
-        <mxCell id="sdk-c" value="temporal-sdk-java-otel-aplicacion.json&#xa;&lt;b&gt;Java SDK (OTel) — apoq&lt;/b&gt;&#xa;solo namespaces APOQ de &lt;b&gt;este&lt;/b&gt; AKS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F7F3EC;strokeColor=#8A5A12;fontSize=11;align=left;spacingLeft=8;fontFamily=Helvetica;" vertex="1" parent="cert">
-          <mxGeometry x="50" y="304" width="500" height="80" as="geometry"/>
+        <mxCell id="sdk-c" value="Java SDK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F3EC;strokeColor=#8A5A12;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="cert">
+          <mxGeometry x="166" y="250" width="120" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="e-k1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;" edge="1" parent="cert" source="aks-c" target="prom-c2">
           <mxGeometry relative="1" as="geometry"/>
@@ -173,36 +116,30 @@
         <mxCell id="e-k2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;" edge="1" parent="cert" source="prom-c2" target="gf-c">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e-k3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;dashed=1;" edge="1" parent="cert" source="gf-c" target="sdk-c">
+        <mxCell id="e-k3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;" edge="1" parent="cert" source="gf-c" target="sdk-c">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
 
         <mxCell id="prod" value="PROD" style="swimlane;horizontal=1;startSize=28;fillColor=#FFFFFF;strokeColor=#AAAAAA;fontColor=#333333;fontStyle=1;fontSize=12;" vertex="1" parent="az-a">
-          <mxGeometry x="1280" y="60" width="600" height="460" as="geometry"/>
+          <mxGeometry x="1020" y="52" width="460" height="360" as="geometry"/>
         </mxCell>
-        <mxCell id="ico-aks-p" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/kubernetes/326CE5;" vertex="1" parent="prod">
-          <mxGeometry x="24" y="44" width="36" height="36" as="geometry"/>
+        <mxCell id="aks-p" value="AKS" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/kubernetes/326CE5;" vertex="1" parent="prod">
+          <mxGeometry x="80" y="56" width="40" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="ico-java-p" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/openjdk/437291;" vertex="1" parent="prod">
-          <mxGeometry x="68" y="48" width="28" height="28" as="geometry"/>
+          <mxGeometry x="132" y="62" width="28" height="28" as="geometry"/>
         </mxCell>
         <mxCell id="ico-otel-p" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/opentelemetry/425CC7;" vertex="1" parent="prod">
-          <mxGeometry x="104" y="48" width="28" height="28" as="geometry"/>
+          <mxGeometry x="168" y="62" width="28" height="28" as="geometry"/>
         </mxCell>
-        <mxCell id="aks-p" value="AKS prod&#xa;workers APOQ&#xa;/metrics OTel" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="prod">
-          <mxGeometry x="40" y="90" width="200" height="70" as="geometry"/>
+        <mxCell id="prom-p" value="Prometheus" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/prometheus/E6522C;" vertex="1" parent="prod">
+          <mxGeometry x="206" y="56" width="40" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="prom-p" value="Prometheus&#xa;del cluster prod" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="prod">
-          <mxGeometry x="320" y="90" width="200" height="70" as="geometry"/>
+        <mxCell id="gf-p" value="Grafana" style="shape=image;html=1;verticalLabelPosition=bottom;verticalAlign=top;align=center;imageAspect=0;aspect=fixed;fontSize=12;fontColor=#333333;fontFamily=Helvetica;image=https://cdn.simpleicons.org/grafana/F46800;" vertex="1" parent="prod">
+          <mxGeometry x="206" y="160" width="40" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="ico-gf-p" value="" style="shape=image;html=1;imageAspect=0;aspect=fixed;image=https://cdn.simpleicons.org/grafana/F46800;" vertex="1" parent="prod">
-          <mxGeometry x="284" y="186" width="32" height="32" as="geometry"/>
-        </mxCell>
-        <mxCell id="gf-p" value="Grafana PROD&#xa;(otra instancia)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#666666;fontStyle=1;fontSize=12;fontFamily=Helvetica;" vertex="1" parent="prod">
-          <mxGeometry x="120" y="226" width="360" height="56" as="geometry"/>
-        </mxCell>
-        <mxCell id="sdk-p" value="temporal-sdk-java-otel-aplicacion.json&#xa;&lt;b&gt;Java SDK (OTel) — apoq&lt;/b&gt;&#xa;solo namespaces APOQ de &lt;b&gt;este&lt;/b&gt; AKS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F7F3EC;strokeColor=#8A5A12;fontSize=11;align=left;spacingLeft=8;fontFamily=Helvetica;" vertex="1" parent="prod">
-          <mxGeometry x="50" y="304" width="500" height="80" as="geometry"/>
+        <mxCell id="sdk-p" value="Java SDK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F3EC;strokeColor=#8A5A12;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="prod">
+          <mxGeometry x="166" y="250" width="120" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="e-p1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;" edge="1" parent="prod" source="aks-p" target="prom-p">
           <mxGeometry relative="1" as="geometry"/>
@@ -210,25 +147,21 @@
         <mxCell id="e-p2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;" edge="1" parent="prod" source="prom-p" target="gf-p">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e-p3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;dashed=1;" edge="1" parent="prod" source="gf-p" target="sdk-p">
+        <mxCell id="e-p3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A5A12;strokeWidth=2;dashed=1;" edge="1" parent="prod" source="gf-p" target="sdk-p">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
 
-        <mxCell id="e-grpc-d" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#888888;exitX=0.5;exitY=0;entryX=0.08;entryY=1;" edge="1" parent="1" source="aks-d" target="ns-box">
+        <mxCell id="e-grpc-d" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#888888;exitX=0.5;exitY=0;entryX=0.2;entryY=1;" edge="1" parent="1" source="aks-d" target="ns-box">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e-grpc-c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#888888;exitX=0.5;exitY=0;entryX=0.18;entryY=1;" edge="1" parent="1" source="aks-c" target="ns-box">
+        <mxCell id="e-grpc-c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#888888;exitX=0.5;exitY=0;entryX=0.35;entryY=1;" edge="1" parent="1" source="aks-c" target="ns-box">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e-grpc-p" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#888888;exitX=0.5;exitY=0;entryX=0.28;entryY=1;" edge="1" parent="1" source="aks-p" target="ns-box">
+        <mxCell id="e-grpc-p" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#888888;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="aks-p" target="ns-box">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="grpc-l" value="gRPC workflows (no son métricas)" style="text;html=1;align=center;fontSize=10;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
-          <mxGeometry x="40" y="388" width="240" height="18" as="geometry"/>
-        </mxCell>
-
-        <mxCell id="foot" value="Cloud y worker no comparten Prometheus. d01-aplicacion.json = Grafana plataforma + código apoq/nrem (todos los ns Cloud). temporal-sdk-java-otel-aplicacion.json = Grafana de cada entorno AKS + el mismo código (solo ese cluster)." style="text;html=1;align=left;fontSize=11;fontColor=#555555;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="40" y="968" width="1920" height="36" as="geometry"/>
+        <mxCell id="grpc-l" value="gRPC" style="text;html=1;align=center;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="280" width="50" height="16" as="geometry"/>
         </mxCell>
       </root>
     </mxGraphModel>
