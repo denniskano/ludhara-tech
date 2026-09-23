@@ -19,10 +19,11 @@ Referencia: [OpenMetrics](https://docs.temporal.io/cloud/metrics/openmetrics), [
 | Archivo | Contenido |
 |---|---|
 | [arquitectura-metricas.drawio](./arquitectura-metricas.drawio) | Diagrama Draw.io: v0 + certificado vs v1 + API key |
+| [arquitectura-metricas-libreto.md](./arquitectura-metricas-libreto.md) | Libreto para explicar el diagrama |
 | [arquitectura-metricas.md](./arquitectura-metricas.md) | Misma historia en texto / Mermaid |
 | [d01-siguiente.md](./d01-siguiente.md) | Overview: validar v1 y namespaces |
 | [dashboards/d01-aplicacion.json](./dashboards/d01-aplicacion.json) | Template: overview D01 recortado por aplicación |
-| [dashboards-por-aplicacion.md](./dashboards-por-aplicacion.md) | Cómo instanciar el template por código de 4 caracteres |
+| [dashboards-por-aplicacion.md](./dashboards-por-aplicacion.md) | Guía para equipos: importar D01-app, sin API key |
 | [d02-importar.md](./d02-importar.md) | Importar D02, alertas P1 y detalle de métricas |
 | [dashboards/d02-slo.json](./dashboards/d02-slo.json) | Grafana: SLO (cualquier namespace) |
 | [d05-importar.md](./d05-importar.md) | Importar D05, alertas P3 y detalle de métricas |

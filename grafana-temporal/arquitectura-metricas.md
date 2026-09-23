@@ -1,6 +1,7 @@
 # Arquitectura de métricas Temporal Cloud — antes vs ahora
 
-Diagrama Draw.io: [arquitectura-metricas.drawio](./arquitectura-metricas.drawio) (abrir en diagrams.net o la extensión Draw.io).
+Diagrama Draw.io: [arquitectura-metricas.drawio](./arquitectura-metricas.drawio) (abrir en diagrams.net o la extensión Draw.io).  
+Libreto para presentarlo: [arquitectura-metricas-libreto.md](./arquitectura-metricas-libreto.md).
 
 Solo el **plano de métricas**. Los workers siguen en AKS; el runtime de Temporal Cloud no cambia. Lo que se retira es el endpoint PromQL v0 (`temporal_cloud_v0_*`), apagado el **5 oct 2026**.
 
