@@ -1,14 +1,14 @@
-# D05 — importar FinOps Actions / TRU
+# D03 — importar FinOps Actions / TRU
 
 D01 ya tiene filas de billable y TRU. Este JSON es el tablero de **Finanzas / PEVE**: totales 7d/30d, quién gasta (`action_type` × workflow type), heartbeats/retries, cuota APS y capacidad provisionada.
 
-No sustituye D02 (guardia) ni D03/D04 (ops de la app). No importar `temporal_cloud_action_costs.json` (PromQL v0).
+No sustituye D02 (guardia) ni el overview por app ([d01-aplicacion.json](./dashboards/d01-aplicacion.json)). No importar `temporal_cloud_action_costs.json` (PromQL v0).
 
 Solo `temporal_cloud_v1_*`. Las series ya son rates o gauges: las queries **no** usan `rate()`.
 
 ## Importar el dashboard
 
-1. Grafana → Dashboards → Import → subir `dashboards/d05-finops.json`.
+1. Grafana → Dashboards → Import → subir `dashboards/d03-finops.json`.
 2. Elegir el **mismo Prometheus** que pinta el Temporal overview.
 3. Variable Namespace: lista **todos** los namespaces del scrape (`All` = `.*`). Recorte por aplicación: [d01-aplicacion.json](./dashboards/d01-aplicacion.json). Si no lista nada, Explore → `temporal_cloud_v1_billable_action_count`.
 4. Rango por defecto **7d**. Retention prod ≥ 90 días para el stat 30d; si Grafana retiene menos, 30d sale corto o vacío.
@@ -22,7 +22,7 @@ Si Billable sale vacío y D01 sí pinta Actions: el job puede estar droppeando `
 
 Igual que D02: series ya son rate/s o gauge. **No** usar `rate()`. Totales 7d/30d se **estiman** con `sum_over_time` (cada sample es la media del minuto × 60 s). No son el número de la factura; sirven para cruzarla.
 
-Labels de D05: `temporal_namespace`, `action_type`, `temporal_workflow_type`, `is_background`. Alta cardinalidad: cada par type × action_type es una serie.
+Labels de D03: `temporal_namespace`, `action_type`, `temporal_workflow_type`, `is_background`. Alta cardinalidad: cada par type × action_type es una serie.
 
 ## Métricas del tablero (qué miden y cómo leerlas)
 
@@ -38,7 +38,7 @@ Actions **facturables** por segundo, rotas por `action_type` y `temporal_workflo
 - **Baseline 7d × 1.5:** media de la rate a 7 días. Si la rate actual la supera 2 h y hay volumen > 0.1/s → P3.
 - Vacío con D01 pintando Actions: relabel droppeó esta métrica, no “no hay gasto”.
 
-**`action_type` que D05 destaca**
+**`action_type` que D03 destaca**
 
 | Valor (aprox.) | Significado |
 |---|---|
@@ -58,9 +58,9 @@ Todas las Actions/s que Cloud cuenta hacia la cuota. Filtro `is_background="fals
 Tope APS del namespace (on-demand o el tope elevado si hay TRU).
 
 **`temporal_cloud_v1_total_action_throttled_count`** (rate)  
-Actions frenadas por ese tope. En D05 va al lado del %: puedes estar al 50% medio y tener throttle (burst). El paging de throttle es P1 en D02, no se duplica aquí.
+Actions frenadas por ese tope. En D03 va al lado del %: puedes estar al 50% medio y tener throttle (burst). El paging de throttle es P1 en D02, no se duplica aquí.
 
-En el YAML (no en un panel D05, sí P3): `operations_count` / `operations_limit` y `service_pending_requests` / `poller_limit`.
+En el YAML (no en un panel D03, sí P3): `operations_count` / `operations_limit` y `service_pending_requests` / `poller_limit`.
 
 ### Capacidad — on-demand vs TRU
 
@@ -70,7 +70,7 @@ TRU contratados en el namespace. **`0` = on-demand. Normal.** No alertar 0. Cada
 **`temporal_cloud_v1_action_on_demand_envelope_limit`** (gauge)  
 Qué `action_limit` tendrías **si** estuvieras on-demand. Si `action_limit` ≠ envelope, el namespace está en capacidad provisionada. Si son iguales, estás on-demand (el panel de TRU en 0 lo confirma).
 
-Existen envelopes análogos para operations y service RPS (`*_on_demand_envelope_limit`); D05 solo pinta el de Actions.
+Existen envelopes análogos para operations y service RPS (`*_on_demand_envelope_limit`); D03 solo pinta el de Actions.
 
 ## Qué mirar (15 minutos)
 
@@ -96,4 +96,4 @@ No alertar TRU=0. No alertar p95. Throttle/exhaustion son P1 en D02, no se dupli
 
 No es forecast de dólares (Temporal no exporta precio en OpenMetrics). Es volumen de Actions para cruzar con la factura del account.
 
-D08 (saturación de cuotas) puede extraer las filas de límite; D05 se queda con gasto y desglose.
+Límites y throttle también están en D01 y D02; D03 se queda con gasto y desglose.

@@ -41,7 +41,7 @@ Problemas: queries no portables a v1, un dashboard de costs aparte, deprecado 2 
 
 ## Ahora — OpenMetrics v1
 
-Un scrape HTTPS a `metrics.temporal.io/v1/metrics` (API key, rol Metrics Read-Only). Las series `temporal_cloud_v1_*` ya son **rate/s o gauge** en ventana de 1 minuto. **No** usar `rate()`. Un overview (mixin = D01). Encima: D02, D05, template por app.
+Un scrape HTTPS a `metrics.temporal.io/v1/metrics` (API key, rol Metrics Read-Only). Las series `temporal_cloud_v1_*` ya son **rate/s o gauge** en ventana de 1 minuto. **No** usar `rate()`. Un overview (mixin = D01). Encima: D02, D03, template por app.
 
 ```mermaid
 flowchart LR
@@ -62,14 +62,14 @@ flowchart LR
     G1["Grafana\nmismo datasource"]
     D01["D01 mixin overview\naccount"]
     D02["D02 SLO guardia"]
-    D05["D05 FinOps"]
+    D03["D03 FinOps"]
     DAPP["D01-app template\npor código de 4"]
     AL["alertas-catalogo.yaml\nP1–P3 sin rate()"]
     OM -->|"temporal_cloud_v1_*"| SC
     SC --> G1
     G1 --> D01
     G1 --> D02
-    G1 --> D05
+    G1 --> D03
     G1 --> DAPP
     G1 --> AL
   end
@@ -90,8 +90,8 @@ Fuera de este corte (igual que antes): métricas SDK `temporal_*`, slots de work
 | Autenticación | **Certificado cliente (mTLS)** | **API key Bearer** (Metrics Read-Only) |
 | Scrape | Consulta remota PromQL | Pull 60 s + API key |
 | Overview | `temporal_cloud.json` | Mixin Grafana = D01 |
-| FinOps | `action_costs.json` v0 | D05 sobre `billable_action_count` |
+| FinOps | `action_costs.json` v0 | D03 sobre `billable_action_count` |
 | Guardia / app | No había pack BCP | D02, D01-app |
 | Estado | No usar. Apagado 5 oct 2026 | Canónico |
 
-Si en Explore aparece `v0_*`, el datasource sigue en el camino viejo. D02, D05 y D01-app no funcionan contra v0.
+Si en Explore aparece `v0_*`, el datasource sigue en el camino viejo. D02, D03 y D01-app no funcionan contra v0.

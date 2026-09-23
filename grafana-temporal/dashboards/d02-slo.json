@@ -273,7 +273,7 @@
           "refId": "B"
         }
       ],
-      "description": "total_action_count{is_background=false} vs action_limit. Solo las no-background topan la cuota APS. Distinto de billable_action_count (factura, D05). % medio verde + throttle > 0 = burst de 1 min. > 80% sostenido = P3.",
+      "description": "total_action_count{is_background=false} vs action_limit. Solo las no-background topan la cuota APS. Distinto de billable_action_count (factura, D03). % medio verde + throttle > 0 = burst de 1 min. > 80% sostenido = P3.",
       "title": "Actions vs action_limit",
       "type": "timeseries"
     }

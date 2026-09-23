@@ -94,7 +94,7 @@
         <mxCell id="b-d01" value="D01 mixin&#xa;overview account" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1f4e3d;fontSize=11;" vertex="1" parent="lane1">
           <mxGeometry x="1380" y="48" width="160" height="46" as="geometry"/>
         </mxCell>
-        <mxCell id="b-d02" value="D02 SLO · D05 FinOps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1f4e3d;fontSize=11;" vertex="1" parent="lane1">
+        <mxCell id="b-d02" value="D02 SLO · D03 FinOps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1f4e3d;fontSize=11;" vertex="1" parent="lane1">
           <mxGeometry x="1380" y="102" width="160" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="b-dapp" value="D01-app + alertas P1–P3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1f4e3d;fontSize=11;" vertex="1" parent="lane1">

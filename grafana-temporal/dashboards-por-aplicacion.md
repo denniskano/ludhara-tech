@@ -6,9 +6,9 @@ Archivo: [dashboards/d01-aplicacion.json](./dashboards/d01-aplicacion.json)
 
 ## Qué es esto
 
-Cada equipo **baja este JSON, lo importa y escribe su código**. El dashboard queda de **esa** aplicación: solo namespaces que empiezan con ese prefijo. **No hay combo que liste las demás aplicaciones del banco.**
+Cada equipo **baja este JSON, lo importa y escribe su código**. El dashboard queda de **esa** aplicación: solo namespaces que empiezan con ese prefijo. Los workflow types de esa app salen solos. **No hay combo de otras apps ni tablero por type nominado.**
 
-D01 (mixin) es el overview del account (PEVE). D02 y D05 también son de plataforma.
+D01 (mixin) es el overview del account (PEVE). D02 y D03 también son de plataforma.
 
 ## Qué no tienen que hacer
 
@@ -25,13 +25,12 @@ Si D01 de plataforma ya pinta `v1_*`, usen ese Prometheus. Si D01 está vacío: 
 
 1. Grafana → Dashboards → Import → subir `d01-aplicacion.json`.
 2. **Prometheus:** el mismo que el Temporal overview (D01).
-3. **Código de aplicación:** solo el prefijo (`apoq`). Con eso bastan los datos: Namespace lista sus `apoq*`.
-4. **Name** (título en el menú): Grafana lo copia del JSON y **no** sustituye variables. Dejar `Temporal Cloud Overview` o, si quieren distinguirlo en la lista, escribir `Overview apoq`. No dejen `${APP_CODE}` literal.
-5. Import. Dentro del tablero la fila de arriba dice `Resumen — apoq` (eso sí usa el código). Solo combo **Namespace**.
+3. **Código de aplicación:** solo el prefijo (`apoq`). Eso filtra namespaces (`apoq*`). **No** cambia el título.
+4. **Name:** Grafana lo deja como `Temporal Cloud Overview — ${APP_CODE}`. **Hay que reemplazar `${APP_CODE}` a mano** (ej. `Temporal Cloud Overview — apoq`). El campo código no lo sustituye.
+5. **UID:** si aparece `temporal-cloud-overview-${APP_CODE}`, reemplazar igual (`temporal-cloud-overview-apoq`). Si no, el segundo import pisa el primero.
+6. Import. La fila de arriba dice `Resumen — apoq`. Solo combo **Namespace**.
 
-Si el dashboard viejo se llama `Temporal Cloud Overview - ${APP_CODE}`, bórrenlo e importen de nuevo. No hay que editar el título a mano para que los paneles funcionen.
-
-NREM hace lo mismo con `nrem`. APTI y TUPI: dos imports (`apti`, `tupi`).
+NREM: Name `Temporal Cloud Overview — nrem`. APTI y TUPI: dos imports.
 
 ## Qué ven después
 
@@ -56,18 +55,18 @@ Si se equivocaron de código: Dashboard settings → Variables → `aplicacion` 
 
 ## Día a día
 
-1. Abrir *su* overview (la fila dice `Resumen — apoq`), no D01 ni el de otro equipo.
+1. Abrir *su* overview (`Temporal Cloud Overview — apoq`), no D01 ni el de otro equipo.
 2. Namespace: All o el del incidente.
 3. Stats de arriba, luego type o TQ. Icono **i** del panel = qué métrica es.
 
-No editen queries. Types nominados (“débito”) son D03/D04 (PEVE + PO).
+No editen queries. Los workflow types de esa app salen solos en Completions (`temporal_workflow_type`). No hay tablero aparte por type de negocio.
 
 Explore al mismo Prometheus puede pedir otro namespace: este dashboard no es un firewall. Folder + Team Grafana si no deben ver el JSON de otra app.
 
 ## Checklist
 
 - [ ] D01 de plataforma pinta v1.
-- [ ] Import: Prometheus de D01 + **su** código. Sin API key.
+- [ ] Import: Prometheus de D01 + **su** código. En **Name** (y UID) reemplazar `${APP_CODE}`. Sin API key.
 - [ ] No hay combo Application con la lista del banco.
 - [ ] Namespace solo muestra prefijos de su código.
 - [ ] Completions muestra los workflow types que conocen.
@@ -79,5 +78,5 @@ Explore al mismo Prometheus puede pedir otro namespace: este dashboard no es un 
 | Equipo de aplicación (este) | `dashboards-por-aplicacion.md` |
 | JSON | `dashboards/d01-aplicacion.json` |
 | PEVE: D01, scrape, v0 | `d01-siguiente.md`, `arquitectura-metricas.md` |
-| PEVE: guardia / FinOps | `d02-importar.md`, `d05-importar.md` |
+| PEVE: guardia / FinOps | `d02-importar.md`, `d03-importar.md` |
 | Pack completo | `monitoreo-bcp.html` |

@@ -94,7 +94,7 @@ Cierres por timeout (start-to-close / execution). Distinto de fail: el workflow 
 
 No están en D02 (sí en D01): `workflow_success_count`, `cancel`, `terminate`, `continued_as_new`. Cancel/terminate operativos no deben entrar al fail-rate de paging.
 
-### Cuota de Actions (puente a D05)
+### Cuota de Actions (puente a D03)
 
 **`temporal_cloud_v1_total_action_count`** (rate)  
 Actions por segundo. Solo `is_background="false"` cuenta contra el límite. Background no satura la cuota APS.
@@ -102,7 +102,7 @@ Actions por segundo. Solo `is_background="false"` cuenta contra el límite. Back
 **`temporal_cloud_v1_action_limit`** (gauge)  
 Tope de Actions/s configurado en el namespace. El panel pinta uso vs este tope. Rojo sostenido > 80% es P3 (ticket), no P1; el P1 es throttle > 0.
 
-`billable_action_count` no está en D02: es factura (D05). `total_action_count` es cuota operativa; no son idénticos (Temporal excluye algunos tipos del billable).
+`billable_action_count` no está en D02: es factura (D03). `total_action_count` es cuota operativa; no son idénticos (Temporal excluye algunos tipos del billable).
 
 ## Alertas P1 (mismo datasource)
 
@@ -124,4 +124,4 @@ Si en el overview o en Explore aparece `temporal_cloud_v0_*`, el scrape viejo se
 
 ## Qué no es este tablero
 
-No sustituye D03/D04 (workflow types de débito/remesa). Open workflows no es SLO. Workers/SDK: corte siguiente.
+Ops de una app: [d01-aplicacion.json](./dashboards/d01-aplicacion.json). Open workflows no es SLO. Workers/SDK: corte siguiente.

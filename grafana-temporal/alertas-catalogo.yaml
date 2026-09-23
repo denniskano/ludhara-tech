@@ -182,7 +182,7 @@ groups:
           layer: cloud
         annotations:
           summary: Billable actions > 150% vs media 7d en {{ $labels.temporal_namespace }}
-          description: Ticket FinOps (D05). Revisar heartbeats, retry_activity y top workflow types. No es paging.
+          description: Ticket FinOps (D03). Revisar heartbeats, retry_activity y top workflow types. No es paging.
 
       - alert: TemporalCloudOperationsLimitHigh
         expr: |

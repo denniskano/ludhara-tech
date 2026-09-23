@@ -33,22 +33,14 @@ Labels opt-in (`temporal_activity_type`, worker deployment) solo en un scrape de
 
 Las rates de 1 min suavizan bursts: puede haber `resource_exhausted` con la utilización media “por debajo del límite”. Alertar throttle/exhaustion, no solo `% del limit`.
 
-## 2. Cinco dashboards Cloud
+## 2. Dashboards Cloud
 
 | ID | Dashboard | Audiencia | Origen |
 |---|---|---|---|
 | D01 | Temporal Cloud Overview | PEVE / SRE plataforma | **Instalado** (mixin Grafana). |
-| D01-app | Overview por aplicación | Equipo de cada app | **Importar** [d01-aplicacion.json](./dashboards/d01-aplicacion.json): pedir código; solo esos namespaces. [Guía](./dashboards-por-aplicacion.md). |
+| D01-app | Overview por aplicación | Equipo de cada app | **Importar** [d01-aplicacion.json](./dashboards/d01-aplicacion.json): pedir código; solo esos namespaces. Types de esa app salen solos. [Guía](./dashboards-por-aplicacion.md). |
 | D02 | SLO — namespaces críticos | Continuidad / PEVE / PO | **Importar** [dashboards/d02-slo.json](./dashboards/d02-slo.json). |
-| D03 | APOQ producción | PO APOQ + ops pagos | **Construir.** Namespace fijo `apoq-prod`. |
-| D04 | NREM producción | PO NREM + ops remesas | **Construir.** Namespace fijo `nrem-prod`. |
-| D05 | FinOps Actions / TRU | Finanzas plataforma / PEVE | **Importar** [dashboards/d05-finops.json](./dashboards/d05-finops.json). |
-| D06 | Sala de incidente | Continuidad + PEVE | Una pantalla; ver [monitoreo-bcp.html](./monitoreo-bcp.html). |
-| D07 | Schedules / cut-off | Ops pagos y remesas | Si hay schedules de negocio. |
-| D08 | Saturación de cuotas | SRE plataforma | % vs action/ops/RPS/poller limit. |
-| D09 | Error budget | Continuidad / PO | SLO mensual Start/Signal. |
-| D10 | Cert vs prod | Post-deploy | Sin paging en cert. |
-| D11 | HA replication lag | Continuidad | Solo namespaces HA. |
+| D03 | FinOps Actions / TRU | Finanzas plataforma / PEVE | **Importar** [dashboards/d03-finops.json](./dashboards/d03-finops.json). |
 
 No importar `temporal_cloud_openmetrics.json` además de D01. Retirar `temporal_cloud.json` (v0) antes del 5 oct 2026. Vista ejecutiva: [monitoreo-bcp.html](./monitoreo-bcp.html).
 
@@ -91,31 +83,17 @@ Paneles mínimos D02:
 - Timeseries RED + cuotas, por namespace (variable; no hardcodear apps).
 - Tabla: workflow types con failed+timeout en la ventana.
 
-## 5. D03 / D04 — tablero de aplicación (solo Cloud)
+## 5. D01-app — tablero de aplicación (solo Cloud)
 
-Misma plantilla, `temporal_namespace` fijo.
+No hay tablero por type nominado (débito, emisión, …). Cada equipo importa [d01-aplicacion.json](./dashboards/d01-aplicacion.json) con su código de 4; el dashboard lista todos los namespaces `codigo*` y todos los `temporal_workflow_type` de esa app.
 
-Completar con el inventario real de workflow types:
+Guía: [dashboards-por-aplicacion.md](./dashboards-por-aplicacion.md).
 
-- APOQ: débito, crédito, compensación, recuperación.
-- NREM: emisión, recepción, tracking de remesa.
+`workflow_failed_count` no distingue fallo de negocio (compensación esperada) de fallo de plataforma.
 
-Paneles:
+## 6. D03 — FinOps
 
-1. Requests y errors por `operation` (Start, Signal, SignalWithStart, Query, Update).
-2. Completions: success, failed, timeout, cancel, terminate, continued-as-new **por `temporal_workflow_type`**.
-3. Activities: fail/timeout (label `temporal_activity_type` solo si la cardinalidad es aceptable).
-4. Backlog y no-poller **por task queue** de esa app.
-5. Sync match vs poll timeout.
-6. Schedules: success, buffer overrun, missed catchup, overlap skipped.
-7. Uso vs límites: actions (`is_background="false"`), operations, service RPS, pollers pendientes vs `poller_limit`.
-8. Latencia Start/Signal con piso de volumen.
-
-`workflow_failed_count` no distingue fallo de negocio (compensación esperada) de fallo de plataforma. El PO define qué types disparan paging.
-
-## 6. D05 — FinOps
-
-Importar [dashboards/d05-finops.json](./dashboards/d05-finops.json). Pasos: [d05-importar.md](./d05-importar.md). Independiente de D03/D04.
+Importar [dashboards/d03-finops.json](./dashboards/d03-finops.json). Pasos: [d03-importar.md](./d03-importar.md). Independiente del overview por app.
 
 - `temporal_cloud_v1_billable_action_count` por `action_type` y `temporal_workflow_type` (totales rango / 7d / 30d).
 - `temporal_cloud_v1_total_action_count{is_background="false"}` vs `temporal_cloud_v1_action_limit` + throttle.
@@ -158,7 +136,7 @@ Ver [alertas-catalogo.yaml](./alertas-catalogo.yaml). Síntoma + namespace + (si
 
 1. Job OpenMetrics + retiro PromQL v0 (límite 5 oct 2026).
 2. Importar D01. **Hecho.** Validar: [d01-siguiente.md](./d01-siguiente.md).
-3. Alertas P1 y D02 SLO **o** D05 FinOps (este último no espera types de negocio).
-4. D03 y D04 con workflow types reales.
+3. Alertas P1 y D02 SLO **o** D03 FinOps.
+4. Cada app importa D01-app con su código.
 
 Siguiente corte (fuera de aquí): SDK workers y camino Azure.

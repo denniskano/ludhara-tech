@@ -62,9 +62,9 @@
     <h1>Monitoreo Temporal Cloud — guía de implementación</h1>
     <p class="meta">Carpeta <code>grafana-temporal/</code> · solo métricas <code>temporal_cloud_v1_*</code> (OpenMetrics) · PromQL v0 se apaga el <strong>5 oct 2026</strong>.</p>
     <div class="lead">
-      <p><strong>Implementado:</strong> D01 (overview mixin, ya en Grafana) · D02 (guardia SLO, JSON genérico) · D05 (FinOps Actions/TRU, JSON genérico) · catálogo de alertas P1–P3 en YAML.</p>
-      <p><strong>No implementado:</strong> D03/D04 (tablero por aplicación) · D06–D11 · scrape SDK / workers / Private Link. Las métricas son las mismas que D01; D02 y D05 no son un segundo overview: recortan guardia y factura.</p>
-      <p>Los dashboards D02/D05 listan <em>cualquier</em> namespace del scrape. Algunas reglas del YAML aún traen ejemplos <code>apoq-prod|nrem-prod</code>: hay que sustituirlos por los namespaces de guardia reales.</p>
+      <p><strong>Implementado:</strong> D01 (overview mixin, ya en Grafana) · D01-app (overview por código de aplicación) · D02 (guardia SLO, JSON genérico) · D03 (FinOps Actions/TRU, JSON genérico) · catálogo de alertas P1–P3 en YAML.</p>
+      <p><strong>No va:</strong> tablero por type nominado ni D06–D11 (misma señal que D01 / D01-app / D02 / D03). El recorte es por aplicación. <strong>Fuera de Cloud:</strong> scrape SDK / workers / Private Link. D02 y D03 recortan guardia y factura, no son un segundo overview.</p>
+      <p>Los dashboards D02/D03 listan <em>cualquier</em> namespace del scrape. Algunas reglas del YAML aún traen ejemplos <code>apoq-prod|nrem-prod</code>: hay que sustituirlos por los namespaces de guardia reales.</p>
     </div>
 
     <nav class="toc">
@@ -74,8 +74,8 @@
         <li><a href="#fuente">Fuente de métricas (OpenMetrics)</a></li>
         <li><a href="#d01">D01 — overview (instalado)</a></li>
         <li><a href="#d02">D02 — guardia SLO</a></li>
-        <li><a href="#d05">D05 — FinOps</a></li>
-        <li><a href="#metricas">Métricas D02 y D05 (detalle)</a></li>
+        <li><a href="#d03">D03 — FinOps</a></li>
+        <li><a href="#metricas">Métricas D02 y D03 (detalle)</a></li>
         <li><a href="#importar">Cómo importar un JSON en Grafana</a></li>
         <li><a href="#alertas-setup">Cómo configurar alertas</a></li>
         <li><a href="#catalogo">Catálogo de alertas (qué hace cada una)</a></li>
@@ -101,7 +101,7 @@
         </tr>
         <tr>
           <td>D01-app</td>
-          <td>Template overview recortado por prefijo de código (todos los namespaces <code>app*</code>).</td>
+          <td>Overview recortado por código de aplicación. Types de esa app salen solos.</td>
           <td>Equipo de cada app</td>
           <td>JSON listo. Al importar se pide el código; solo sus namespaces.</td>
           <td><code>dashboards/d01-aplicacion.json</code></td>
@@ -114,11 +114,11 @@
           <td><code>dashboards/d02-slo.json</code> · uid <code>temporal-cloud-slo</code></td>
         </tr>
         <tr>
-          <td>D05</td>
+          <td>D03</td>
           <td>FinOps: billable 7d/30d, quién gasta, heartbeats/retries, TRU vs on-demand.</td>
           <td>Finanzas / PEVE</td>
           <td>JSON listo. Falta importar.</td>
-          <td><code>dashboards/d05-finops.json</code> · uid <code>temporal-cloud-finops</code></td>
+          <td><code>dashboards/d03-finops.json</code> · uid <code>temporal-cloud-finops</code></td>
         </tr>
         <tr>
           <td>Alertas</td>
@@ -126,20 +126,6 @@
           <td>Grafana Alerting</td>
           <td>YAML listo. Falta crear reglas y contact points.</td>
           <td><code>alertas-catalogo.yaml</code></td>
-        </tr>
-        <tr>
-          <td>D03 / D04</td>
-          <td>Tablero por app (namespace fijo + workflow types de negocio).</td>
-          <td>PO + ops</td>
-          <td>No construido</td>
-          <td>—</td>
-        </tr>
-        <tr>
-          <td>D06–D11</td>
-          <td>Sala de incidente, schedules, cuotas, error budget, cert vs prod, HA.</td>
-          <td>Según dueño</td>
-          <td>Diseño, no JSON</td>
-          <td>Ver §11</td>
         </tr>
       </tbody>
     </table>
@@ -150,14 +136,14 @@
         <tr><td><code>arquitectura-metricas.md</code></td><td>Misma historia en texto</td></tr>
         <tr><td><code>d01-siguiente.md</code></td><td>Validar que D01 pinta v1</td></tr>
         <tr><td><code>d02-importar.md</code></td><td>Checklist corto de D02</td></tr>
-        <tr><td><code>d05-importar.md</code></td><td>Checklist corto de D05</td></tr>
+        <tr><td><code>d03-importar.md</code></td><td>Checklist corto de D03</td></tr>
         <tr><td><code>paquete-bcp-apoq-nrem.md</code></td><td>Scrape, SLI, mapa de métricas</td></tr>
         <tr><td><code>inventario-dashboards.md</code></td><td>Qué trae el mixin vs JSON oficiales de Temporal</td></tr>
         <tr><td><code>README.md</code></td><td>Índice del directorio</td></tr>
       </tbody>
     </table>
     <div class="note ok">
-      <p><strong>Valor vs D01.</strong> Mismas series. D01 es el mapa (scroll largo, sin umbral de paging). D02 es una pantalla de guardia con stats verde/rojo. D05 es totales y desglose de factura. No importar <code>temporal_cloud_openmetrics.json</code> además de D01. No importar <code>temporal_cloud.json</code> ni <code>temporal_cloud_action_costs.json</code> (PromQL v0).</p>
+      <p><strong>Valor vs D01.</strong> Mismas series. D01 es el mapa (scroll largo, sin umbral de paging). D02 es una pantalla de guardia con stats verde/rojo. D03 es totales y desglose de factura. No importar <code>temporal_cloud_openmetrics.json</code> además de D01. No importar <code>temporal_cloud.json</code> ni <code>temporal_cloud_action_costs.json</code> (PromQL v0).</p>
     </div>
 
     <h2 id="fuente">2. Fuente de métricas (OpenMetrics)</h2>
@@ -183,12 +169,12 @@
     <ul>
       <li>El nombre del job (<code>temporal-cloud</code>) entra en <code>up{job="temporal-cloud"}</code>. En Grafana Cloud suele ser otro. En Explore: <code>up{job=~".*temporal.*"}</code> y copiar el valor exacto a la alerta de scrape.</li>
       <li>Labels opt-in (<code>temporal_activity_type</code>, worker deployment) <strong>no</strong> en el scrape 24×7. Job de diagnóstico aparte.</li>
-      <li><code>temporal_cloud_v1_billable_action_count</code> es de alta cardinalidad (namespace × workflow type × action_type). Si D05 sale vacío y D01 sí pinta Actions, el relabel puede estar droppeando esa métrica.</li>
-      <li>Retention prod recomendada ≥ 90 días (totales 30d de D05 y SLO mensual).</li>
+      <li><code>temporal_cloud_v1_billable_action_count</code> es de alta cardinalidad (namespace × workflow type × action_type). Si D03 sale vacío y D01 sí pinta Actions, el relabel puede estar droppeando esa métrica.</li>
+      <li>Retention prod recomendada ≥ 90 días (totales 30d de D03 y SLO mensual).</li>
       <li>Los percentiles v1 <strong>no</strong> se re-agregan entre namespaces ni a ventanas más largas.</li>
     </ul>
     <div class="note warn">
-      <p>Si en Explore aparece <code>temporal_cloud_v0_*</code>, el datasource sigue en el PromQL legado. D02/D05 no funcionan contra v0. Apagado: <strong>5 oct 2026</strong>.</p>
+      <p>Si en Explore aparece <code>temporal_cloud_v0_*</code>, el datasource sigue en el PromQL legado. D02/D03 no funcionan contra v0. Apagado: <strong>5 oct 2026</strong>.</p>
     </div>
 
     <h2 id="d01">3. D01 — overview (instalado)</h2>
@@ -233,7 +219,7 @@
         <tr><td>Actions vs action_limit</td><td><code>total_action_count{is_background="false"}</code> vs <code>action_limit</code></td><td>Cuota SaaS</td></tr>
       </tbody>
     </table>
-    <p>D02 <strong>no</strong> incluye panel de scrape <code>up</code> (está en la alerta P1). <strong>No</strong> sustituye D03/D04.</p>
+    <p>D02 <strong>no</strong> incluye panel de scrape <code>up</code> (está en la alerta P1). Ops de una app: D01-app, no este tablero.</p>
     <h3>Cómo usarlo</h3>
     <ol>
       <li>Star / pin en Grafana para la guardia.</li>
@@ -242,8 +228,8 @@
       <li>Si Error rate y Requests salen vacíos: Explore <code>temporal_cloud_v1_service_request_count</code> y copiar el label <code>temporal_namespace</code> exacto.</li>
     </ol>
 
-    <h2 id="d05">5. D05 — FinOps</h2>
-    <p>JSON: <code>dashboards/d05-finops.json</code> · título <em>Temporal Cloud FinOps — Actions / TRU</em> · uid <code>temporal-cloud-finops</code> · refresh 1m · rango por defecto <strong>7d</strong>.</p>
+    <h2 id="d03">5. D03 — FinOps</h2>
+    <p>JSON: <code>dashboards/d03-finops.json</code> · título <em>Temporal Cloud FinOps — Actions / TRU</em> · uid <code>temporal-cloud-finops</code> · refresh 1m · rango por defecto <strong>7d</strong>.</p>
     <p>Variable Namespace igual de genérica que D02 (<code>All = .*</code>), sobre <code>temporal_cloud_v1_billable_action_count</code>.</p>
     <p>Temporal <strong>no exporta precio</strong> en OpenMetrics. El tablero es volumen de Actions para cruzar con la factura del account.</p>
     <h3>Paneles</h3>
@@ -271,9 +257,9 @@
       <li>TRU / ns_capacity vacíos: on-demand. No es error.</li>
       <li>No alertar TRU=0. No alertar p95 aquí. Throttle/exhaustion son P1 de D02.</li>
     </ol>
-    <p>Texto largo de cada métrica: <code>d02-importar.md</code>, <code>d05-importar.md</code>. En Grafana, “i” del panel.</p>
+    <p>Texto largo de cada métrica: <code>d02-importar.md</code>, <code>d03-importar.md</code>. En Grafana, “i” del panel.</p>
 
-    <h2 id="metricas">Métricas D02 y D05 (detalle)</h2>
+    <h2 id="metricas">Métricas D02 y D03 (detalle)</h2>
     <p>Prefijo <code>temporal_cloud_v1_</code>. Cloud publica ya agregado a 1 minuto: las <strong>rate</strong> son eventos/s (media del minuto); los <strong>gauge</strong> son valor puntual. No usar <code>rate()</code> / <code>increase()</code>. Un <code>0.5</code> en una rate ≈ 30 eventos en ese minuto. Los bursts de pocos segundos se diluyen: por eso se alerta throttle/exhaustion, no solo el % medio del límite.</p>
 
     <h3>D02 — guardia</h3>
@@ -348,7 +334,7 @@
           <td>Rate</td>
           <td>Actions/s. Solo <code>is_background=false</code> topa el límite.</td>
           <td>Cuota operativa vs <code>action_limit</code>. &gt; 80% = P3.</td>
-          <td><code>billable_action_count</code> (factura, D05).</td>
+          <td><code>billable_action_count</code> (factura, D03).</td>
         </tr>
         <tr>
           <td><code>action_limit</code></td>
@@ -360,7 +346,7 @@
       </tbody>
     </table>
 
-    <h3>D05 — FinOps</h3>
+    <h3>D03 — FinOps</h3>
     <table>
       <thead><tr><th>Métrica</th><th>Tipo</th><th>Qué mide</th><th>Cómo leerla</th><th>No es</th></tr></thead>
       <tbody>
@@ -408,16 +394,16 @@
         </tr>
       </tbody>
     </table>
-    <p>Detalle aún más largo (labels, queries, falsos verdes): <code>d02-importar.md</code> y <code>d05-importar.md</code>.</p>
+    <p>Detalle aún más largo (labels, queries, falsos verdes): <code>d02-importar.md</code> y <code>d03-importar.md</code>.</p>
 
     <h2 id="importar">6. Cómo importar un JSON en Grafana</h2>
     <ol>
       <li>Grafana → <strong>Dashboards</strong> → <strong>New</strong> → <strong>Import</strong>.</li>
-      <li>Upload <code>d02-slo.json</code> o <code>d05-finops.json</code> (no pegar el YAML de alertas aquí).</li>
+      <li>Upload <code>d02-slo.json</code> o <code>d03-finops.json</code> (no pegar el YAML de alertas aquí).</li>
       <li>Datasource: el <strong>mismo Prometheus</strong> que pinta el Temporal overview (D01).</li>
       <li>Import. Comprobar uid (si ya existe un dashboard con ese uid, Grafana pedirá overwrite o cambiar uid).</li>
       <li>Arriba: Namespace = All o un namespace concreto. Refresh 1m.</li>
-      <li>Opcional: folder “Temporal Cloud”, star para guardia (D02) o Finanzas (D05).</li>
+      <li>Opcional: folder “Temporal Cloud”, star para guardia (D02) o Finanzas (D03).</li>
     </ol>
     <p>Si al importar pide un datasource que no existe, crear/seleccionar el Prometheus del scrape OpenMetrics. Los paneles usan <code>${DS_PROMETHEUS}</code>.</p>
 
@@ -463,7 +449,7 @@
       <li>Labels: <code>severity=p1</code>, <code>layer=cloud</code>. Summary/description de <code>annotations</code> (Grafana usa <code>{{ $labels.temporal_namespace }}</code> igual que Prometheus).</li>
       <li>Save. Probar con <strong>Preview</strong> / Explore pegando la misma expr.</li>
     </ol>
-    <p>Orden de creación: las cinco P1 primero. Luego P3 de D05. P2 cuando el ruido de P1 esté controlado y existan types críticos.</p>
+    <p>Orden de creación: las cinco P1 primero. Luego P3 de D03. P2 cuando el ruido de P1 esté controlado y existan types críticos.</p>
 
     <h3>7.3 Grafana Cloud: mimir / ruler (opcional)</h3>
     <p>Si hay provisioning GitOps, el YAML se puede cargar como Prometheus rule group (nombres de grupo <code>temporal-cloud-scrape</code> y <code>temporal-cloud-prod</code>). Ajustar datasource/tenant. No mezclar con el YAML v0 de Temporal (<code>temporal_cloud_action_costs_alerts.yaml</code>).</p>
@@ -508,7 +494,7 @@
           <td class="p1"><code>TemporalCloudThrottled</code></td>
           <td>actions <em>o</em> operations <em>o</em> service RPS throttled &gt; 0</td>
           <td>2m</td>
-          <td>Cuota SaaS. D02 / D05 Actions vs limit. Subir límites o bajar APS (heartbeats, retries).</td>
+          <td>Cuota SaaS. D02 / D03 Actions vs limit. Subir límites o bajar APS (heartbeats, retries).</td>
         </tr>
         <tr>
           <td class="p1"><code>TemporalCloudNoPollerTasks</code></td>
@@ -576,7 +562,7 @@
       </tbody>
     </table>
 
-    <h3>P3 — ticket FinOps / capacidad (D05)</h3>
+    <h3>P3 — ticket FinOps / capacidad (D03)</h3>
     <table>
       <thead>
         <tr><th>Nombre</th><th>Señal</th><th>For</th><th>Notas</th></tr>
@@ -592,7 +578,7 @@
           <td class="p3"><code>TemporalCloudBillableVsBaseline7d</code></td>
           <td>billable &gt; 150% vs media 7d <strong>y</strong> billable/s &gt; 0.1</td>
           <td>2h</td>
-          <td>D05: heartbeats, retries, top types. YAML con filtro de ejemplo apoq/nrem. No P1.</td>
+          <td>D03: heartbeats, retries, top types. YAML con filtro de ejemplo apoq/nrem. No P1.</td>
         </tr>
         <tr>
           <td class="p3"><code>TemporalCloudOperationsLimitHigh</code></td>
@@ -657,12 +643,12 @@ sum by (temporal_namespace, temporal_task_queue, task_type) (
           <li>No poller → workers / TQ, no “Temporal Cloud caído”.</li>
         </ul>
       </li>
-      <li>Si hace falta el mapa completo: D01. Si hace falta el type de negocio: hoy Explore por <code>temporal_workflow_type</code>; mañana D03/D04.</li>
+      <li>Si hace falta el mapa completo: D01. Types de una app: D01-app (panel Completions) o Explore por <code>temporal_workflow_type</code>.</li>
       <li>P2 de fail-rate: confirmar que el type es de negocio, no un workflow de prueba.</li>
     </ol>
     <h3>Review FinOps (semanal)</h3>
     <ol>
-      <li>D05, 7d, un namespace prod a la vez.</li>
+      <li>D03, 7d, un namespace prod a la vez.</li>
       <li>Totales vs factura Temporal (fuera de Grafana).</li>
       <li>Top 20 + % heartbeat/retry.</li>
       <li>P3 de baseline 7d: ¿deploy, retry storm, TRU ocioso?</li>
@@ -691,29 +677,18 @@ sum by (temporal_namespace, temporal_task_queue, task_type) (
         <tr><td>Scrape</td><td><code>up</code></td><td>100%</td></tr>
       </tbody>
     </table>
-    <p>Error budget / burn-rate 1h/6h = D09 (no construido). Open workflows no es SLO.</p>
+    <p>Error budget / burn-rate: se ve en D02 (error rate + volumen). Open workflows no es SLO.</p>
 
     <h2 id="pendiente">11. Fuera de este corte</h2>
-    <table>
-      <thead><tr><th>ID</th><th>Dashboard</th><th>Cuándo</th></tr></thead>
-      <tbody>
-        <tr><td>D03 / D04</td><td>Una app, namespace fijo, types nominados (débito/crédito vs emisión/recepción)</td><td>Tras inventario real de <code>temporal_workflow_type</code></td></tr>
-        <tr><td>D06</td><td>Sala de incidente: 6 paneles, sin scroll, links a D03/D04</td><td>Cuando D02 ya esté en guardia</td></tr>
-        <tr><td>D07</td><td>Schedules / cut-off</td><td>Si hay schedules de negocio</td></tr>
-        <tr><td>D08</td><td>Saturación de las cuatro cuotas (D05 ya cubre Actions)</td><td>Si Finanzas/SRE lo piden aparte</td></tr>
-        <tr><td>D09</td><td>Error budget mensual para Continuidad</td><td>Tras acordar SLO</td></tr>
-        <tr><td>D10</td><td>Cert vs prod post-deploy</td><td>Cuando haya ancla de CI</td></tr>
-        <tr><td>D11</td><td>Replication lag</td><td>Solo namespaces HA</td></tr>
-      </tbody>
-    </table>
+    <p>D06–D11 no se construyen: schedules, cuotas, lag HA y el mapa de incidente ya están en D01 / D01-app; guardia en D02; factura en D03. Cert vs prod: Namespace en D01-app.</p>
     <p><strong>Siguiente corte (no Cloud):</strong> métricas SDK (<code>temporal_*</code>), slots de worker, schedule-to-start, AKS, Private Link Azure, lag Event Hubs/Kafka. Un D01 verde con worker caído es el fallo típico; D02 lo señala con <code>no_poller</code>, no lo diagnostica.</p>
     <h3>Orden práctico ahora</h3>
     <ol>
       <li>Validar D01 (v1, namespaces, no v0).</li>
       <li>Importar D02. Star en guardia.</li>
       <li>Cinco alertas P1 + contact point de paging. Ajustar job y namespaces.</li>
-      <li>Importar D05. Alertas P3 (Actions 80%, billable vs 7d).</li>
-      <li>P2 con types reales. D03/D04.</li>
+      <li>Importar D03. Alertas P3 (Actions 80%, billable vs 7d).</li>
+      <li>Cada app importa D01-app. P2 si hace falta filtrar types ruidosos.</li>
       <li>Retirar dashboards/scrape v0 antes del 5 oct 2026.</li>
     </ol>
 
@@ -723,7 +698,7 @@ sum by (temporal_namespace, temporal_task_queue, task_type) (
       <li><a href="https://docs.temporal.io/cloud/metrics/openmetrics/metrics-reference">Catálogo <code>temporal_cloud_v1_*</code></a></li>
       <li><a href="https://docs.temporal.io/cloud/metrics/openmetrics/migration-guide">Migración v0 → v1</a></li>
       <li><a href="https://github.com/grafana/jsonnet-libs/blob/master/temporal-mixin/dashboards/temporal-overview.json">Mixin Grafana (D01)</a></li>
-      <li>YAML y JSON de este pack: <code>alertas-catalogo.yaml</code>, <code>dashboards/d02-slo.json</code>, <code>dashboards/d05-finops.json</code></li>
+      <li>YAML y JSON de este pack: <code>alertas-catalogo.yaml</code>, <code>dashboards/d02-slo.json</code>, <code>dashboards/d03-finops.json</code></li>
     </ul>
   </main>
 </body>

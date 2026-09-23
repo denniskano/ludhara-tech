@@ -53,7 +53,7 @@ v1 expone gauges que ya son rates por segundo en ventanas de 1 minuto. Las queri
 
 [temporal_cloud_action_costs.json](https://github.com/temporalio/dashboards/blob/master/cloud/temporal_cloud_action_costs.json) y [alerts YAML](https://github.com/temporalio/dashboards/blob/master/cloud/temporal_cloud_action_costs_alerts.yaml) son FinOps sobre PromQL v0.
 
-El mixin OpenMetrics ya cubre `temporal_cloud_v1_billable_action_count` y TRU. Costos y alertas de gasto: **D05** ([dashboards/d05-finops.json](./dashboards/d05-finops.json)), no el JSON v0.
+El mixin OpenMetrics ya cubre `temporal_cloud_v1_billable_action_count` y TRU. Costos y alertas de gasto: **D03** ([dashboards/d03-finops.json](./dashboards/d03-finops.json)), no el JSON v0.
 
 ## 5. Comparación (solo Cloud)
 

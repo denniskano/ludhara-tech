@@ -21,7 +21,7 @@
     { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" }
   ],
   "annotations": { "list": [] },
-  "description": "Overview Temporal Cloud de UNA aplicación. Al importar se pide el código (apoq, nrem, …). Solo lista namespaces que empiezan con ese prefijo. No hay combo de otras apps. Mismo Prometheus que D01. No sustituye D01, D02 ni D05.",
+  "description": "Overview Temporal Cloud de UNA aplicación. Al importar se pide el código (apoq, nrem, …). Solo lista namespaces que empiezan con ese prefijo. Types de esa app salen solos. No hay combo de otras apps. Mismo Prometheus que D01. No sustituye D01, D02 ni D03.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -314,7 +314,7 @@
   },
   "time": { "from": "now-6h", "to": "now" },
   "timezone": "browser",
-  "title": "Temporal Cloud Overview",
-  "uid": null,
-  "version": 4
+  "title": "Temporal Cloud Overview — ${APP_CODE}",
+  "uid": "temporal-cloud-overview-${APP_CODE}",
+  "version": 5
 }
