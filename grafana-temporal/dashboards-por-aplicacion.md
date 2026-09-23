@@ -2,90 +2,75 @@
 
 Documento para el equipo de APOQ, NREM, CPCA, etc. PEVE ya tiene la integración Temporal Cloud → Grafana (OpenMetrics + API key de plataforma). **Ustedes no crean API key, no piden certificado y no montan un scrape.**
 
-Archivo a importar: [dashboards/d01-aplicacion.json](./dashboards/d01-aplicacion.json)
+Archivo: [dashboards/d01-aplicacion.json](./dashboards/d01-aplicacion.json)
 
 ## Qué es esto
 
-Un **template** del overview (las mismas preguntas que D01), recortado a los namespaces de **su** código de aplicación.
+Cada equipo **baja este JSON, lo importa y escribe su código**. El dashboard queda de **esa** aplicación: solo namespaces que empiezan con ese prefijo. **No hay combo que liste las demás aplicaciones del banco.**
 
-D01 (el mixin que ya está en Grafana) es del account entero: lo usa PEVE. D02 y D05 también son de plataforma. Este JSON es el que el equipo *Save as* y deja con su código.
+D01 (mixin) es el overview del account (PEVE). D02 y D05 también son de plataforma.
 
 ## Qué no tienen que hacer
 
 | No | Por qué |
 |---|---|
-| Crear API key en Temporal Cloud | La key (rol Metrics Read-Only) es de PEVE. Un scrape, un Prometheus. |
-| Pedir certificado mTLS de métricas | Eso era el PromQL v0. Ya no aplica. |
-| Configurar cada workflow a mano | Los paneles agrupan por `temporal_workflow_type`. Si Cloud emite la serie, aparece. |
-| Duplicar el JSON en git por ambiente | Un dashboard. Namespace lista **todos** los que empiezan con su código. |
-| Importar D02 o D05 “para su app” | Esos son de guardia y FinOps de account. |
+| Crear API key en Temporal Cloud | La key es de PEVE. Un scrape, un Prometheus. |
+| Pedir certificado mTLS de métricas | Eso era el PromQL v0. |
+| Elegir “Aplicación” en un dropdown | El código se fija **al importar**. No se ven otras apps. |
+| Configurar cada workflow | Aparecen solos (`temporal_workflow_type`). |
 
-Si D01 (overview de plataforma) ya pinta `temporal_cloud_v1_*`, el datasource sirve. Si D01 está vacío, no es un tema del equipo: avisar a PEVE.
+Si D01 de plataforma ya pinta `v1_*`, usen ese Prometheus. Si D01 está vacío: PEVE.
 
-## Qué sí hacen (15 minutos)
+## Importar (10 minutos)
 
 1. Grafana → Dashboards → Import → subir `d01-aplicacion.json`.
-2. Datasource: el **mismo Prometheus** que pinta el Temporal overview (D01). No crear otro.
-3. *Save as* → título `Temporal Cloud Overview — APOQ` (o NREM, CPCA…). Grafana asigna otro uid; no pisen el template.
-4. Dashboard settings → Variables → **Aplicación**:
-   - Valor por defecto = su código de 4 caracteres en minúsculas (`apoq`, `nrem`, `cpca`…).
-   - *Include All*: desactivado (así no ven el resto del banco).
-   - *Hide*: Variable (el dropdown Aplicación desaparece; queda Namespace).
-5. Save. Star / folder del equipo.
+2. **Prometheus:** el mismo que el Temporal overview (D01).
+3. **Código de aplicación:** solo su prefijo, minúsculas, 4 caracteres. Ejemplo: `apoq`. No `apoq-prod`.
+4. Import. El título queda `Temporal Cloud Overview — apoq`.
+5. Arriba solo debe verse **Namespace** (sus `apoq*`). Si aparece un combo Application con todas las apps, es el JSON viejo: borrar ese dashboard y volver a importar este.
 
-Listo. No hay un paso 6 de “registrar workflows”.
+No hace falta *Save as* ni ocultar variables. Cada import con otro código es otro dashboard (otro uid).
 
-## Varios namespaces y varios workflows
+NREM hace lo mismo con `nrem`. APTI y TUPI: dos imports (`apti`, `tupi`).
 
-El filtro es solo el **prefijo de 4 caracteres**. No se exige `dev`, `cert` ni `prod`. Entra todo namespace del scrape que empiece con ese código: `apoq-prod`, `apoq-qa`, `apoq-prod-b`, `apoqalgo`.
+## Qué ven después
 
-Ejemplo:
+El filtro es el prefijo que escribieron. Entra todo namespace del scrape que empiece con ese código. No se exige `dev`/`cert`/`prod`.
 
-| Namespace en Cloud | ¿Lo ve Aplicación = `apoq`? |
+| Namespace en Cloud | Código `apoq` |
 |---|---|
-| `apoq-desa`, `apoq-cert`, `apoq-prod` | Sí |
-| `apoq-qa`, `apoq-prod-dr` | Sí |
+| `apoq-desa`, `apoq-cert`, `apoq-prod`, `apoq-qa` | Sí |
 | `nrem-prod` | No |
 
-- **Aplicación = `apoq`** → Namespace lista todos los `apoq*`.
-- **Namespace = All** → suma esos, no NREM.
-- **Namespace = uno solo** → un ambiente o variante.
-- Los **workflow types** y **task queues** salen solos. No se configuran.
+- **Namespace = All** → todos los de su código.
+- **Un namespace** → un ambiente o variante.
+- Workflows y task queues: solos.
 
-Dos códigos (`apti` y `tupi`) = dos copias del template. Un dashboard = un prefijo de 4.
-
-Si un namespace no aparece: no empieza por esos 4 caracteres (mayúsculas, otro código) o no está en el scrape. En Explore, mismo Prometheus:
+Si no lista un namespace: no empieza por ese código, o no está en el scrape. Explore, mismo Prometheus:
 
 ```
 label_values(temporal_cloud_v1_service_request_count, temporal_namespace)
 ```
 
-Si el nombre está en Explore y no en el dropdown, avisar a PEVE para ajustar la regex. Si no está en Explore, Cloud no está scrapeando ese namespace (filtro del job o el namespace no existe).
+Si se equivocaron de código: Dashboard settings → Variables → `aplicacion` (está oculta; tipo constant) → poner el prefijo correcto → Save.
 
-## Cómo lo usan el día a día
+## Día a día
 
-1. Abrir *su* overview (la copia, no el template ni D01).
-2. Elegir en Namespace el o los namespaces del incidente (All = todos los de su código).
-3. Lectura: stats de arriba (open, fail+timeout, error rate Start/Signal, no poller, throttle, Actions). Luego el type o la TQ que se movió.
-4. El icono **i** de cada panel dice qué métrica es.
+1. Abrir *su* overview (`Overview — apoq`), no D01 ni el de otro equipo.
+2. Namespace: All o el del incidente.
+3. Stats de arriba, luego type o TQ. Icono **i** del panel = qué métrica es.
 
-No editen queries. Si falta un type de negocio *nominado* (fila “débito” en vez del nombre crudo), eso es D03/D04: lo arma PEVE con el inventario que firme el PO. Este template no lo sustituye.
+No editen queries. Types nominados (“débito”) son D03/D04 (PEVE + PO).
 
-## Permisos (opcional, PEVE)
-
-El dropdown no es un control de acceso. Quien tenga el template original puede elegir otra aplicación.
-
-Si el equipo no debe ver series de otra app: folder Grafana del equipo + Team Viewer solo ahí, con *su* copia (Aplicación fija y oculta). Explore al mismo Prometheus igual puede pedir otro namespace: el aislamiento fuerte de métricas no es este dashboard.
+Explore al mismo Prometheus puede pedir otro namespace: este dashboard no es un firewall. Folder + Team Grafana si no deben ver el JSON de otra app.
 
 ## Checklist
 
-- [ ] D01 de plataforma ya pinta v1 (si no: PEVE, no el equipo).
-- [ ] Import con el Prometheus de D01. Sin API key nueva.
-- [ ] *Save as* con el nombre de la app.
-- [ ] `aplicacion` = código de 4, All off, variable oculta.
-- [ ] Namespace lista todos los que empiezan con ese código (sin filtrar ambiente).
-- [ ] En prod hay open / requests / actions (o se entiende por qué está vacío).
-- [ ] Los workflow types que el equipo conoce aparecen en completions.
+- [ ] D01 de plataforma pinta v1.
+- [ ] Import: Prometheus de D01 + **su** código. Sin API key.
+- [ ] No hay combo Application con la lista del banco.
+- [ ] Namespace solo muestra prefijos de su código.
+- [ ] Completions muestra los workflow types que conocen.
 
 ## Dónde está cada cosa
 
