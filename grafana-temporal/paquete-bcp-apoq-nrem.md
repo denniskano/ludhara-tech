@@ -38,7 +38,7 @@ Las rates de 1 min suavizan bursts: puede haber `resource_exhausted` con la util
 | ID | Dashboard | Audiencia | Origen |
 |---|---|---|---|
 | D01 | Temporal Cloud Overview | PEVE / SRE plataforma | **Instalado** (mixin Grafana). |
-| D01-app | Overview por aplicación | Equipo de cada app | **Template** [dashboards/d01-aplicacion.json](./dashboards/d01-aplicacion.json). |
+| D01-app | Overview por aplicación | Equipo de cada app | **Importar** [d01-aplicacion.json](./dashboards/d01-aplicacion.json): pedir código; solo esos namespaces. [Guía](./dashboards-por-aplicacion.md). |
 | D02 | SLO — namespaces críticos | Continuidad / PEVE / PO | **Importar** [dashboards/d02-slo.json](./dashboards/d02-slo.json). |
 | D03 | APOQ producción | PO APOQ + ops pagos | **Construir.** Namespace fijo `apoq-prod`. |
 | D04 | NREM producción | PO NREM + ops remesas | **Construir.** Namespace fijo `nrem-prod`. |

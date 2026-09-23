@@ -25,11 +25,11 @@ Si D01 de plataforma ya pinta `v1_*`, usen ese Prometheus. Si D01 está vacío: 
 
 1. Grafana → Dashboards → Import → subir `d01-aplicacion.json`.
 2. **Prometheus:** el mismo que el Temporal overview (D01).
-3. **Código de aplicación:** solo su prefijo, minúsculas, 4 caracteres. Ejemplo: `apoq`. No `apoq-prod`.
-4. Import. El título queda `Temporal Cloud Overview — apoq`.
-5. Arriba solo debe verse **Namespace** (sus `apoq*`). Si aparece un combo Application con todas las apps, es el JSON viejo: borrar ese dashboard y volver a importar este.
+3. **Código de aplicación:** solo el prefijo (`apoq`). Con eso bastan los datos: Namespace lista sus `apoq*`.
+4. **Name** (título en el menú): Grafana lo copia del JSON y **no** sustituye variables. Dejar `Temporal Cloud Overview` o, si quieren distinguirlo en la lista, escribir `Overview apoq`. No dejen `${APP_CODE}` literal.
+5. Import. Dentro del tablero la fila de arriba dice `Resumen — apoq` (eso sí usa el código). Solo combo **Namespace**.
 
-No hace falta *Save as* ni ocultar variables. Cada import con otro código es otro dashboard (otro uid).
+Si el dashboard viejo se llama `Temporal Cloud Overview - ${APP_CODE}`, bórrenlo e importen de nuevo. No hay que editar el título a mano para que los paneles funcionen.
 
 NREM hace lo mismo con `nrem`. APTI y TUPI: dos imports (`apti`, `tupi`).
 
@@ -56,7 +56,7 @@ Si se equivocaron de código: Dashboard settings → Variables → `aplicacion` 
 
 ## Día a día
 
-1. Abrir *su* overview (`Overview — apoq`), no D01 ni el de otro equipo.
+1. Abrir *su* overview (la fila dice `Resumen — apoq`), no D01 ni el de otro equipo.
 2. Namespace: All o el del incidente.
 3. Stats de arriba, luego type o TQ. Icono **i** del panel = qué métrica es.
 

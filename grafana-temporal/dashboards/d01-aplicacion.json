@@ -33,7 +33,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 1,
-      "title": "Resumen (esta aplicación)",
+      "title": "Resumen — $aplicacion",
       "type": "row"
     },
     {
@@ -314,7 +314,7 @@
   },
   "time": { "from": "now-6h", "to": "now" },
   "timezone": "browser",
-  "title": "Temporal Cloud Overview — ${APP_CODE}",
-  "uid": "temporal-cloud-overview-${APP_CODE}",
-  "version": 3
+  "title": "Temporal Cloud Overview",
+  "uid": null,
+  "version": 4
 }

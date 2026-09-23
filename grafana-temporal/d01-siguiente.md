@@ -21,7 +21,7 @@ No hace falta un segundo overview. D01 queda como tablero de exploración de pla
 | 1 | D02 SLO | Importar [dashboards/d02-slo.json](./dashboards/d02-slo.json). Pasos: [d02-importar.md](./d02-importar.md). |
 | 2 | Alertas P1 | [alertas-catalogo.yaml](./alertas-catalogo.yaml) sobre el mismo datasource. |
 | 3 | D05 FinOps | Importar [dashboards/d05-finops.json](./dashboards/d05-finops.json). Pasos: [d05-importar.md](./d05-importar.md). Independiente de D03/D04. |
-| 4 | Overview por app | Template [d01-aplicacion.json](./dashboards/d01-aplicacion.json). Equipos: [dashboards-por-aplicacion.md](./dashboards-por-aplicacion.md) (no crean API key). |
+| 4 | Overview por app | Importar [d01-aplicacion.json](./dashboards/d01-aplicacion.json) con el código de 4. Guía: [dashboards-por-aplicacion.md](./dashboards-por-aplicacion.md). |
 | 5 | D03 / D04 | Types de negocio nominados (después del template). |
 
 Detalle de paneles y SLI: [paquete-bcp-apoq-nrem.md](./paquete-bcp-apoq-nrem.md).
