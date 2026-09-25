@@ -3,11 +3,11 @@
 **BCP / PEVE / Versión 1.4 / Uso interno**  
 El detalle consta en el plan de retiro preventivo. La primera versión del destino es Self-Hosted. La sección 04.6 agrega tres opciones adicionales.
 
-![Arquitectura Temporal Self-Hosted en Azure AKS](assets/arquitectura-temporal-self-hosted-aks.png)
+![Arquitectura Temporal Self-Hosted en Azure AKS](assets/04-1-arquitectura-self-hosted.png)
 
-El destino vigente es Temporal Self-Hosted en Azure AKS. PEVE opera el plano de control (Frontend, History, Matching y Worker Service). La persistencia y la visibilidad quedan en Azure privada. Los workers de APOQ y NREM permanecen en el AKS del Banco. El Frontend no se publica en internet.
+El destino vigente es Temporal Self-Hosted en Azure AKS. PEVE opera el control plane (Frontend, History, Matching y Worker Service). Persistence y visibility quedan en Azure privada. Los workers de APOQ y NREM permanecen en el AKS del Banco. El Frontend no se publica en internet.
 
-Self-Hosted (primera versión) conserva el motor Temporal y no incluye soporte de Temporal Technologies Inc. A esa versión se agregan tres opciones adicionales, todas de ejecución durable en código: Azure Durable Functions (Microsoft opera el plano de control), Dapr Workflows en AKS (mismo Durable Task, cómputo en AKS, soporte Azure) y Restate (Enterprise o Self-Managed en AKS; residual: proveedor más joven que Temporal). Un cambio de destino exige reescritura y aprobación formal antes del paso 0.2.
+Self-Hosted (primera versión) conserva el motor Temporal y no incluye soporte de Temporal Technologies Inc. A esa versión se agregan tres opciones adicionales, todas de ejecución durable en código: Azure Durable Functions (Microsoft opera el control plane), Dapr Workflows en AKS (mismo Durable Task, cómputo en AKS, soporte Azure) y Restate (Enterprise o Self-Managed en AKS; residual: proveedor más joven que Temporal). Un cambio de destino exige reescritura y aprobación formal antes del paso 0.2.
 
 ---
 
@@ -21,9 +21,9 @@ Esta aprobación no incluye la migración productiva de APOQ ni de NREM.
 
 ## Fundamento
 
-Temporal Cloud orquesta y persiste el estado de workflows del Banco. Es un servicio significativo: si Temporal Technologies Inc. no puede seguir operándolo, el plano de control deja de estar disponible. El resultado financiero negativo del proveedor es un elemento de vigilancia, no una prueba de quiebra. El riesgo que se trata es el cese de capacidad para operar Temporal Cloud.
+Temporal Cloud orquesta y persiste el estado de workflows del Banco. Es un servicio significativo: si Temporal Technologies Inc. no puede seguir operándolo, el control plane deja de estar disponible. El resultado financiero negativo del proveedor es un elemento de vigilancia, no una prueba de quiebra. El riesgo que se trata es el cese de capacidad para operar Temporal Cloud.
 
-Los workers ya se ejecutan en AKS del Banco. El componente que no controla el Banco es el servicio gestionado. La primera versión sustituye ese plano de control por el mismo motor Temporal, de código abierto, hospedado por el Banco. Las opciones de la sección 04.6 cambian de motor y exigen reescritura.
+Los workers ya se ejecutan en AKS del Banco. El componente que no controla el Banco es el servicio gestionado. La primera versión sustituye ese control plane por el mismo motor Temporal, de código abierto, hospedado por el Banco. Las opciones de la sección 04.6 cambian de motor y exigen reescritura.
 
 ---
 

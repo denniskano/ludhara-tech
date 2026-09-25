@@ -35,7 +35,7 @@ Los campos en cursiva de los anexos A, C, F y G se completan durante la fase 0, 
 
 Temporal Cloud es operado por Temporal Technologies Inc. El servidor Temporal, con licencia MIT, puede instalarse y operarse en la infraestructura del Banco. En la primera versión del plan la orquestación se mantiene en el mismo motor. Si el paso 0.0 elige una opción de la sección 04.6, el motor cambia y hay reescritura. Los historiales y el estado de negocio quedan bajo control del BCP en todos los destinos.
 
-Los workers ya se ejecutan en AKS del Banco. En Self-Hosted el cambio es de plano de control y conexión. En Durable Functions, Dapr Workflows o Restate el cambio incluye el modelo de programación; el cómputo puede permanecer en AKS (Dapr, Restate, Durable Task SDK) o pasar a Azure Functions.
+Los workers ya se ejecutan en AKS del Banco. En Self-Hosted el cambio es de control plane y conexión. En Durable Functions, Dapr Workflows o Restate el cambio incluye el modelo de programación; el cómputo puede permanecer en AKS (Dapr, Restate, Durable Task SDK) o pasar a Azure Functions.
 
 ---
 
@@ -110,7 +110,7 @@ El riesgo cubierto es la pérdida de continuidad operativa del proveedor, no un 
 |---|---|---|---|---|
 | Reorganización concursal | El servicio suele continuar. El contrato puede asumirse o rechazarse | Activar el plan, congelar usos nuevos en Cloud y migrar por ambientes | Limitada. No se depende de servicios profesionales del proveedor | Semanas |
 | Venta o cambio de control | El servicio continúa y cambia el dueño | Misma ruta técnica. Se evalúa si el comprador es aceptable para el Banco | Media o alta | Semanas a meses |
-| Liquidación o cese abrupto | El plano de control puede interrumpirse. No hay exportación ni soporte | Conmutar al destino aprobado y reabrir los casos críticos desde el estado de negocio | Nula | Horas a pocos días |
+| Liquidación o cese abrupto | El control plane puede interrumpirse. No hay exportación ni soporte | Conmutar al destino aprobado y reabrir los casos críticos desde el estado de negocio | Nula | Horas a pocos días |
 
 ### Supuestos
 
@@ -130,60 +130,21 @@ Una caída transitoria de región, una degradación de corta duración o un inci
 
 ## 04. Solución alternativa y arquitectura objetivo
 
-El destino aprobado es Temporal Self-Hosted en Azure AKS, operado por el Banco. PEVE opera el plano de control. Las aplicaciones siguen operando sus workers. No se adoptará otra plataforma en el momento de la activación, salvo acta previa del paso 0.0 sobre una opción de la sección 04.6.
+El destino aprobado es Temporal Self-Hosted en Azure AKS, operado por el Banco. PEVE opera el control plane. Las aplicaciones siguen operando sus workers. No se adoptará otra plataforma en el momento de la activación, salvo acta previa del paso 0.0 sobre una opción de la sección 04.6.
 
 Arquitectura emite conformidad del patrón. Seguridad valida autenticación, autorización, certificados, cifrado, red, registro de eventos y segregación.
 
 ### 04.1 Diagrama de la propuesta
 
-![Arquitectura Temporal Self-Hosted en Azure AKS, BCP / PEVE](assets/arquitectura-temporal-self-hosted-aks.png)
+![Arquitectura Temporal Self-Hosted en Azure AKS, BCP / PEVE](assets/04-1-arquitectura-self-hosted.png)
+
+Fuente editable: [assets/04-1-arquitectura-self-hosted.drawio](assets/04-1-arquitectura-self-hosted.drawio).
 
 La arquitectura se organiza en tres planos. El Frontend no se expone a internet público.
 
-1. **Aplicación.** APOQ, NREM y las demás aplicaciones del inventario. Los workers permanecen en el AKS del Banco. El core, el outbox y las colas constituyen el registro de negocio.
-2. **Plano de control Temporal (AKS PEVE).** Frontend, History, Matching y Worker Service, detrás de un balanceador interno. La consola web se usa solo para administración.
-3. **Plataforma Azure privada.** Persistencia, visibilidad, archivo de historiales, secretos y monitoreo, con Private Link o red virtual privada.
-
-```mermaid
-flowchart LR
-  subgraph apps["Plano de aplicación - BCP"]
-    APOQ["APOQ, NREM y demás"]
-    W["Workers AKS aplicación"]
-    CORE["Core, outbox y colas"]
-    APOQ --> W
-    W --- CORE
-  end
-
-  subgraph cp["Plano de control Temporal - AKS PEVE"]
-    ILB["Balanceador interno privado"]
-    FE["Frontend"]
-    HS["History"]
-    MT["Matching"]
-    WS["Worker Service"]
-    UI["Consola de administración"]
-    ILB --> FE
-    FE --- HS
-    FE --- MT
-    FE --- WS
-    UI -.-> FE
-  end
-
-  subgraph az["Azure privada"]
-    PG["PostgreSQL persistencia"]
-    VIS["Elasticsearch u OpenSearch"]
-    BLOB["Blob: archivo y exportación"]
-    KV["Key Vault"]
-    MON["Monitor y alertas"]
-  end
-
-  W -->|"gRPC mTLS"| ILB
-  HS --> PG
-  MT --> PG
-  FE --> VIS
-  WS --> BLOB
-  FE --> KV
-  cp --> MON
-```
+1. **Application plane.** APOQ, NREM y las demás aplicaciones del inventario. Los workers permanecen en el AKS del Banco. El core, el outbox y las colas constituyen el registro de negocio.
+2. **Control plane Temporal (AKS PEVE).** Frontend, History, Matching y Worker Service, detrás de un internal load balancer. La web UI se usa solo para administración.
+3. **Azure privada.** Persistence, visibility, archival de historiales, secretos y Monitor, con Private Link o red virtual privada.
 
 ### 04.2 Decisiones de diseño
 
@@ -191,16 +152,16 @@ flowchart LR
 |---|---|---|
 | Ubicación del servidor Temporal | AKS dedicado de PEVE, fuera del namespace de la aplicación | Separar la operación de plataforma y la de negocio |
 | Instalaciones | Dos: no productiva (desarrollo y certificación) y productiva | Aislar producción y ensayar la receta sin afectar críticos |
-| Persistencia | Azure Database for PostgreSQL Flexible Server, con alta disponibilidad y respaldo | Almacén soportado por Temporal y operado en Azure |
-| Visibilidad | Elasticsearch u OpenSearch en Azure | Búsqueda de workflows para operación y auditoría |
-| Archivo de historiales | Azure Blob (workflows cerrados) | Conservación más allá de la retención del clúster |
+| Persistence | Azure Database for PostgreSQL Flexible Server, con alta disponibilidad y respaldo | Store soportado por Temporal y operado en Azure |
+| Visibility | Elasticsearch u OpenSearch en Azure | Búsqueda de workflows para operación y auditoría |
+| Archival | Azure Blob (workflows cerrados) | Conservación más allá de la retención del clúster |
 | Exportación desde Cloud | Proceso periódico hacia Blob del Banco, mientras Cloud esté disponible | En la activación solo existirá lo ya copiado |
-| Acceso al Frontend | Balanceador interno y Private Link, sin dirección pública | Reducir superficie de exposición y controlar residencia |
+| Acceso al Frontend | Internal load balancer y Private Link, sin dirección pública | Reducir superficie de exposición y controlar residencia |
 | Autenticación | mTLS o equivalente aprobado, con identidades en Key Vault | No reutilizar las credenciales de Cloud |
 | Workers de aplicación | Permanecen en el AKS actual | El cambio es de conexión |
 | Payload | Cifrado en tránsito y en el contenido de negocio | Control ya aplicado por el Banco |
 | Namespaces | Código de aplicación y ambiente en cada instalación | Segregación apoq-prod, nrem-prod y equivalentes |
-| Recuperación del plano de control | Respaldo y restauración ensayados; segunda zona de disponibilidad en producción | Corresponde a la continuidad de Self-Hosted, no al retiro de Cloud |
+| Recuperación del control plane | Respaldo y restauración ensayados; segunda zona de disponibilidad en producción | Corresponde a la continuidad de Self-Hosted, no al retiro de Cloud |
 | Alcance técnico excluido | Réplica oficial Cloud hacia Self-Hosted y copia de la base de datos de Cloud | El producto no lo ofrece |
 
 La versión del servidor Temporal, el número de particiones de historial y el dimensionamiento de nodos los define PEVE en el Anexo B.
@@ -209,11 +170,11 @@ La versión del servidor Temporal, el número de particiones de historial y el d
 
 | Componente | Tratamiento |
 |---|---|
-| Plano de control | Clúster Self-Hosted en AKS, con alta disponibilidad, respaldo, restauración, observabilidad y control de accesos |
+| Control plane | Clúster Self-Hosted en AKS, con alta disponibilidad, respaldo, restauración, observabilidad y control de accesos |
 | Workers | Permanecen en AKS del Banco. Se actualizan endpoint, credenciales, certificados y parámetros |
 | Namespaces | Equivalentes por aplicación y ambiente |
 | Identidad y secretos | Accesos nuevos en Self-Hosted. Revocación de Cloud al cierre |
-| Red | Resolución, rutas, puertos, balanceador interno y Private Link |
+| Red | Resolución, rutas, puertos, internal load balancer y Private Link |
 | Pipelines | Variables por ambiente y trazabilidad del cambio |
 | Observabilidad | Registros, métricas, trazas, alertas y tableros sobre Self-Hosted |
 | Historiales cerrados | Archivo en Blob y exportación desde Cloud hacia Blob |
@@ -223,21 +184,9 @@ La versión del servidor Temporal, el número de particiones de historial y el d
 
 Mientras Temporal Cloud responda, el worker utiliza un solo clúster activo por workflow. El indicador de configuración decide el destino de los nuevos inicios. La reversa solo aplica en este modo.
 
-```mermaid
-flowchart TB
-  APP["Aplicación APOQ / NREM"]
-  FLAG["Indicador de destino"]
-  CLOUD["Temporal Cloud"]
-  SH["Temporal Self-Hosted AKS"]
-  CORE["Core / outbox"]
+![Conexión dual mientras Temporal Cloud responde](assets/04-4-transicion-dual.png)
 
-  APP --> FLAG
-  FLAG -->|"nuevos inicios"| SH
-  FLAG -->|"conclusión de ejecuciones abiertas"| CLOUD
-  APP --> CORE
-  SH --> CORE
-  CLOUD -.->|"exportación periódica"| BLOB["Blob del Banco"]
-```
+Fuente editable: [assets/04-4-transicion-dual.drawio](assets/04-4-transicion-dual.drawio).
 
 Un identificador de workflow o un schedule no debe estar activo en Cloud y en Self-Hosted al mismo tiempo. Si Self-Hosted no cumple los criterios de aceptación, los nuevos inicios pueden volver a Cloud únicamente mientras ese servicio siga operable.
 
@@ -245,21 +194,17 @@ Un identificador de workflow o un schedule no debe estar activo en Cloud y en Se
 
 Si Temporal Cloud no responde, no hay conexión dual ni exportación. Los workers apuntan solo a Self-Hosted. Las ejecuciones abiertas en Cloud se consideran no recuperables como historial y se reconstruyen desde el core.
 
-```mermaid
-flowchart LR
-  APP["APOQ / NREM"] --> W["Workers"]
-  W --> SH["Self-Hosted AKS"]
-  W --> CORE["Core / outbox / NREM"]
-  CLOUD["Temporal Cloud no disponible"] -.->|sin API| X["sin conclusión ni exportación"]
-```
+![Modo estresado: Temporal Cloud no responde](assets/04-5-modo-estresado.png)
+
+Fuente editable: [assets/04-5-modo-estresado.drawio](assets/04-5-modo-estresado.drawio).
 
 ### 04.6 Opciones adicionales de destino
 
-La primera versión del plan tiene un solo destino: Temporal Self-Hosted en Azure AKS. Conserva el motor, los SDK y la receta de conexión dual. El Banco opera el plano de control y **no recibe soporte de Temporal Technologies Inc.** sobre el binario de código abierto. Ese es el intercambio: se elimina la dependencia de continuidad del proveedor y se asume la operación.
+La primera versión del plan tiene un solo destino: Temporal Self-Hosted en Azure AKS. Conserva el motor, los SDK y la receta de conexión dual. El Banco opera el control plane y **no recibe soporte de Temporal Technologies Inc.** sobre el binario de código abierto. Ese es el intercambio: se elimina la dependencia de continuidad del proveedor y se asume la operación.
 
 A esa primera versión se agregan **tres opciones adicionales**, todas de la misma categoría que Temporal (ejecución durable en código). Ninguna es un cambio de endpoint: exigen reescritura de workflows y no admiten conexión dual con Temporal Cloud.
 
-| # | Opción | Soporte de proveedor | Dónde corre el plano de control |
+| # | Opción | Soporte de proveedor | Dónde corre el control plane |
 |---|---|---|---|
 | — | Temporal Self-Hosted (primera versión) | No. PEVE opera el OSS | AKS PEVE |
 | 1 | Azure Durable Functions | Microsoft / contrato Azure | Durable Task Scheduler (Microsoft) |
@@ -281,7 +226,7 @@ No se evalúan como destino de críticos: Camunda 8 (BPMN / Zeebe; otra categor�
 
 #### Opción adicional 1 — Azure Durable Functions y Durable Task Scheduler
 
-Microsoft opera el plano de control. El Banco ya tiene contratos Azure. El soporte es el plan de soporte Microsoft (Unified o el que Compras tenga vigente), no un proveedor de orquestación distinto.
+Microsoft opera el control plane. El Banco ya tiene contratos Azure. El soporte es el plan de soporte Microsoft (Unified o el que Compras tenga vigente), no un proveedor de orquestación distinto.
 
 | Elemento | Propuesta |
 |---|---|
@@ -294,26 +239,9 @@ Microsoft opera el plano de control. El Banco ya tiene contratos Azure. El sopor
 | Riesgo de proveedor | Microsoft. Aceptable para el Banco. El residual es lock-in Azure, ya asumido |
 | Cuándo elegirla | El Banco no quiere operar un motor de orquestación y exige soporte sobre un contrato ya firmado |
 
-```mermaid
-flowchart LR
-  subgraph apps["Plano de aplicación - BCP"]
-    APOQ["APOQ / NREM"]
-    ACT["Activities / functions"]
-    CORE["Core, outbox y colas"]
-    APOQ --> ACT
-    ACT --- CORE
-  end
+![Azure Durable Functions y Durable Task Scheduler](assets/04-6-durable-functions.png)
 
-  subgraph azdf["Azure Durable Task"]
-    DF["Durable Functions o Durable Task SDK"]
-    DTS["Durable Task Scheduler"]
-    DF --> DTS
-  end
-
-  ACT -->|"orquestación"| DF
-  DTS --> MON["Azure Monitor"]
-  DTS --> KV["Key Vault / Entra"]
-```
+Fuente editable: [assets/04-6-durable-functions.drawio](assets/04-6-durable-functions.drawio).
 
 #### Opción adicional 2 — Dapr Workflows en AKS
 
@@ -321,37 +249,20 @@ Misma categoría que Temporal: el workflow se escribe en código, se persiste el
 
 | Elemento | Propuesta |
 |---|---|
-| Producto | Dapr Workflows (sidecar en AKS), con almacén de estado que soporte workflows. En Azure: PostgreSQL. No usar Cosmos DB para este caso (límite de 2 MB y 100 operaciones por transacción; no hay migración posterior) |
+| Producto | Dapr Workflows (sidecar en AKS), con state store que soporte workflows. En Azure: PostgreSQL. No usar Cosmos DB para este caso (límite de 2 MB y 100 operaciones por transacción; no hay migración posterior) |
 | Proveedor de soporte | Microsoft, sobre AKS y la extensión Dapr de Azure, más el plan de soporte ya contratado. Dapr es CNCF; el canal útil para el Banco es Azure, no el foro de la comunidad |
 | Fortaleza | Modelo comparable a Temporal (código, replay, activities). Los procesos siguen en AKS, no hay que pasarlos a Azure Functions. Identidad, red privada y residencia ya aceptadas. Misma familia que la opción 1, otro hosting |
-| Debilidad | Reescritura de SDK Temporal. Versionado, search attributes y visibilidad son más débiles que en Temporal. El building block de workflows es más joven que el servidor Temporal; hay que fijar versión soportada (N y N-2) y ensayar restauración del state store |
+| Debilidad | Reescritura de SDK Temporal. Versionado, search attributes y visibility son más débiles que en Temporal. El building block de workflows es más joven que el servidor Temporal; hay que fijar versión soportada (N y N-2) y ensayar restauración del state store |
 | Migración desde Cloud | No hay importación de historial. Nuevos inicios en Dapr; conclusión o reapertura desde el core |
 | Conexión dual | No aplica. Dos implementaciones del proceso hasta el corte |
 | Riesgo de proveedor | Microsoft / Azure. Aceptable para el Banco. El residual es la madurez de Dapr Workflows para volumen y duración de APOQ y NREM, y que PEVE opera sidecars y el state store |
 | Cuándo elegirla | El Banco exige soporte Microsoft y quiere conservar el cómputo en AKS, con un modelo de programación del mismo tipo que Temporal |
 
-```mermaid
-flowchart LR
-  subgraph apps2["Plano de aplicación - BCP"]
-    APOQ2["APOQ / NREM"]
-    APP["App + activities en AKS"]
-    CORE2["Core, outbox y colas"]
-    APOQ2 --> APP
-    APP --- CORE2
-  end
+![Dapr Workflows en AKS](assets/04-6-dapr-workflows.png)
 
-  subgraph dapr["Dapr en AKS"]
-    SID["Sidecar daprd"]
-    WF["Workflow engine / scheduler"]
-    SID --- WF
-  end
+Fuente editable: [assets/04-6-dapr-workflows.drawio](assets/04-6-dapr-workflows.drawio).
 
-  APP -->|"SDK workflow"| SID
-  WF --> PG2["PostgreSQL estado"]
-  WF --> MON2["Monitor y alertas"]
-```
-
-Durable Functions (opción 1) y Dapr Workflows (opción 2) no son dos motores distintos: son dos formas de hospedar el Durable Task Framework. La 1 deja el plano de control en Microsoft (Durable Task Scheduler). La 2 lo deja en AKS junto a las aplicaciones. Se elige una de las dos, o ninguna.
+Durable Functions (opción 1) y Dapr Workflows (opción 2) no son dos motores distintos: son dos formas de hospedar el Durable Task Framework. La 1 deja el control plane en Microsoft (Durable Task Scheduler). La 2 lo deja en AKS junto a las aplicaciones. Se elige una de las dos, o ninguna.
 
 #### Opción adicional 3 — Restate
 
@@ -362,32 +273,15 @@ Restate es el destino más cercano a Temporal en modelo mental: ejecución durab
 | Producto | Restate Server (binario en AKS, operador Kubernetes) o Restate Cloud Enterprise. Preferible Self-Managed en AKS si el criterio es no repetir un SaaS único |
 | Proveedor de soporte | Restate (plan Enterprise) si se contrata Cloud o soporte sobre el binario. Si solo se autoaloja el OSS, el soporte vuelve a PEVE |
 | Fortaleza | Misma categoría que Temporal, con menos piezas que un clúster Temporal (servidor + log). SDKs cercanos al estilo actual. Autoalojable en Azure. Enterprise ofrece SLA y canal de soporte |
-| Debilidad | Reescritura de SDK Temporal. Compañía más joven que Temporal Technologies Inc. y que Microsoft. Restate Cloud **repite concentración** de plano de control en un proveedor de orquestación. El OSS sin contrato Enterprise deja al Banco otra vez sin soporte de proveedor |
+| Debilidad | Reescritura de SDK Temporal. Compañía más joven que Temporal Technologies Inc. y que Microsoft. Restate Cloud **repite concentración** de control plane en un proveedor de orquestación. El OSS sin contrato Enterprise deja al Banco otra vez sin soporte de proveedor |
 | Migración desde Cloud | No hay importación de historial. Nuevos inicios en Restate; conclusión o reapertura desde el core |
 | Conexión dual | No aplica. Dos implementaciones del proceso hasta el corte |
 | Riesgo de proveedor | Restate Cloud: continuidad de un proveedor más pequeño que Temporal. Self-Managed + Enterprise: el residual es la vigencia del contrato de soporte. Self-Managed sin Enterprise: mismo residual que Temporal OSS |
 | Cuándo elegirla | El Banco quiere un motor de ejecución durable en código, distinto de Temporal y de Durable Task, y acepta contratar Restate Enterprise o autoalojarlo en AKS |
 
-```mermaid
-flowchart LR
-  subgraph apps3["Plano de aplicación - BCP"]
-    APOQ3["APOQ / NREM"]
-    SVC["Servicios / handlers AKS"]
-    CORE3["Core, outbox y colas"]
-    APOQ3 --> SVC
-    SVC --- CORE3
-  end
+![Restate Self-Managed o Cloud Enterprise](assets/04-6-restate.png)
 
-  subgraph rst["Restate"]
-    RS["Restate Server"]
-    LOG["Log durable"]
-    RS --- LOG
-  end
-
-  SVC -->|"SDK Restate"| RS
-  RS --> MON3["Monitor y alertas"]
-  RS --> KV3["Key Vault"]
-```
+Fuente editable: [assets/04-6-restate.drawio](assets/04-6-restate.drawio).
 
 #### Comparación
 
@@ -400,7 +294,7 @@ flowchart LR
 | Tiempo hasta fase 0 operativa | El de la sección 14 | Mayor: nuevo modelo + Functions o DTS | Mayor: sidecar, state store y pruebas de dominio | Mayor: nuevo SDK + servidor o Cloud |
 | Residencia / Azure | AKS y PostgreSQL del Banco | Nativo Azure | AKS y PostgreSQL (no Cosmos DB) | AKS (Self-Managed) o Restate Cloud |
 | Riesgo que se trata | Cese de Temporal Cloud, sin cambiar de motor | Cese de Temporal Cloud y ausencia de soporte OSS | Igual, conservando cómputo en AKS | Cese de Temporal Cloud, con otro motor durable |
-| Quién opera el plano de control | PEVE | Microsoft (Scheduler) o PEVE (MSSQL) | PEVE (sidecars + state store), con soporte Azure | PEVE (AKS) o Restate (Cloud) |
+| Quién opera el control plane | PEVE | Microsoft (Scheduler) o PEVE (MSSQL) | PEVE (sidecars + state store), con soporte Azure | PEVE (AKS) o Restate (Cloud) |
 
 #### Decisión que se pide sobre alternativas
 
@@ -488,7 +382,7 @@ El PO valida el impacto funcional y la continuidad del proceso. El equipo técni
 
 Legal y Compras gestionan las notificaciones, los derechos de salida y la terminación. Conservan las comunicaciones y la constancia de cierre.
 
-El contrato aporta valor en reorganización y venta (preaviso, asistencia, exportación y periodo de transición). En liquidación puede no haber asistencia ni mantenimiento del plano de control. El control principal del plan es la plataforma alternativa, no la cláusula contractual.
+El contrato aporta valor en reorganización y venta (preaviso, asistencia, exportación y periodo de transición). En liquidación puede no haber asistencia ni mantenimiento del control plane. El control principal del plan es la plataforma alternativa, no la cláusula contractual.
 
 Mientras Temporal Cloud exista como contraparte:
 
@@ -730,7 +624,7 @@ Al completar el paso 0.10, la plataforma objetivo queda lista para recibir las a
 | Durable Functions | Opción adicional 1. Orquestación Azure (Durable Task Scheduler o Durable Task SDK). Soporte Microsoft |
 | Dapr Workflows | Opción adicional 2. Ejecución durable en código sobre sidecars en AKS. Soporte Microsoft / extensión Dapr |
 | Restate | Opción adicional 3. Motor de ejecución durable en código. Restate Cloud Enterprise o Self-Managed en AKS |
-| PEVE | Frente que gobierna el plan y opera el plano de control |
+| PEVE | Frente que gobierna el plan y opera el control plane |
 | Vigilancia | Seguimiento de la continuidad del proveedor, sin iniciar la migración productiva |
 | Activación | Orden de ejecutar el retiro en modo ordenado o estresado |
 | Destino aprobado | Self-Hosted, salvo acta del paso 0.0 que elija Durable Functions, Dapr Workflows o Restate |
@@ -813,7 +707,7 @@ Sustituye B.1 y B.2 cuando el paso 0.0 elige Durable Functions, Dapr Workflows o
 | Patrón de Arquitectura | Conformidad del destino elegido (Functions + Scheduler, Dapr + PostgreSQL, o Restate AKS/Cloud) | Acta de Arquitectura y Seguridad |
 | Plataforma no productiva y productiva | Alta disponibilidad y restauración ensayadas, capacidad concurrente para APOQ y NREM | Diagrama, IaC y prueba de restauración |
 | Identidad | Identidades nuevas (Entra / managed identity / mTLS). No reutilizar secretos de Cloud | Matriz de roles |
-| Red | Conectividad privada desde las aplicaciones hacia el plano de control del destino | Prueba de conectividad |
+| Red | Conectividad privada desde las aplicaciones hacia el control plane del destino | Prueba de conectividad |
 | Observabilidad | Registros, métricas, trazas, alertas y tablero del destino | Tablero operativo |
 | Residencia | Datos y respaldos en ubicaciones aceptadas | Constancia de Arquitectura y Seguridad |
 | Soporte de proveedor | Contrato o plan de soporte vigente: Microsoft (1 y 2) o Restate Enterprise (3, si se exige soporte) | Constancia de Compras |
