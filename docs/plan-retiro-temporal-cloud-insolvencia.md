@@ -1,14 +1,14 @@
 # Plan de retiro preventivo de Temporal Cloud ante insolvencia del proveedor
 
-**BCP / PEVE / Versión 1.4**  
+**BCP / PEVE / Versión 1.0**  
 Datos elaborados por BCP para uso interno.  
 Documento de decisión asociado: resumen para la instancia aprobadora.
 
 | Control | Valor |
 |---|---|
 | Código | PEVE-PR-2026-001 |
-| Versión | 1.4 |
-| Estado | Final para aprobación. La fase 0 queda pendiente de ejecución. Destino de la primera versión: Self-Hosted. Tres opciones adicionales en 04.6. |
+| Versión | 1.0 |
+| Estado | Final para aprobación. La fase 0 queda pendiente de ejecución. Cuatro destinos evaluados de forma equitativa. Paso 0.0 elige uno. |
 | Clasificación | Uso interno BCP |
 | Dueño | PEVE |
 | Revisores | Arquitectura, Seguridad, Continuidad, RNF, Legal / Compras, PO APOQ, PO NREM |
@@ -27,13 +27,13 @@ Los campos en cursiva de los anexos A, C, F y G se completan durante la fase 0, 
 | Servicio | Temporal Cloud (orquestación y persistencia del estado de workflows) |
 | Proveedor | Temporal Technologies Inc. |
 | Función | Crítica / servicio significativo de procesamiento de datos |
-| Destino | Temporal Self-Hosted en Azure AKS del Banco (primera versión / vigente). Tres opciones adicionales: sección 04.6 |
+| Destino | Cuatro opciones evaluadas de forma equitativa: Temporal Self-Hosted en Azure AKS, Azure Durable Functions, Dapr Workflows, y Restate. Paso 0.0 elige uno. |
 | Riesgo cubierto | Insolvencia, liquidación, cese de operaciones o pérdida material de capacidad del proveedor para operar Temporal Cloud |
-| Fuera de alcance | Terminación comercial o renegociación de precio. Un destino distinto a Self-Hosted (Durable Functions, Dapr Workflows o Restate) requiere aprobación formal de Arquitectura, Compras y la instancia |
+| Fuera de alcance | Terminación comercial o renegociación de precio. Adopción de un destino sin acta del paso 0.0 con aprobación formal de Arquitectura, Compras y la instancia |
 | Gobierno | PEVE gobierna el plan y entrega la receta técnica. Los equipos de aplicación ejecutan y validan su migración. |
 | Naturaleza | Preventivo y activable. La alternativa se prepara con anticipación y se ejecuta cuando se declara la pérdida de continuidad del proveedor o el cese del servicio. |
 
-Temporal Cloud es operado por Temporal Technologies Inc. El servidor Temporal, con licencia MIT, puede instalarse y operarse en la infraestructura del Banco. En la primera versión del plan la orquestación se mantiene en el mismo motor. Si el paso 0.0 elige una opción de la sección 04.6, el motor cambia y hay reescritura. Los historiales y el estado de negocio quedan bajo control del BCP en todos los destinos.
+Temporal Cloud es operado por Temporal Technologies Inc. El plan evalúa cuatro destinos. El servidor Temporal (MIT) puede instalarse y operarse en el Banco (Self-Hosted). Microsoft opera Azure Durable Functions y soporta Dapr Workflows. Restate puede autoalojarse en AKS o contratarse como Cloud Enterprise. El paso 0.0 elige uno de los cuatro. Los historiales y el estado de negocio quedan bajo control del BCP en todos los destinos.
 
 Los workers ya se ejecutan en AKS del Banco. En Self-Hosted el cambio es de control plane y conexión. En Durable Functions, Dapr Workflows o Restate el cambio incluye el modelo de programación; el cómputo puede permanecer en AKS (Dapr, Restate, Durable Task SDK) o pasar a Azure Functions.
 
@@ -42,7 +42,7 @@ Los workers ya se ejecutan en AKS del Banco. En Self-Hosted el cambio es de cont
 ## Principios
 
 1. **Continuidad y ausencia de duplicidad.** No se admite la doble ejecución de efectos de negocio (débito, crédito, remesa o liquidación). Las activities deben ser idempotentes. Un schedule o un workflow no puede estar activo a la vez en Cloud y en el destino aprobado.
-2. **Destino aprobado.** La primera versión del plan migra hacia Temporal Self-Hosted en Azure AKS. Las tres opciones adicionales de la sección 04.6 (Durable Functions, Dapr Workflows y Restate) se documentan para decisión; no se adoptan en la activación sin aprobación formal. Donde el resto del documento dice Self-Hosted como destino de la migración, léase el destino aprobado (Self-Hosted salvo acta del paso 0.0). La conexión dual, los namespaces Temporal y el Anexo B aplican solo si el destino es Self-Hosted.
+2. **Destino aprobado.** El plan evalúa cuatro opciones de forma equitativa (Temporal Self-Hosted, Azure Durable Functions, Dapr Workflows y Restate). El paso 0.0 elige uno con aprobación formal antes de ejecutar la fase. Donde el documento dice Self-Hosted como destino de la migración, léase el destino aprobado por el paso 0.0. La conexión dual, los namespaces Temporal y el Anexo B aplican solo si el destino es Self-Hosted.
 3. **Preparación previa.** La plataforma objetivo, la receta, el inventario y la exportación de historiales deben existir antes de la notificación del proveedor.
 4. **Dos modos de actuación.** En reorganización o venta puede existir una ventana para concluir workflows en Cloud. En liquidación o interrupción definitiva no se espera cooperación del proveedor: se conmuta al destino aprobado y se reconstruye desde el estado de negocio.
 5. **Migración por ambientes.** El orden es desarrollo, certificación y producción. No hay pase productivo sin conformidad técnica, funcional y de seguridad.
@@ -60,7 +60,7 @@ El retiro cubre las aplicaciones del BCP que usan o tienen previsto usar Tempora
 
 **Incluye:** aplicaciones, workflows (activos, históricos, fallidos, compensados o en reproceso), namespaces, workers en AKS, endpoints, red, certificados, secretos, pipelines, observabilidad, pruebas, aprobaciones y evidencias de cierre.
 
-**No incluye:** aplicaciones de empresas distintas a BCP; cambios funcionales que no sean necesarios para el retiro; la adopción de un destino de la sección 04.6 sin aprobación formal; la ejecución detallada de los cambios de cada aplicación, que se documenta en sus procedimientos de despliegue aplicando la receta de PEVE.
+**No incluye:** aplicaciones de empresas distintas a BCP; cambios funcionales que no sean necesarios para el retiro; la adopción de un destino sin aprobación formal del paso 0.0; la ejecución detallada de los cambios de cada aplicación, que se documenta en sus procedimientos de despliegue aplicando la receta de PEVE.
 
 ### Inventario
 
@@ -80,7 +80,7 @@ APOQ y NREM pueden avanzar como frentes paralelos. No se ha identificado depende
 
 Las aplicaciones no productivas deben migrarse al destino aprobado antes de un eventual pase a producción. Si el dueño decide no continuar, se congelan o retiran con evidencia. No se habilitará producción nueva sobre Temporal Cloud.
 
-**Patrón de namespaces.** Si el destino es Self-Hosted: código de aplicación en minúsculas seguido del ambiente, por ejemplo apoq-dev, apoq-cert y apoq-prod. Si el destino es 04.6 no hay namespaces Temporal; el inventario registra task hubs, aplicaciones Dapr o deployments Restate equivalentes.
+**Patrón de namespaces.** Si el destino es Self-Hosted (opción 1): código de aplicación en minúsculas seguido del ambiente, por ejemplo apoq-dev, apoq-cert y apoq-prod. Si el destino es opción 2, 3 o 4 no hay namespaces Temporal; el inventario registra task hubs, aplicaciones Dapr o deployments Restate equivalentes.
 
 **Clasificación.** APOQ y NREM son funciones críticas en producción. El resto es material por el tipo de proceso (autorizador, pagos, LBTR, core de cuentas), aunque aún no esté en producción, y no debe pasar a producción sobre Temporal Cloud mientras el proveedor esté en vigilancia.
 
@@ -88,7 +88,7 @@ Las aplicaciones no productivas deben migrarse al destino aprobado antes de un e
 
 ## 02. Objetivos
 
-**General.** Definir el marco técnico, operativo, contractual, de continuidad y de seguridad para retirar Temporal Cloud del BCP y migrar los casos de uso al destino vigente (Temporal Self-Hosted en Azure AKS), o a un destino de la sección 04.6 si la instancia lo aprueba, sin comprometer la continuidad de las aplicaciones productivas ni la trazabilidad de los workflows.
+**General.** Definir el marco técnico, operativo, contractual, de continuidad y de seguridad para retirar Temporal Cloud del BCP y migrar los casos de uso a uno de los cuatro destinos evaluados (Temporal Self-Hosted, Azure Durable Functions, Dapr Workflows o Restate), elegido por el paso 0.0, sin comprometer la continuidad de las aplicaciones productivas ni la trazabilidad de los workflows.
 
 **Específicos**
 
@@ -115,7 +115,7 @@ El riesgo cubierto es la pérdida de continuidad operativa del proveedor, no un 
 ### Supuestos
 
 - Si el destino es Self-Hosted: el servidor Temporal y los SDK permanecen disponibles como código abierto. El Banco opera el mismo motor.
-- Si el destino es una opción de la sección 04.6: no hay reutilización del SDK Temporal. La fase 0 incluye reescritura y no hay conexión dual. El supuesto de “mismo motor” no aplica.
+- Si el destino es opción 2, 3 o 4: no hay reutilización del SDK Temporal. La fase 0 incluye reescritura y no hay conexión dual. El supuesto de “mismo motor” no aplica.
 - No existe una migración oficial de Temporal Cloud hacia ningún destino de este plan. La salida se realiza en la aplicación (cambio de endpoint, o dos implementaciones del proceso), no mediante copia de la base de datos del proveedor.
 - La exportación de historiales de Cloud requiere que el servicio esté disponible y se ejecuta de forma periódica. Si no se ha copiado a almacenamiento del Banco antes de la activación, el historial vivo no será recuperable.
 - Temporal orquesta la ejecución. El registro de negocio reside en el core, outbox, colas y conciliaciones de APOQ y NREM. En modo estresado, la pérdida máxima de información aceptable se mide contra ese estado, no contra el historial de Cloud.
@@ -130,9 +130,9 @@ Una caída transitoria de región, una degradación de corta duración o un inci
 
 ## 04. Solución alternativa y arquitectura objetivo
 
-El destino aprobado es Temporal Self-Hosted en Azure AKS, operado por el Banco. PEVE opera el control plane. Las aplicaciones siguen operando sus workers. No se adoptará otra plataforma en el momento de la activación, salvo acta previa del paso 0.0 sobre una opción de la sección 04.6.
+El plan evalúa cuatro destinos de forma equitativa. El paso 0.0 elige uno con acta formal. Las aplicaciones siguen operando sus workers en todas las opciones. PEVE opera el control plane cuando el destino es Self-Hosted o Dapr Workflows; Microsoft lo opera en Durable Functions; Restate lo opera en Cloud Enterprise o PEVE en Self-Managed.
 
-Arquitectura emite conformidad del patrón. Seguridad valida autenticación, autorización, certificados, cifrado, red, registro de eventos y segregación.
+Arquitectura emite conformidad del patrón elegido. Seguridad valida autenticación, autorización, certificados, cifrado, red, registro de eventos y segregación.
 
 ### 04.1 Diagrama de la propuesta
 
@@ -198,18 +198,20 @@ Si Temporal Cloud no responde, no hay conexión dual ni exportación. Los worker
 
 Fuente editable: [assets/04-5-modo-estresado.drawio](assets/04-5-modo-estresado.drawio).
 
-### 04.6 Opciones adicionales de destino
+### 04.6 Evaluación de las cuatro opciones de destino
 
-La primera versión del plan tiene un solo destino: Temporal Self-Hosted en Azure AKS. Conserva el motor, los SDK y la receta de conexión dual. El Banco opera el control plane y **no recibe soporte de Temporal Technologies Inc.** sobre el binario de código abierto. Ese es el intercambio: se elimina la dependencia de continuidad del proveedor y se asume la operación.
+El plan evalúa cuatro destinos de forma equitativa. Todos permiten ejecución durable en código. El paso 0.0 elige uno.
 
-A esa primera versión se agregan **tres opciones adicionales**, todas de la misma categoría que Temporal (ejecución durable en código). Ninguna es un cambio de endpoint: exigen reescritura de workflows y no admiten conexión dual con Temporal Cloud.
+**Temporal Self-Hosted** conserva el motor, los SDK y la receta de conexión dual. El Banco opera el control plane y **no recibe soporte de Temporal Technologies Inc.** sobre el binario de código abierto. Ese es el intercambio: se elimina la dependencia de continuidad del proveedor y se asume la operación.
+
+Las otras tres opciones exigen reescritura de workflows y no admiten conexión dual con Temporal Cloud.
 
 | # | Opción | Soporte de proveedor | Dónde corre el control plane |
 |---|---|---|---|
-| — | Temporal Self-Hosted (primera versión) | No. PEVE opera el OSS | AKS PEVE |
-| 1 | Azure Durable Functions | Microsoft / contrato Azure | Durable Task Scheduler (Microsoft) |
-| 2 | Dapr Workflows | Microsoft sobre AKS / extensión Dapr | Sidecars y state store en AKS |
-| 3 | Restate | Restate Enterprise (SLA negociado) o PEVE si se autoaloja | Restate Cloud o binario en AKS |
+| 1 | Temporal Self-Hosted | No. PEVE opera el OSS | AKS PEVE |
+| 2 | Azure Durable Functions | Microsoft / contrato Azure | Durable Task Scheduler (Microsoft) |
+| 3 | Dapr Workflows | Microsoft sobre AKS / extensión Dapr | Sidecars y state store en AKS |
+| 4 | Restate | Restate Enterprise (SLA negociado) o PEVE si se autoaloja | Restate Cloud o binario en AKS |
 
 #### Criterio de selección
 
@@ -224,7 +226,26 @@ A esa primera versión se agregan **tres opciones adicionales**, todas de la mis
 
 No se evalúan como destino de críticos: Camunda 8 (BPMN / Zeebe; otra categoría, no ejecución durable en código); AWS Step Functions (el Banco está en Azure); Logic Apps (iPaaS); Cadence u Orkes Conductor (grafo de tareas, no replay Temporal; Orkes además concentra soporte en un proveedor de menor escala); un segundo Temporal Cloud en otra cuenta (sigue siendo Temporal Technologies Inc.).
 
-#### Opción adicional 1 — Azure Durable Functions y Durable Task Scheduler
+#### Opción 1 — Temporal Self-Hosted en Azure AKS
+
+PEVE opera el control plane. El Banco ya tiene infraestructura Azure. No incluye soporte de Temporal Technologies Inc. sobre el OSS.
+
+| Elemento | Propuesta |
+|---|---|
+| Producto | Servidor Temporal de código abierto (MIT) en AKS PEVE. PostgreSQL para persistence, Elasticsearch/OpenSearch para visibility, Blob para archival |
+| Proveedor de soporte | No hay. PEVE opera el binario OSS. Sin contrato ni canal de Temporal Technologies Inc. |
+| Fortaleza | Conserva el motor, SDKs y workers actuales. Cambio de endpoint únicamente. Conexión dual durante la transición. Elimina dependencia de continuidad del proveedor SaaS |
+| Debilidad | El Banco opera el control plane sin soporte del proveedor del motor. Responsabilidad de actualización, escalamiento, respaldo y recuperación |
+| Migración desde Cloud | Cambio de endpoint. Conclusión de workflows cortos en Cloud o traslado de estado. Conexión dual aplicable |
+| Conexión dual | No aplica. No hay dos clústeres Temporal. El indicador de destino pasa a ser “Temporal Cloud / Durable Functions” y exige dos implementaciones del mismo proceso |
+| Riesgo de proveedor | Ninguno: es OSS. El residual es la operación sin soporte especializado de Temporal Technologies Inc. |
+| Cuándo elegirla | El Banco puede operar el motor, no requiere soporte del proveedor, y quiere evitar reescritura de APOQ y NREM |
+
+![Arquitectura Temporal Self-Hosted en Azure AKS](assets/04-1-arquitectura-self-hosted.png)
+
+Fuente editable: [assets/04-1-arquitectura-self-hosted.drawio](assets/04-1-arquitectura-self-hosted.drawio).
+
+#### Opción 2 — Azure Durable Functions y Durable Task Scheduler
 
 Microsoft opera el control plane. El Banco ya tiene contratos Azure. El soporte es el plan de soporte Microsoft (Unified o el que Compras tenga vigente), no un proveedor de orquestación distinto.
 
@@ -234,8 +255,8 @@ Microsoft opera el control plane. El Banco ya tiene contratos Azure. El soporte 
 | Proveedor de soporte | Microsoft. Mismo canal que el resto de Azure del BCP |
 | Fortaleza | Contratos existentes, residencia en Azure, identidad (Entra / managed identity), Private Link, tablero nativo del Scheduler, SLA de Azure sobre el servicio gestionado |
 | Debilidad | Reescritura completa de workflows Temporal (signals, queries, search attributes, schedules, namespaces). El modelo de hosting habitual es Azure Functions, no los workers actuales en AKS; el Durable Task SDK permite otro host, pero no es el camino más documentado |
-| Migración desde Cloud | No hay importación de historial. Igual que Self-Hosted: nuevos inicios en el destino; conclusión o reapertura desde el core |
-| Conexión dual | No aplica. No hay dos clústeres Temporal. El indicador de destino pasa a ser “Temporal Cloud / Durable Functions” y exige dos implementaciones del mismo proceso |
+| Migración desde Cloud | No hay importación de historial. Nuevos inicios en el destino; conclusión o reapertura desde el core |
+| Conexión dual | No aplica. No hay dos clústeres Temporal. El indicador de destino pasa a ser "Temporal Cloud / Durable Functions" y exige dos implementaciones del mismo proceso |
 | Riesgo de proveedor | Microsoft. Aceptable para el Banco. El residual es lock-in Azure, ya asumido |
 | Cuándo elegirla | El Banco no quiere operar un motor de orquestación y exige soporte sobre un contrato ya firmado |
 
@@ -243,7 +264,7 @@ Microsoft opera el control plane. El Banco ya tiene contratos Azure. El soporte 
 
 Fuente editable: [assets/04-6-durable-functions.drawio](assets/04-6-durable-functions.drawio).
 
-#### Opción adicional 2 — Dapr Workflows en AKS
+#### Opción 3 — Dapr Workflows en AKS
 
 Misma categoría que Temporal: el workflow se escribe en código, se persiste el historial y se reconstruye por replay. Activities, temporizadores y eventos externos equivalen a activities, timers y signals. El runtime de Dapr Workflow se apoya en el Durable Task Framework de Microsoft. Los workers y las aplicaciones permanecen en AKS.
 
@@ -251,7 +272,7 @@ Misma categoría que Temporal: el workflow se escribe en código, se persiste el
 |---|---|
 | Producto | Dapr Workflows (sidecar en AKS), con state store que soporte workflows. En Azure: PostgreSQL. No usar Cosmos DB para este caso (límite de 2 MB y 100 operaciones por transacción; no hay migración posterior) |
 | Proveedor de soporte | Microsoft, sobre AKS y la extensión Dapr de Azure, más el plan de soporte ya contratado. Dapr es CNCF; el canal útil para el Banco es Azure, no el foro de la comunidad |
-| Fortaleza | Modelo comparable a Temporal (código, replay, activities). Los procesos siguen en AKS, no hay que pasarlos a Azure Functions. Identidad, red privada y residencia ya aceptadas. Misma familia que la opción 1, otro hosting |
+| Fortaleza | Modelo comparable a Temporal (código, replay, activities). Los procesos siguen en AKS, no hay que pasarlos a Azure Functions. Identidad, red privada y residencia ya aceptadas. Misma familia que la opción 2, otro hosting |
 | Debilidad | Reescritura de SDK Temporal. Versionado, search attributes y visibility son más débiles que en Temporal. El building block de workflows es más joven que el servidor Temporal; hay que fijar versión soportada (N y N-2) y ensayar restauración del state store |
 | Migración desde Cloud | No hay importación de historial. Nuevos inicios en Dapr; conclusión o reapertura desde el core |
 | Conexión dual | No aplica. Dos implementaciones del proceso hasta el corte |
@@ -262,9 +283,9 @@ Misma categoría que Temporal: el workflow se escribe en código, se persiste el
 
 Fuente editable: [assets/04-6-dapr-workflows.drawio](assets/04-6-dapr-workflows.drawio).
 
-Durable Functions (opción 1) y Dapr Workflows (opción 2) no son dos motores distintos: son dos formas de hospedar el Durable Task Framework. La 1 deja el control plane en Microsoft (Durable Task Scheduler). La 2 lo deja en AKS junto a las aplicaciones. Se elige una de las dos, o ninguna.
+Durable Functions (opción 2) y Dapr Workflows (opción 3) no son dos motores distintos: son dos formas de hospedar el Durable Task Framework. La 2 deja el control plane en Microsoft (Durable Task Scheduler). La 3 lo deja en AKS junto a las aplicaciones. Se elige una de las dos, o ninguna.
 
-#### Opción adicional 3 — Restate
+#### Opción 4 — Restate
 
 Restate es el destino más cercano a Temporal en modelo mental: ejecución durable en código, SDKs (Java, TypeScript, Go, Python, Kotlin), invocaciones idempotentes, timers y comunicación durable. Se puede autoalojar en AKS o contratar Restate Cloud con plan Enterprise (SLA negociado, soporte P0).
 
@@ -285,29 +306,29 @@ Fuente editable: [assets/04-6-restate.drawio](assets/04-6-restate.drawio).
 
 #### Comparación
 
-| | Temporal Self-Hosted (1.ª versión) | Adic. 1 Durable Functions | Adic. 2 Dapr Workflows | Adic. 3 Restate |
+| | Opción 1: Self-Hosted | Opción 2: Durable Functions | Opción 3: Dapr Workflows | Opción 4: Restate |
 |---|---|---|---|---|
 | Categoría | Ejecución durable en código | Ejecución durable en código (Durable Task) | Ejecución durable en código (Durable Task) | Ejecución durable en código |
 | Soporte de proveedor para críticos | No. PEVE opera el OSS | Sí. Microsoft / contrato Azure | Sí. Microsoft sobre AKS / extensión Dapr | Sí, si hay contrato Enterprise. No, si solo OSS |
 | Reescritura de APOQ / NREM | Mínima (endpoint, identidad, receta) | Completa | Completa (SDK Dapr; workers en AKS) | Completa (SDK Restate; handlers en AKS) |
 | Conexión dual con Cloud | Sí | No | No | No |
-| Tiempo hasta fase 0 operativa | El de la sección 14 | Mayor: nuevo modelo + Functions o DTS | Mayor: sidecar, state store y pruebas de dominio | Mayor: nuevo SDK + servidor o Cloud |
+| Tiempo hasta fase 0 operativa | Referencial de la sección 14 | Mayor: nuevo modelo + Functions o DTS | Mayor: sidecar, state store y pruebas de dominio | Mayor: nuevo SDK + servidor o Cloud |
 | Residencia / Azure | AKS y PostgreSQL del Banco | Nativo Azure | AKS y PostgreSQL (no Cosmos DB) | AKS (Self-Managed) o Restate Cloud |
 | Riesgo que se trata | Cese de Temporal Cloud, sin cambiar de motor | Cese de Temporal Cloud y ausencia de soporte OSS | Igual, conservando cómputo en AKS | Cese de Temporal Cloud, con otro motor durable |
 | Quién opera el control plane | PEVE | Microsoft (Scheduler) o PEVE (MSSQL) | PEVE (sidecars + state store), con soporte Azure | PEVE (AKS) o Restate (Cloud) |
 
 #### Decisión que se pide sobre alternativas
 
-La instancia no está obligada a cambiar el destino. Si no hay acta en contrario, la fase 0 sigue el Anexo B (Self-Hosted).
+El paso 0.0 elige uno de los cuatro destinos evaluados con acta formal. No hay destino predeterminado.
 
 | Pedido | Efecto |
 |---|---|
-| Mantener Self-Hosted (primera versión) | Se ejecuta la sección 14. El residual es operar el motor sin soporte de Temporal Technologies Inc. |
-| Elegir Durable Functions | Se detiene el Anexo B. Arquitectura emite un patrón Azure. APOQ y NREM reescriben. No hay conexión dual. Compras usa el contrato Microsoft |
-| Elegir Dapr Workflows | Se detiene el Anexo B. Arquitectura emite el patrón Dapr en AKS. State store PostgreSQL. APOQ y NREM reescriben al SDK Dapr. No hay conexión dual |
-| Elegir Restate | Se detiene el Anexo B. Arquitectura emite el patrón Restate (AKS o Cloud). Compras el contrato Enterprise si se exige soporte de proveedor. APOQ y NREM reescriben al SDK Restate |
+| Elegir Self-Hosted (opción 1) | Se ejecuta la sección 14 con Anexo B. El residual es operar el motor sin soporte de Temporal Technologies Inc. Conexión dual aplicable |
+| Elegir Durable Functions (opción 2) | Arquitectura emite un patrón Azure. APOQ y NREM reescriben. No hay conexión dual. Compras usa el contrato Microsoft. Anexo B.4 |
+| Elegir Dapr Workflows (opción 3) | Arquitectura emite el patrón Dapr en AKS. State store PostgreSQL. APOQ y NREM reescriben al SDK Dapr. No hay conexión dual. Anexo B.4 |
+| Elegir Restate (opción 4) | Arquitectura emite el patrón Restate (AKS o Cloud). Compras el contrato Enterprise si se exige soporte de proveedor. APOQ y NREM reescriben al SDK Restate. Anexo B.4 |
 
-Un cambio de destino se aprueba **antes** del paso 0.2. Después de instalar Self-Hosted, cambiar de motor no anula el trabajo de red y de inventario, pero sí anula la receta de conexión dual.
+El destino se aprueba **antes** del paso 0.2. La receta de conexión dual (0.4, 0.5) aplica solo si 0.0 elige la opción 1. Las opciones 2, 3 y 4 siguen la ruta de reescritura del Anexo B.4.
 
 ---
 
@@ -338,7 +359,7 @@ La notificación formal del proveedor es un disparador, no el único. En un esce
 | Notificación formal de Temporal Technologies Inc. | Insolvencia, liquidación, disolución, cese, terminación o imposibilidad material de seguir prestando Temporal Cloud | Activación inmediata del plan | Instancia aprobadora, con evidencia custodiada por Legal |
 | Comunicación contractual que anticipe la pérdida definitiva de capacidad | Preaviso de cese, rechazo del contrato en concurso o impago de la infraestructura del proveedor | Activación inmediata | Legal / Compras e instancia aprobadora |
 | Duda sobre la continuidad del proveedor | Duda sustancial de auditor, incumplimiento de obligaciones financieras o imposibilidad acreditada de operar Cloud | Activación. Congelar nuevos usos de Cloud | RNF, Legal e instancia aprobadora |
-| Liquidez | Horizonte de caja reducido sin financiamiento comprometido, o ronda abortada con recorte operativo material | Vigilancia formal. Piloto en un caso no crítico (conexión dual si Self-Hosted; flujo reescrito si 04.6). Acelerar la plataforma destino | RNF y PEVE |
+| Liquidez | Horizonte de caja reducido sin financiamiento comprometido, o ronda abortada con recorte operativo material | Vigilancia formal. Piloto en un caso no crítico (conexión dual si Self-Hosted; flujo reescrito si opción 2, 3 o 4). Acelerar la plataforma destino | RNF y PEVE |
 | Degradación persistente de Cloud | Incidentes de prioridad alta reiterados o incumplimiento mensual del nivel de servicio atribuible al proveedor | Tratar como cese material. Migrar las aplicaciones críticas | PEVE, Continuidad e instancia aprobadora |
 | Cambio de control | Fusión, venta o cambio de jurisdicción del proveedor o de sus datos | Vigilancia. Misma ruta técnica si el comprador no es aceptable | Legal, Arquitectura e instancia aprobadora |
 
@@ -397,7 +418,7 @@ La destrucción certificada de datos en Cloud se solicita cuando existe contrapa
 
 ## 09. Procedimiento técnico de transición
 
-PEVE define la receta. Cada aplicación la ejecuta. Temporal no ofrece migración automatizada de Cloud hacia ningún destino: si el destino es Self-Hosted se actualiza la conexión; si es 04.6 se reescribe el proceso y se corta el tráfico nuevo.
+PEVE define la receta. Cada aplicación la ejecuta. Temporal no ofrece migración automatizada de Cloud hacia ningún destino: si el destino es Self-Hosted se actualiza la conexión; si es opción 2, 3 o 4 se reescribe el proceso y se corta el tráfico nuevo.
 
 La receta de conexión, el tratamiento por namespace y la conexión dual de esta sección aplican **solo** si el paso 0.0 confirma Self-Hosted. Si confirma Durable Functions, Dapr Workflows o Restate, rige el Anexo B.4.
 
@@ -405,7 +426,7 @@ La receta de conexión, el tratamiento por namespace y la conexión dual de esta
 
 | Fase | Actividades principales | Responsable líder | Resultado |
 |---|---|---|---|
-| 0. Preparación preventiva | Confirmación del destino (Self-Hosted vigente, o 04.6 si hay acta). Arquitectura, capacidad, receta, inventario, exportación de historiales a almacenamiento del Banco, conexión dual si el destino es Temporal, observabilidad y pruebas iniciales | PEVE / Arquitectura | Plataforma preparada antes de la activación |
+| 0. Preparación preventiva | Confirmación del destino (uno de los cuatro destinos evaluados, con acta formal). Arquitectura, capacidad, receta, inventario, exportación de historiales a almacenamiento del Banco, conexión dual si el destino es Temporal, observabilidad y pruebas iniciales | PEVE / Arquitectura | Plataforma preparada antes de la activación |
 | 1. Activación | Registro del aviso o del expediente, convocatoria, definición del modo (ordenado o estresado) y calendario | PEVE / instancia aprobadora | Plan activado |
 | 2. Migración no productiva | Cambios en desarrollo y certificación; pruebas técnicas, funcionales, de seguridad y de observabilidad | Equipos de aplicación | Ambientes no productivos validados |
 | 3. Migración productiva | Cambio controlado o conmutación, conciliación, validación, estabilización y reversa si Cloud sigue disponible | Equipos de APOQ y NREM | Aplicaciones operando en el destino aprobado |
@@ -537,7 +558,7 @@ El retiro no se considera cerrado hasta evidenciar la eliminación, rotación o 
 |---|---|---|
 | Revisión documental | Inventario, supuestos, costos, tiempos, capacidades, disparadores y compatibilidad residual del contrato | Anual o ante cambio material |
 | Recorrido operativo | PEVE y las aplicaciones recorren las fases 0 a 5 y confirman que pueden ejecutarlas | Anual |
-| Ejercicio técnico | Un caso no crítico en el destino: conexión dual si Self-Hosted, o flujo reescrito si 04.6; conclusión o reapertura; schedules; observabilidad | Anual |
+| Ejercicio técnico | Un caso no crítico en el destino: conexión dual si Self-Hosted, o flujo reescrito si opción 2, 3 o 4; conclusión o reapertura; schedules; observabilidad | Anual |
 | Ejercicio de mesa en modo estresado | Temporal Cloud no responde; conmutación al destino aprobado; conciliación de APOQ y NREM contra el estado de negocio; aviso a control | Anual, junto con las pruebas de continuidad |
 
 La revisión de suficiencia del plan la realiza un área que no lo elaboró (RNF o Auditoría Interna, según el mandato interno).
@@ -556,7 +577,7 @@ La revisión de suficiencia del plan la realiza un área que no lo elaboró (RNF
 
 ### Riesgo residual
 
-El riesgo residual se mantiene mientras la preparación preventiva no esté completa (plataforma destino, receta, exportación de historiales, matriz de workflows) o la información operativa no se encuentre actualizada. En Self-Hosted eso incluye clúster y conexión dual. En 04.6 incluye reescritura validada en certificación y ausencia de ejecución simultánea con Cloud. Completar la fase 0 permite ejecutar el retiro ante un cese del proveedor. El resultado financiero del proveedor, por sí solo, no reduce ese residual. El residual de Self-Hosted es operar sin soporte de Temporal Technologies Inc. El residual de Durable Functions o Dapr es lock-in Azure y madurez del modelo Durable Task. El residual de Restate Cloud es la continuidad de un proveedor más joven; el de Restate Self-Managed sin Enterprise es el mismo que el OSS de Temporal.
+El riesgo residual se mantiene mientras la preparación preventiva no esté completa (plataforma destino, receta, exportación de historiales, matriz de workflows) o la información operativa no se encuentre actualizada. En Self-Hosted eso incluye clúster y conexión dual. En opciones 2, 3 o 4 incluye reescritura validada en certificación y ausencia de ejecución simultánea con Cloud. Completar la fase 0 permite ejecutar el retiro ante un cese del proveedor. El resultado financiero del proveedor, por sí solo, no reduce ese residual. El residual de Self-Hosted es operar sin soporte de Temporal Technologies Inc. El residual de Durable Functions o Dapr es lock-in Azure y madurez del modelo Durable Task. El residual de Restate Cloud es la continuidad de un proveedor más joven; el de Restate Self-Managed sin Enterprise es el mismo que el OSS de Temporal.
 
 La versión vigente, sus actualizaciones relevantes y su cierre serán presentados a las áreas de control y a la instancia aprobadora, con trazabilidad de la revisión y de la conformidad.
 
@@ -584,10 +605,10 @@ El objetivo es completar el Anexo F. El orden siguiente es referencial. Las fech
 
 | Paso | Entregable | Líder | Depende de |
 |---|---|---|---|
-| 0.0 | Acta de destino: Self-Hosted (primera versión) o una opción de la sección 04.6. Sin acta, rige Self-Hosted | Instancia / Arquitectura / Compras | Aprobación del plan |
+| 0.0 | Acta de destino: elige uno de los cuatro evaluados (Self-Hosted, Durable Functions, Dapr Workflows o Restate) | Instancia / Arquitectura / Compras | Aprobación del plan |
 | 0.1 | Conformidad de la arquitectura: sección 04 si Self-Hosted; patrón Durable Functions, Dapr o Restate si 0.0 lo eligió | Arquitectura / Seguridad | 0.0 |
 
-Si el paso 0.0 confirma **Self-Hosted**, siguen 0.2 a 0.10. Si confirma una opción de **04.6**, se omiten 0.3 a 0.5 (namespaces y conexión dual) y rigen 0.2b a 0.5b, más 0.6 a 0.10.
+Si el paso 0.0 confirma la **opción 1 (Self-Hosted)**, siguen 0.2 a 0.10. Si confirma las **opciones 2, 3 o 4 (Durable Functions, Dapr o Restate)**, se omiten 0.3 a 0.5 (namespaces y conexión dual) y rigen 0.2b a 0.5b, más 0.6 a 0.10.
 
 | Paso | Entregable (Self-Hosted) | Líder | Depende de |
 |---|---|---|---|
@@ -611,7 +632,7 @@ Si el paso 0.0 confirma **Self-Hosted**, siguen 0.2 a 0.10. Si confirma una opci
 | 0.9 | Ejercicio de mesa “Cloud no responde” con APOQ y NREM (F9) | PEVE y Continuidad | 0.7 y 0.8 |
 | 0.10 | Inventario A con antigüedad no mayor a 90 días, contrato localizado e instancia informada (F10 a F12) | PEVE / Legal | 0.9 |
 
-Al completar el paso 0.10, la plataforma objetivo queda lista para recibir las aplicaciones. La migración productiva sigue reservada a la activación descrita en la sección 06. Un destino 04.6 alarga la fase 0: la reescritura de APOQ y NREM no cabe en el calendario de un solo cambio de endpoint.
+Al completar el paso 0.10, la plataforma objetivo queda lista para recibir las aplicaciones. La migración productiva sigue reservada a la activación descrita en la sección 06. Un destino opción 2, 3 o 4 alarga la fase 0: la reescritura de APOQ y NREM no cabe en el calendario de un solo cambio de endpoint.
 
 ---
 
@@ -620,15 +641,15 @@ Al completar el paso 0.10, la plataforma objetivo queda lista para recibir las a
 | Término | Significado en este plan |
 |---|---|
 | Temporal Cloud | Servicio gestionado de Temporal Technologies Inc. |
-| Self-Hosted | Servidor Temporal de código abierto operado por el Banco en Azure AKS. Destino vigente. Sin soporte de Temporal Technologies Inc. |
-| Durable Functions | Opción adicional 1. Orquestación Azure (Durable Task Scheduler o Durable Task SDK). Soporte Microsoft |
-| Dapr Workflows | Opción adicional 2. Ejecución durable en código sobre sidecars en AKS. Soporte Microsoft / extensión Dapr |
-| Restate | Opción adicional 3. Motor de ejecución durable en código. Restate Cloud Enterprise o Self-Managed en AKS |
+| Self-Hosted | Servidor Temporal de código abierto operado por el Banco en Azure AKS. Opción 1 de las cuatro evaluadas. Sin soporte de Temporal Technologies Inc. |
+| Durable Functions | Opción 2. Orquestación Azure (Durable Task Scheduler o Durable Task SDK). Soporte Microsoft |
+| Dapr Workflows | Opción 3. Ejecución durable en código sobre sidecars en AKS. Soporte Microsoft / extensión Dapr |
+| Restate | Opción 4. Motor de ejecución durable en código. Restate Cloud Enterprise o Self-Managed en AKS |
 | PEVE | Frente que gobierna el plan y opera el control plane |
 | Vigilancia | Seguimiento de la continuidad del proveedor, sin iniciar la migración productiva |
 | Activación | Orden de ejecutar el retiro en modo ordenado o estresado |
-| Destino aprobado | Self-Hosted, salvo acta del paso 0.0 que elija Durable Functions, Dapr Workflows o Restate |
-| Conexión dual | Solo si el destino es Self-Hosted. Mismo worker o cliente con dos endpoints Temporal. Un solo clúster activo por ejecución. No aplica a 04.6 |
+| Destino aprobado | El elegido por el paso 0.0: Self-Hosted, Durable Functions, Dapr Workflows o Restate |
+| Conexión dual | Solo si el destino es Self-Hosted. Mismo worker o cliente con dos endpoints Temporal. Un solo clúster activo por ejecución. No aplica a opciones 2, 3 ni 4 |
 | Conclusión en Cloud | Dejar terminar en Cloud los workflows cortos ya abiertos |
 | Traslado de estado | Pasar el estado de una ejecución larga a una nueva ejecución en Self-Hosted |
 | Reapertura desde negocio | Reabrir desde el core, outbox o colas, no desde el historial de Cloud |
@@ -664,7 +685,7 @@ Ninguna aplicación no productiva habilitará un namespace productivo en Tempora
 
 ## Anexo B. Receta Self-Hosted (PEVE)
 
-Objetivo de la fase 0: el Banco puede recibir APOQ y NREM sin depender de Temporal Technologies Inc. en el momento de la activación. La topología de Self-Hosted es la de la sección 04. Si el paso 0.0 elige 04.6, rige B.4 y no B.1–B.2.
+Objetivo de la fase 0: el Banco puede recibir APOQ y NREM sin depender de Temporal Technologies Inc. en el momento de la activación. La topología de Self-Hosted es la de la sección 04. Si el paso 0.0 elige opción 2, 3 o 4, rige B.4 y no B.1–B.2.
 
 ### B.1 Plataforma
 
@@ -772,7 +793,7 @@ Custodia: PEVE (expediente único). Copias: Legal/Compras (contractual), RNF (ri
 | D10 | Terminación contractual o constancia de inexistencia de contraparte | Legal / Compras | Fase 5 |
 | D11 | Riesgo residual y aprobación de cierre | RNF e instancia aprobadora | Fase 5 |
 | D12 | Lecciones del ejercicio anual “Cloud no responde” | PEVE | Revisión del plan |
-| D13 | Acta de destino del paso 0.0 (Self-Hosted o una opción 04.6) | Instancia / Arquitectura / Compras | Antes del paso 0.2 o 0.2b |
+| D13 | Acta de destino del paso 0.0 (Self-Hosted o una opciones 2, 3 o 4) | Instancia / Arquitectura / Compras | Antes del paso 0.2 o 0.2b |
 
 ---
 
@@ -812,7 +833,7 @@ La fase 0 se considera completa cuando PEVE puede marcar afirmativo en todos los
 
 | Código | Criterio | Sí / No |
 |---|---|---|
-| F14 | Destino confirmado: Self-Hosted, o acta D13 de una opción 04.6 | |
+| F14 | Destino confirmado: Self-Hosted, o acta D13 de una opciones 2, 3 o 4 | |
 | F1 | Plataforma destino con alta disponibilidad, respaldo y restauración ensayada (clúster Self-Hosted, o Scheduler / Dapr / Restate según F14) | |
 | F2 | Segregación por ambiente de APOQ y NREM en el destino (namespaces Self-Hosted, o task hubs / apps Dapr / deployments Restate) | |
 | F3 | Indicador que impide ejecución simultánea con Cloud, y reversa solo si Cloud responde. Conexión dual Temporal únicamente si F14 es Self-Hosted | |
@@ -820,12 +841,12 @@ La fase 0 se considera completa cuando PEVE puede marcar afirmativo en todos los
 | F5 | Anexo C de APOQ y NREM firmado por el PO, con nombres reales de workflow | |
 | F6 | Tiempos de recuperación y ventana de APOQ y NREM vigentes en Continuidad | |
 | F7 | Observabilidad del destino con alertas equivalentes | |
-| F8 | Ejercicio técnico no crítico ejecutado (conexión dual si Self-Hosted; flujo reescrito si 04.6) | |
+| F8 | Ejercicio técnico no crítico ejecutado (conexión dual si Self-Hosted; flujo reescrito si opción 2, 3 o 4) | |
 | F9 | Ejercicio de mesa “Cloud no responde” ejecutado con APOQ y NREM | |
 | F10 | Inventario A actualizado en los últimos 90 días | |
 | F11 | Legal tiene localizado el contrato, el preaviso y los contactos de Temporal Technologies Inc. | |
 | F12 | La instancia aprobadora ha recibido la versión vigente del plan | |
-| F13 | Arquitectura conformada: sección 04 si Self-Hosted; patrón 04.6 si F14 cambió el destino | |
+| F13 | Arquitectura conformada: sección 04 si Self-Hosted; patrón de opción 2, 3 o 4 si F14 cambió el destino | |
 
 ---
 
@@ -840,8 +861,8 @@ Los siguientes datos deben registrarse antes de declarar completa la fase 0.
 | Responsables nominativos | PEVE y dueños | Anexos A y D |
 | Versión del servidor Temporal, particiones de historial y dimensionamiento AKS (si Self-Hosted) | PEVE | Anexo B |
 | Runtime, SKU y región del Durable Task Scheduler o versión Dapr + state store, o versión Restate / plan Enterprise (si 04.6) | PEVE | Anexo B.4 |
-| Lenguaje y SDK actuales de APOQ y NREM (condiciona Functions, Dapr o Restate) | Equipos APOQ y NREM | Sección 04.6 |
+| Lenguaje y SDK actuales de APOQ y NREM (condiciona Functions, Dapr o Restate) | Equipos APOQ y NREM | Cuatro opciones evaluadas (cuatro opciones evaluadas (sección 04.6)) |
 | Ubicación y retención de la exportación de historiales | PEVE y Seguridad | Sección 09 y fase 0 |
 | Umbral de liquidez y de nivel de servicio para declarar vigilancia | RNF | Sección 06 |
 | Instancia aprobadora concreta (comité o gerencia) | PEVE / gobierno | Sección 07 |
-| Destino de la fase 0 (Self-Hosted o 04.6) | Instancia / Arquitectura / Compras | Sección 04.6 y paso 0.0 |
+| Destino de la fase 0 (Self-Hosted o 04.6) | Instancia / Arquitectura / Compras | Cuatro opciones evaluadas (cuatro opciones evaluadas (sección 04.6)) y paso 0.0 |

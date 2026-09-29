@@ -1,19 +1,24 @@
 # Retiro de Temporal Cloud ante insolvencia. Resumen para aprobación
 
-**BCP / PEVE / Versión 1.4 / Uso interno**  
-El detalle consta en el plan de retiro preventivo. La primera versión del destino es Self-Hosted. La sección 04.6 agrega tres opciones adicionales.
+**BCP / PEVE / Versión 1.0 / Uso interno**  
+El detalle consta en el plan de retiro preventivo. El paso 0.0 elige uno de cuatro destinos evaluados de forma equitativa.
 
 ![Arquitectura Temporal Self-Hosted en Azure AKS](assets/04-1-arquitectura-self-hosted.png)
 
-El destino vigente es Temporal Self-Hosted en Azure AKS. PEVE opera el control plane (Frontend, History, Matching y Worker Service). Persistence y visibility quedan en Azure privada. Los workers de APOQ y NREM permanecen en el AKS del Banco. El Frontend no se publica en internet.
+El plan evalúa cuatro destinos de forma equitativa:
 
-Self-Hosted (primera versión) conserva el motor Temporal y no incluye soporte de Temporal Technologies Inc. A esa versión se agregan tres opciones adicionales, todas de ejecución durable en código: Azure Durable Functions (Microsoft opera el control plane), Dapr Workflows en AKS (mismo Durable Task, cómputo en AKS, soporte Azure) y Restate (Enterprise o Self-Managed en AKS; residual: proveedor más joven que Temporal). Un cambio de destino exige reescritura y aprobación formal antes del paso 0.2.
+1. **Temporal Self-Hosted en Azure AKS.** PEVE opera el control plane. No incluye soporte de Temporal Technologies Inc. Cambio de endpoint; conexión dual.
+2. **Azure Durable Functions.** Microsoft opera el control plane (Durable Task Scheduler). Contrato y soporte Azure. Exige reescritura.
+3. **Dapr Workflows en AKS.** Sidecars en AKS, state store PostgreSQL. Soporte Azure sobre extensión Dapr. Exige reescritura.
+4. **Restate.** Self-Managed en AKS o Cloud Enterprise. Soporte con plan Enterprise. Exige reescritura.
+
+Los workers de APOQ y NREM permanecen en el AKS del Banco en todas las opciones. El paso 0.0 registra formalmente el destino elegido.
 
 ---
 
 ## Decisión que se pide
 
-Aprobar el plan de retiro preventivo de Temporal Cloud y autorizar la fase 0 como control del riesgo de pérdida de continuidad de Temporal Technologies Inc. El destino de la primera versión es Self-Hosted. El paso 0.0 confirma ese destino o una de las tres opciones adicionales (Durable Functions, Dapr Workflows, Restate).
+Aprobar el plan de retiro preventivo de Temporal Cloud y autorizar la fase 0 como control del riesgo de pérdida de continuidad de Temporal Technologies Inc. El paso 0.0 elige uno de los cuatro destinos evaluados (Temporal Self-Hosted, Azure Durable Functions, Dapr Workflows o Restate).
 
 Esta aprobación no incluye la migración productiva de APOQ ni de NREM.
 
@@ -23,7 +28,7 @@ Esta aprobación no incluye la migración productiva de APOQ ni de NREM.
 
 Temporal Cloud orquesta y persiste el estado de workflows del Banco. Es un servicio significativo: si Temporal Technologies Inc. no puede seguir operándolo, el control plane deja de estar disponible. El resultado financiero negativo del proveedor es un elemento de vigilancia, no una prueba de quiebra. El riesgo que se trata es el cese de capacidad para operar Temporal Cloud.
 
-Los workers ya se ejecutan en AKS del Banco. El componente que no controla el Banco es el servicio gestionado. La primera versión sustituye ese control plane por el mismo motor Temporal, de código abierto, hospedado por el Banco. Las opciones de la sección 04.6 cambian de motor y exigen reescritura.
+Los workers ya se ejecutan en AKS del Banco. El componente que no controla el Banco es el servicio gestionado. Las cuatro opciones evaluadas permiten ejecución durable en código. Temporal Self-Hosted conserva el motor y solo exige cambio de endpoint. Las otras tres opciones cambian de motor y exigen reescritura.
 
 ---
 
@@ -34,7 +39,7 @@ Los workers ya se ejecutan en AKS del Banco. El componente que no controla el Ba
 | Insolvencia, liquidación, cese o pérdida material de Temporal Cloud | Incidente de corta duración (planes de continuidad y recuperación) |
 | APOQ y NREM en producción | Aplicaciones de otras empresas del grupo |
 | Aplicaciones en desarrollo o certificación: CPCA, CPCC, APTI/TUPI, CDPT, SRCR, LBCL y CPCR | Cambios funcionales ajenos al retiro |
-| Destino de la primera versión: Temporal Self-Hosted en Azure AKS | Adopción de Durable Functions, Dapr Workflows o Restate sin acta de la sección 04.6 |
+| Cuatro opciones evaluadas: Temporal Self-Hosted, Azure Durable Functions, Dapr Workflows y Restate | Adopción de un destino sin acta del paso 0.0 |
 
 ---
 
@@ -89,7 +94,7 @@ Hasta entonces, el riesgo residual es la dependencia operativa de Temporal Cloud
 |---|---|
 | Aprobar este plan como versión vigente | PEVE lo mantiene. RNF o Auditoría lo revisa anualmente |
 | Autorizar la fase 0 | PEVE, Arquitectura, Seguridad, APOQ y NREM ejecutan el Anexo F |
-| Confirmar el destino (paso 0.0) | Sin acta en contrario, rige Self-Hosted. Durable Functions, Dapr Workflows o Restate solo con aprobación de Arquitectura y Compras |
+| Confirmar el destino (paso 0.0) | Se elige uno de los cuatro destinos evaluados con aprobación de Arquitectura y Compras |
 | Congelar namespaces productivos nuevos en Temporal Cloud | Las aplicaciones en certificación solo producen sobre el destino aprobado |
 | Reservar la activación a la instancia | Nadie retira Cloud ni ejecuta la conmutación productiva sin acta |
 
