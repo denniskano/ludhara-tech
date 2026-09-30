@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import base64
 import io
 import subprocess
 import urllib.request
@@ -158,11 +159,16 @@ def drawio_escape(s: str) -> str:
         s.replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
+        .replace('"', "&quot;")
         .replace("\n", "&#xa;")
     )
 
 
 def icon_url(name: str) -> str:
+    # draw.io styles use ";" as separator, so the data URI omits ";base64".
+    png = ICON_CACHE / f"{name}-{ICONS[name]}-48.png"
+    if png.exists():
+        return "data:image/png," + base64.b64encode(png.read_bytes()).decode("ascii")
     return f"https://cdn.simpleicons.org/{name}/{ICONS[name]}"
 
 
@@ -227,7 +233,7 @@ class Drawio:
     def edge(self, src: str, tgt: str, parent="1", dashed=False, color="#555555", label="") -> str:
         i = self._id()
         dash = "dashed=1;" if dashed else ""
-        lab = f'value="{drawio_escape(label)}";' if label else ""
+        lab = f'value="{drawio_escape(label)}"' if label else 'value=""'
         self.add(
             f'<mxCell id="{i}" {lab} style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;'
             f'endArrow=block;endFill=1;strokeColor={color};strokeWidth=2;{dash}'
