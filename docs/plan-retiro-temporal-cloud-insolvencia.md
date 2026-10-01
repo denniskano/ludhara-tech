@@ -15,6 +15,7 @@ Documento de decisión asociado: resumen para la instancia aprobadora.
 | Aprobador | Instancia aprobadora |
 | Vigencia | Hasta la siguiente revisión anual o un cambio material |
 | Relacionado | Planes de continuidad y recuperación de Temporal Cloud; receta de despliegue de cada aplicación |
+| Fuentes | Documentación de los proveedores (Anexo H), marco normativo y buenas prácticas (Anexo I) y referencias en formato APA (Anexo J) |
 
 Los campos en cursiva de los anexos A, C, F y G se completan durante la fase 0, con la información de cada dueño.
 
@@ -866,3 +867,182 @@ Los siguientes datos deben registrarse antes de declarar completa la fase 0.
 | Umbral de liquidez y de nivel de servicio para declarar vigilancia | RNF | Sección 06 |
 | Instancia aprobadora concreta (comité o gerencia) | PEVE / gobierno | Sección 07 |
 | Destino de la fase 0 (Self-Hosted o 04.6) | Instancia / Arquitectura / Compras | Cuatro opciones evaluadas (cuatro opciones evaluadas (sección 04.6)) y paso 0.0 |
+
+---
+
+## Anexo H. Fuentes
+
+Documentación pública de los proveedores, consultada el 30 de septiembre de 2026. La columna "Qué indica la fuente" resume lo que dice cada documento, no el texto del plan. Las citas siguen el formato APA (7.ª edición); la referencia completa de cada una está en el Anexo J. PEVE revisa estas fuentes en la revisión anual del plan (sección 12), porque los productos cambian de versión y de condiciones.
+
+### H.1 Temporal (opción 1 y origen Cloud)
+
+| Tema | Sección del plan | Qué indica la fuente | Cita |
+|---|---|---|---|
+| Licencia del servidor | Ficha, 04.6 opción 1 | El servidor Temporal se distribuye con licencia MIT | (Temporal Technologies, s. f.-k) |
+| Componentes del control plane | 04.1 | El Temporal Service agrupa Frontend, History, Matching y Worker Service, más los stores de persistence y visibility | (Temporal Technologies, s. f.-i) |
+| Persistence en PostgreSQL | 04.2 | PostgreSQL figura entre las bases soportadas (13.18, 14.15, 15.10 y 16.6 probadas) | (Temporal Technologies, s. f.-d) |
+| Visibility | 04.2 | Visibility soporta Elasticsearch 7 y 8, OpenSearch 2+ (desde Temporal Server 1.30.1), MySQL, PostgreSQL y SQLite | (Temporal Technologies, s. f.-f) |
+| Archival | 04.2 | Archival es una función experimental. Proveedores nativos: S3, Google Cloud y sistema de archivos local; otros requieren un archiver propio | (Temporal Technologies, s. f.-e) |
+| Despliegue en Kubernetes y red privada | 04.1, 04.2, Anexo B | Despliegue con Helm charts. El Temporal Service no debe exponerse a internet público | (Temporal Technologies, s. f.-a, s. f.-j) |
+| mTLS y autorización | 04.2, Anexo B.1 | Configuración de TLS / mTLS y autorización en Self-Hosted | (Temporal Technologies, s. f.-h) |
+| Exportación de historiales desde Cloud | 03, 04.2, 0.6, F4 | Workflow History Export envía historiales cerrados, cada hora, a AWS S3 o GCP GCS, en protobuf. Puede tardar hasta 24 horas. Archival no existe en Cloud | (Temporal Technologies, s. f.-l) |
+| Nubes de Temporal Cloud | 03, 04.2 | Temporal Cloud opera en regiones de AWS y GCP | (Temporal Technologies, s. f.-g) |
+| Sentido de la migración oficial | 03, 04.2, B.3 | La migración documentada va de Self-Hosted hacia Cloud, o entre regiones de Cloud. No hay ruta documentada de Cloud hacia Self-Hosted | (Temporal Technologies, s. f.-c) |
+| Patrón de conexión dual | 04.4, 09, B.2 | La migración manual usa un segundo cliente para los nuevos inicios, drena los workflows cortos y traslada el estado de los largos. El historial cerrado no se migra | (Temporal Technologies, s. f.-b) |
+
+### H.2 Azure Durable Functions y Durable Task Scheduler (opción 2)
+
+| Tema | Sección del plan | Qué indica la fuente | Cita |
+|---|---|---|---|
+| Durable Task Scheduler como backend recomendado | 04.6 opción 2 | Es el storage provider recomendado para Durable Functions y los Durable Task SDKs. Conexión gRPC con TLS e identidad de la aplicación | (Microsoft, s. f.-d) |
+| Backends alternativos | 04.6 opción 2 | Durable Functions admite Durable Task Scheduler, Azure Storage, MSSQL y Netherite (soporte de Netherite hasta el 31 de marzo de 2028) | (Microsoft, s. f.-f) |
+| Hosting fuera de Azure Functions | 04.6 opción 2 | Los Durable Task SDKs standalone corren en AKS, Container Apps o VMs y usan solo Durable Task Scheduler. Los backends propios (MSSQL y otros) son de Durable Functions | (Microsoft, s. f.-a) |
+
+### H.3 Dapr Workflows (opción 3)
+
+| Tema | Sección del plan | Qué indica la fuente | Cita |
+|---|---|---|---|
+| Motor de workflows | 04.6 opción 3 | El motor corre en el sidecar, está implementado con durabletask-go y usa actores de Dapr. Replay sobre historial de eventos | (The Dapr Authors, s. f.-d) |
+| State store PostgreSQL | 04.6 opción 3, B.4 | PostgreSQL v1 y v2 soportan workflows (estado Stable). Azure Cosmos DB no figura con soporte de workflows | (The Dapr Authors, s. f.-b) |
+| Exclusión de Cosmos DB | 04.6 opción 3, B.4 | Cosmos DB limita a 2 MB y 100 operaciones por transacción; no hay migración de datos de workflow hacia otro store | (Microsoft, s. f.-g; The Dapr Authors, s. f.-a) |
+| Versiones soportadas | 04.6 opción 3 | El proyecto Dapr soporta la versión actual y las dos anteriores (N-2) | (The Dapr Authors, s. f.-c) |
+| Soporte de Microsoft | 04.6 opción 3, criterio de selección | La extensión de Dapr para AKS sigue la política de soporte de AKS. Los problemas del runtime, las APIs y los componentes se resuelven con el proyecto open source | (Microsoft, s. f.-c) |
+| Gobierno del proyecto | 04.6 opción 3 | Dapr es un proyecto de la CNCF | (Cloud Native Computing Foundation, s. f.) |
+
+### H.4 Restate (opción 4)
+
+| Tema | Sección del plan | Qué indica la fuente | Cita |
+|---|---|---|---|
+| Licencia del servidor | 04.6 opción 4, 12 | Restate Server usa Business Source License 1.1. Permite el despliegue productivo interno; prohíbe ofrecerlo como servicio gestionado a terceros. Cada versión pasa a Apache 2.0 a los cuatro años | (Restate, s. f.-d) |
+| Modelo y SDKs | 04.6 opción 4 | Servidor en un solo binario (Rust). SDKs para TypeScript, Java, Kotlin, Python, Go y Rust | (Restate, s. f.-a) |
+| Despliegue en AKS | 04.6 opción 4 | Restate Operator recomendado para Kubernetes, incluido AKS; Helm chart como alternativa | (Restate, s. f.-b) |
+| Restate Cloud y plan Enterprise | 04.6 opción 4 | Planes de Restate Cloud; Enterprise con condiciones bajo pedido | (Restate, s. f.-c) |
+
+### H.5 Azure (red y datos)
+
+| Tema | Sección del plan | Qué indica la fuente | Cita |
+|---|---|---|---|
+| Internal load balancer | 04.1, 04.2, 04.3 | Balanceador interno en AKS, sin IP pública | (Microsoft, s. f.-b) |
+| Private Link | 04.1, 04.2, 04.3 | Acceso privado a servicios de Azure desde la red virtual | (Microsoft, s. f.-i) |
+| PostgreSQL Flexible Server | 04.2, B.1 | Servicio gestionado de PostgreSQL y su alta disponibilidad | (Microsoft, s. f.-e, s. f.-h) |
+
+---
+
+## Anexo I. Marco normativo y buenas prácticas
+
+Normas y guías con las que es consistente la estructura del plan, consultadas el 30 de septiembre de 2026. Las normas de la Superintendencia de Banca, Seguros y AFP (SBS) son exigibles al Banco. Las referencias internacionales no son exigibles en Perú; se usan como buena práctica de la industria. Legal y RNF confirman la vigencia de las versiones citadas y la calificación del servicio como significativo. Las citas siguen el formato APA (7.ª edición) y remiten al Anexo J.
+
+### I.1 Normativa SBS
+
+| Norma | Disposición | Qué exige | Sección del plan |
+|---|---|---|---|
+| Reglamento para la Gestión de la Seguridad de la Información y la Ciberseguridad (SBS, 2021) | Art. 24.2 c) | Para un servicio significativo de procesamiento de datos provisto por terceros, incluidos servicios en nube: contar con una estrategia de salida que permita retomar operaciones por cuenta propia o mediante otro proveedor, con las acciones para migrar la información a recursos de la empresa o de otro proveedor | Ficha (función), 04, 04.6, 09, 14 |
+| (SBS, 2021) | Art. 24.2 e) | Asegurar que la información confidencial en custodia del proveedor se elimine definitivamente al resolver el contrato | 08, 11 (cierre seguro) |
+| (SBS, 2021) | Art. 24.2 d) | Mantener un inventario de los servicios que el proveedor contrata a su vez con terceros (contratación en cadena) | No cubierto. Ver I.3 |
+| (SBS, 2021) | Art. 24.3 | Informar a la SBS sobre el servicio contratado, el proveedor y la infraestructura, como máximo 30 días calendario después de iniciar la provisión | 13 (supervisor, si corresponde), aplicable si el destino aprobado es un nuevo proveedor |
+| Reglamento para la Gestión de la Continuidad del Negocio (SBS, 2020) | Art. 7.2 y 7.3 | Análisis de impacto (PMTI, TOR, recursos de terceros) y evaluación de riesgos que incluya puntos únicos de falla y el escenario de recursos de terceros no disponibles | 01, 03, 05 |
+| (SBS, 2020) | Art. 8.2 b) | Las estrategias de continuidad, aprobadas por el directorio, consideran la falla o indisponibilidad de servicios de terceros | 03, 04.5, 10 |
+| (SBS, 2020) | Pruebas y reporte de interrupción significativa | Pruebas periódicas de los planes y reporte a la SBS de eventos de interrupción significativa | 12 (pruebas del plan), 13 |
+| Reglamento para la Gestión del Riesgo Operacional, texto actualizado con la Res. SBS N.° 877-2020 (SBS, 2009) | Gestión de proveedores | Gestión del riesgo operacional en servicios provistos por terceros | 01 (inventario), 07, 12 (riesgo residual) |
+| Reglamento de Gobierno Corporativo y de la Gestión Integral de Riesgos (SBS, 2017) | Subcontratación significativa | Gobierno y gestión de riesgos de la subcontratación significativa | 07, Ficha (gobierno) |
+
+### I.2 Referencias internacionales
+
+| Referencia | Disposición | Qué indica | Sección del plan |
+|---|---|---|---|
+| PRA SS2/21, Outsourcing and third party risk management (Prudential Regulation Authority, 2024) | Cap. 10, párr. 10.10 a 10.19 | Los planes de salida cubren la salida estresada (stressed exit), documentada y probada. Es la mitigación de último recurso ante una interrupción, citando como ejemplo la insolvencia o liquidación del proveedor. Identificar formas viables de salida y medidas temporales | Principio 4, 03, 04.5, 06, Anexo E.2 |
+| Principles for the sound management of third-party risk (Basel Committee on Banking Supervision, 2025) | Principio 9, párr. 63 a 66 | Exit plans para terminación planificada y exit strategies para terminación no planificada, basadas en escenarios plausibles y proporcionales a la criticidad y sustituibilidad del servicio | Principio 4, 03, 04.4, 04.5, Anexo E |
+| DORA (Reglamento [UE] 2022/2554, 2022) | Art. 28.8 | Estrategias de salida documentadas para servicios TIC que soportan funciones críticas, con planes de salida probados periódicamente y soluciones alternativas identificadas | 04.6, 09, 12 |
+| EBA/GL/2019/02, Guidelines on outsourcing arrangements (European Banking Authority, 2019) | Sección 15, párr. 106 a 108 | Exit plan documentado y probado; soluciones alternativas y plan de transición; objetivos, análisis de impacto, roles y recursos, criterios de éxito e indicadores que disparan la salida | 02, 05, 06, 07, 11 |
+| ISO 22301, Business continuity management systems (International Organization for Standardization, 2019) | Norma completa | Sistema de gestión de continuidad del negocio. La Res. SBS N.° 877-2020 toma como referencia esta norma | 05, 10, 12 |
+
+### I.3 Brechas frente al marco
+
+| Requisito | Situación en el plan | Responsable sugerido |
+|---|---|---|
+| Inventario de contratación en cadena (SBS, 2021, art. 24.2 d) | No se documentan los terceros de Temporal Cloud (proveedores de nube AWS y GCP, entre otros) | Compras / RNF |
+| Reporte a la SBS del nuevo proveedor (SBS, 2021, art. 24.3) | Mencionado como "si corresponde" en la sección 13, sin plazo | Legal / RNF |
+
+---
+
+## Anexo J. Referencias
+
+Formato APA (7.ª edición). Las páginas de documentación de los proveedores no tienen fecha de publicación (s. f.) y cambian con cada versión, por lo que incluyen la fecha de consulta.
+
+Basel Committee on Banking Supervision. (2025). *Principles for the sound management of third-party risk*. Bank for International Settlements. <https://www.bis.org/publications/202512-guidelines-principles-sound-management-third-party-risk.pdf>
+
+Cloud Native Computing Foundation. (s. f.). *Dapr*. Recuperado el 30 de septiembre de 2026, de <https://www.cncf.io/projects/dapr/>
+
+European Banking Authority. (2019). *Guidelines on outsourcing arrangements* (EBA/GL/2019/02). <https://www.eba.europa.eu/sites/default/files/documents/10180/2551996/38c80601-f5d7-4855-8ba3-702423665479/EBA%20revised%20Guidelines%20on%20outsourcing%20arrangements.pdf>
+
+International Organization for Standardization. (2019). *Security and resilience — Business continuity management systems — Requirements* (ISO 22301:2019). <https://www.iso.org/standard/75106.html>
+
+Microsoft. (s. f.-a). *Choose your Durable Task hosting model: Azure Functions or self-hosted*. Microsoft Learn. Recuperado el 30 de septiembre de 2026, de <https://learn.microsoft.com/en-us/azure/durable-task/common/choose-orchestration-framework>
+
+Microsoft. (s. f.-b). *Create an internal load balancer in Azure Kubernetes Service (AKS)*. Microsoft Learn. Recuperado el 30 de septiembre de 2026, de <https://learn.microsoft.com/en-us/azure/aks/internal-lb>
+
+Microsoft. (s. f.-c). *Dapr extension for Azure Kubernetes Service (AKS) and Arc-enabled Kubernetes*. Microsoft Learn. Recuperado el 30 de septiembre de 2026, de <https://learn.microsoft.com/en-us/azure/aks/dapr-overview>
+
+Microsoft. (s. f.-d). *Durable Task Scheduler*. Microsoft Learn. Recuperado el 30 de septiembre de 2026, de <https://learn.microsoft.com/en-us/azure/durable-task/scheduler/durable-task-scheduler>
+
+Microsoft. (s. f.-e). *High availability in Azure Database for PostgreSQL flexible server*. Microsoft Learn. Recuperado el 30 de septiembre de 2026, de <https://learn.microsoft.com/en-us/azure/postgresql/high-availability/concepts-high-availability>
+
+Microsoft. (s. f.-f). *Storage providers for Durable Task: Compare and choose*. Microsoft Learn. Recuperado el 30 de septiembre de 2026, de <https://learn.microsoft.com/en-us/azure/durable-task/common/durable-task-storage-providers>
+
+Microsoft. (s. f.-g). *Transactional batch operations in Azure Cosmos DB*. Microsoft Learn. Recuperado el 30 de septiembre de 2026, de <https://learn.microsoft.com/en-us/azure/cosmos-db/transactional-batch>
+
+Microsoft. (s. f.-h). *What is Azure Database for PostgreSQL flexible server?* Microsoft Learn. Recuperado el 30 de septiembre de 2026, de <https://learn.microsoft.com/en-us/azure/postgresql/overview>
+
+Microsoft. (s. f.-i). *What is Azure Private Link?* Microsoft Learn. Recuperado el 30 de septiembre de 2026, de <https://learn.microsoft.com/en-us/azure/private-link/private-link-overview>
+
+Prudential Regulation Authority. (2024). *Outsourcing and third party risk management* (Supervisory Statement SS2/21). Bank of England. <https://www.bankofengland.co.uk/-/media/boe/files/prudential-regulation/supervisory-statement/2024/ss221-november-2024-update.pdf>
+
+Reglamento (UE) 2022/2554 del Parlamento Europeo y del Consejo, de 14 de diciembre de 2022, sobre la resiliencia operativa digital del sector financiero. (2022). *Diario Oficial de la Unión Europea*, L 333. <https://eur-lex.europa.eu/eli/reg/2022/2554/oj>
+
+Restate. (s. f.-a). *Key concepts*. Restate Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.restate.dev/foundations/key-concepts>
+
+Restate. (s. f.-b). *Kubernetes*. Restate Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.restate.dev/server/deploy/kubernetes>
+
+Restate. (s. f.-c). *Pricing*. Recuperado el 30 de septiembre de 2026, de <https://restate.dev/pricing>
+
+Restate. (s. f.-d). *restatedev/restate: LICENSE* [Licencia de software]. GitHub. Recuperado el 30 de septiembre de 2026, de <https://github.com/restatedev/restate/blob/main/LICENSE>
+
+Superintendencia de Banca, Seguros y AFP. (2009). *Resolución SBS N.° 2116-2009: Reglamento para la Gestión del Riesgo Operacional* (texto actualizado con la Resolución SBS N.° 877-2020). <https://intranet2.sbs.gob.pe/dv_int_cn/842/v4.0/Adjuntos/2116-2009%20actualizado%20con%20la%20877-2020.doc.pdf>
+
+Superintendencia de Banca, Seguros y AFP. (2017). *Resolución SBS N.° 272-2017: Reglamento de Gobierno Corporativo y de la Gestión Integral de Riesgos*. <https://www.sbs.gob.pe/Portals/0/jer/Auto_Nuevas_Empresas/Normas_Comunes/5.%20Reg.%20de%20Gobierno%20Corporativo_Res.%20SBS%20N%C2%B0%20272-2017.pdf>
+
+Superintendencia de Banca, Seguros y AFP. (2020). *Resolución SBS N.° 877-2020: Reglamento para la Gestión de la Continuidad del Negocio*. <https://intranet2.sbs.gob.pe/dv_int_cn/1894/v1.0/Adjuntos/877-2020.R.pdf>
+
+Superintendencia de Banca, Seguros y AFP. (2021). *Resolución SBS N.° 504-2021: Reglamento para la Gestión de la Seguridad de la Información y la Ciberseguridad*. <https://intranet2.sbs.gob.pe/dv_int_cn/2046/v2.0/Adjuntos/504-2021.R.pdf>
+
+Temporal Technologies. (s. f.-a). *Deploying a Temporal Service*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/self-hosted-guide/deployment>
+
+Temporal Technologies. (s. f.-b). *Manual migration*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/cloud/migrate/manual>
+
+Temporal Technologies. (s. f.-c). *Migrate*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/cloud/migrate>
+
+Temporal Technologies. (s. f.-d). *Persistence*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/temporal-service/persistence>
+
+Temporal Technologies. (s. f.-e). *Self-hosted Archival setup*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/self-hosted-guide/archival>
+
+Temporal Technologies. (s. f.-f). *Self-hosted Visibility feature setup*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/self-hosted-guide/visibility>
+
+Temporal Technologies. (s. f.-g). *Service regions*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/cloud/regions>
+
+Temporal Technologies. (s. f.-h). *Temporal Platform security features*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/self-hosted-guide/security>
+
+Temporal Technologies. (s. f.-i). *Temporal Service*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/temporal-service>
+
+Temporal Technologies. (s. f.-j). *temporalio/helm-charts* [Repositorio de código fuente]. GitHub. Recuperado el 30 de septiembre de 2026, de <https://github.com/temporalio/helm-charts>
+
+Temporal Technologies. (s. f.-k). *temporalio/temporal: LICENSE* [Licencia de software]. GitHub. Recuperado el 30 de septiembre de 2026, de <https://github.com/temporalio/temporal/blob/main/LICENSE>
+
+Temporal Technologies. (s. f.-l). *Workflow History Export*. Temporal Documentation. Recuperado el 30 de septiembre de 2026, de <https://docs.temporal.io/cloud/export>
+
+The Dapr Authors. (s. f.-a). *Azure Cosmos DB (SQL API)*. Dapr Docs. Recuperado el 30 de septiembre de 2026, de <https://docs.dapr.io/reference/components-reference/supported-state-stores/setup-azure-cosmosdb/>
+
+The Dapr Authors. (s. f.-b). *State store component specs*. Dapr Docs. Recuperado el 30 de septiembre de 2026, de <https://docs.dapr.io/reference/components-reference/supported-state-stores/>
+
+The Dapr Authors. (s. f.-c). *Supported runtime and SDK releases*. Dapr Docs. Recuperado el 30 de septiembre de 2026, de <https://docs.dapr.io/operations/support/support-release-policy/>
+
+The Dapr Authors. (s. f.-d). *Workflow architecture*. Dapr Docs. Recuperado el 30 de septiembre de 2026, de <https://docs.dapr.io/developing-applications/building-blocks/workflow/workflow-architecture/>
