@@ -12,6 +12,8 @@ ICONS = HERE / ".icons"
 RESVG_TOOLS = HERE.parent / "docs" / "assets" / "_tools"
 OUT_SVG = HERE / "portada-databricks-vs-flink-confluent.svg"
 OUT_PNG = HERE / "portada-databricks-vs-flink-confluent.png"
+RESULT_SVG = HERE / "cierre-badi-flinksql.svg"
+RESULT_PNG = HERE / "cierre-badi-flinksql.png"
 
 W, H = 1920, 1080
 FONT = "Helvetica Neue, Helvetica, Arial, sans-serif"
@@ -87,29 +89,7 @@ def logo_tile(cx, cy, icon, label, size=96, stroke="#D6E4FF", fill="#FFFFFF", la
 def build() -> str:
     s: list[str] = []
     s.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">')
-    s.append(f"""<defs>
-  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F3F6FB"/>
-  </linearGradient>
-  <linearGradient id="now" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#F2F7FF"/><stop offset="1" stop-color="#FDF2F5"/>
-  </linearGradient>
-  <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0" stop-color="{CONFLUENT}"/><stop offset="1" stop-color="{FLINK}"/>
-  </linearGradient>
-  <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
-    <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0B1F3A" flood-opacity="0.12"/>
-  </filter>
-  <marker id="arrowBad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-    <path d="M0,0 L10,5 L0,10 z" fill="#B9BEC7"/>
-  </marker>
-  <marker id="arrowNow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-    <path d="M0,0 L10,5 L0,10 z" fill="{CONFLUENT}"/>
-  </marker>
-  <marker id="arrowFlink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-    <path d="M0,0 L10,5 L0,10 z" fill="{FLINK}"/>
-  </marker>
-</defs>""")
+    s.append(defs())
     s.append(f'<rect width="{W}" height="{H}" fill="url(#bg)"/>')
     s.append(f'<rect x="0" y="0" width="{W}" height="12" fill="url(#accent)"/>')
 
@@ -154,18 +134,98 @@ def build() -> str:
     return "\n".join(s)
 
 
-def render_png() -> None:
+def defs() -> str:
+    return f"""<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F3F6FB"/>
+  </linearGradient>
+  <linearGradient id="now" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#F2F7FF"/><stop offset="1" stop-color="#FDF2F5"/>
+  </linearGradient>
+  <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="{CONFLUENT}"/><stop offset="1" stop-color="{FLINK}"/>
+  </linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+    <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0B1F3A" flood-opacity="0.12"/>
+  </filter>
+  <marker id="arrowBad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#B9BEC7"/>
+  </marker>
+  <marker id="arrowNow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="{CONFLUENT}"/>
+  </marker>
+  <marker id="arrowFlink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="{FLINK}"/>
+  </marker>
+</defs>"""
+
+
+def render_png(svg_path: Path, png_path: Path) -> None:
     script = f"""
 const fs = require('fs');
 const {{ Resvg }} = require('@resvg/resvg-js');
-const svg = fs.readFileSync({str(OUT_SVG)!r});
+const svg = fs.readFileSync({str(svg_path)!r});
 const r = new Resvg(svg, {{ fitTo: {{ mode: 'width', value: {W * 2} }}, font: {{ loadSystemFonts: true, defaultFontFamily: 'Helvetica' }} }});
-fs.writeFileSync({str(OUT_PNG)!r}, r.render().asPng());
+fs.writeFileSync({str(png_path)!r}, r.render().asPng());
 """
     subprocess.run(["node", "-e", script], check=True, cwd=str(RESVG_TOOLS))
 
 
+def build_cierre() -> str:
+    """Closing slide: BADI Databricks -> FlinkSQL, with PEVE share of the win."""
+    s: list[str] = []
+    s.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">')
+    s.append(defs())
+    s.append(f'<rect width="{W}" height="{H}" fill="url(#bg)"/>')
+    s.append(f'<rect x="0" y="0" width="{W}" height="12" fill="url(#accent)"/>')
+
+    s.append(text(W / 2, 118, "BADI ya corre en FlinkSQL", 64, NAVY, 700, "middle"))
+    s.append(text(W / 2, 168, "Misma capacidad funcional. Arquitectura nativa de eventos. 60% menos costo operativo.", 26, MUTED, 400, "middle"))
+
+    # From → To strip
+    y = 214
+    s.append(rect(260, y, 1400, 118, "#FFFFFF", "#E6E9EE", r=24, sw=1.5, extra='filter="url(#shadow)"'))
+    s.append(img("databricks.svg", 360, y + 25, 68, 68))
+    s.append(text(448, y + 52, "Databricks", 26, INK, 700))
+    s.append(text(448, y + 82, "jobs batch", 18, MUTED))
+    s.append(f'<circle cx="820" cy="{y + 59}" r="28" fill="url(#accent)"/>')
+    s.append(f'<path d="M808,{y + 47} L832,{y + 59} L808,{y + 71}" fill="none" stroke="#FFFFFF" '
+             f'stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>')
+    s.append(img("flink.svg", 920, y + 25, 68, 68))
+    s.append(text(1008, y + 52, "FlinkSQL", 26, INK, 700))
+    s.append(text(1008, y + 82, "serverless en Confluent Cloud", 18, MUTED))
+    s.append(img("confluent-logo.svg", 1418, y + 42, 168, 32))
+
+    # Three result cards
+    cards = [
+        (80, "#8A919C", "$6k", "antes", "costo operativo mensual"),
+        (680, GOOD, "$2k", "ahora", "mismo resultado, menos costo"),
+        (1280, CONFLUENT, "−60%", "ahorro", "probado en la migración de BADI"),
+    ]
+    cy = 372
+    for x, color, num, tag, sub in cards:
+        s.append(rect(x, cy, 560, 248, "#FFFFFF", "#E6E9EE", r=24, sw=1.5, extra='filter="url(#shadow)"'))
+        s.append(text(x + 280, cy + 52, tag.upper(), 16, color, 700, "middle", spacing=3))
+        s.append(text(x + 280, cy + 148, num, 92, color, 700, "middle"))
+        s.append(text(x + 280, cy + 204, sub, 20, MUTED, 400, "middle"))
+
+    # PEVE credit band
+    s.append(rect(77, 662, 1766, 232, "url(#accent)", r=30, extra='filter="url(#shadow)"'))
+    s.append(rect(80, 665, 1760, 226, "#0B1F3A", r=28))
+    s.append(text(140, 732, "EL EQUIPO PEVE", 18, "#8FB4FF", 700, spacing=3))
+    s.append(text(140, 812, "se lleva el 25% de esa eficiencia", 46, "#FFFFFF", 700))
+    s.append(text(140, 856, "del ahorro operativo logrado en la migración", 24, "#C5D4EA"))
+    s.append(text(1560, 812, "25%", 120, "#FFFFFF", 700, "middle"))
+    s.append(text(1560, 868, "crédito PEVE", 22, "#8FB4FF", 400, "middle"))
+
+    s.append(text(W / 2, 980, "Tiempo real  ·  Los datos no salen  ·  Una sola plataforma", 24, MUTED, 400, "middle"))
+    s.append("</svg>")
+    return "\n".join(s)
+
+
 if __name__ == "__main__":
     OUT_SVG.write_text(build(), encoding="utf-8")
-    render_png()
-    print("ok", OUT_SVG.name, OUT_PNG.name)
+    render_png(OUT_SVG, OUT_PNG)
+    RESULT_SVG.write_text(build_cierre(), encoding="utf-8")
+    render_png(RESULT_SVG, RESULT_PNG)
+    print("ok", OUT_SVG.name, RESULT_SVG.name)
