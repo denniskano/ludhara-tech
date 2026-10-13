@@ -28,10 +28,10 @@ BEFORE_BG = "#F3F4F6"
 BEFORE_STROKE = "#C9CDD4"
 
 
-def img(name: str, x, y, w, h) -> str:
-    data = base64.b64encode((ICONS / name).read_bytes()).decode("ascii")
+def img(name: str, x, y, w, h, *, folder: Path | None = None, mime: str = "image/svg+xml") -> str:
+    data = base64.b64encode(((folder or ICONS) / name).read_bytes()).decode("ascii")
     return (f'<image x="{x}" y="{y}" width="{w}" height="{h}" preserveAspectRatio="xMidYMid meet" '
-            f'href="data:image/svg+xml;base64,{data}"/>')
+            f'href="data:{mime};base64,{data}"/>')
 
 
 def text(x, y, s, size=20, color=INK, weight=400, anchor="start", spacing=0) -> str:
@@ -179,22 +179,22 @@ def build_cierre() -> str:
     s.append(f'<rect width="{W}" height="{H}" fill="url(#bg)"/>')
     s.append(f'<rect x="0" y="0" width="{W}" height="12" fill="url(#accent)"/>')
 
-    s.append(text(W / 2, 118, "BADI ya corre en FlinkSQL", 64, NAVY, 700, "middle"))
-    s.append(text(W / 2, 168, "Misma capacidad funcional. Arquitectura nativa de eventos. 60% menos costo operativo.", 26, MUTED, 400, "middle"))
+    s.append(text(W / 2, 86, "BADI ya corre en FlinkSQL", 52, NAVY, 700, "middle"))
+    s.append(text(W / 2, 128, "Misma capacidad funcional. Arquitectura nativa de eventos. 60% menos costo operativo.", 22, MUTED, 400, "middle"))
 
     # From → To strip
-    y = 214
-    s.append(rect(260, y, 1400, 118, "#FFFFFF", "#E6E9EE", r=24, sw=1.5, extra='filter="url(#shadow)"'))
-    s.append(img("databricks.svg", 360, y + 25, 68, 68))
-    s.append(text(448, y + 52, "Databricks", 26, INK, 700))
-    s.append(text(448, y + 82, "jobs batch", 18, MUTED))
-    s.append(f'<circle cx="820" cy="{y + 59}" r="28" fill="url(#accent)"/>')
-    s.append(f'<path d="M808,{y + 47} L832,{y + 59} L808,{y + 71}" fill="none" stroke="#FFFFFF" '
+    y = 156
+    s.append(rect(260, y, 1400, 96, "#FFFFFF", "#E6E9EE", r=20, sw=1.5, extra='filter="url(#shadow)"'))
+    s.append(img("databricks.svg", 360, y + 16, 62, 62))
+    s.append(text(444, y + 42, "Databricks", 24, INK, 700))
+    s.append(text(444, y + 68, "jobs batch", 16, MUTED))
+    s.append(f'<circle cx="820" cy="{y + 48}" r="24" fill="url(#accent)"/>')
+    s.append(f'<path d="M810,{y + 38} L830,{y + 48} L810,{y + 58}" fill="none" stroke="#FFFFFF" '
              f'stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>')
-    s.append(img("flink.svg", 920, y + 25, 68, 68))
-    s.append(text(1008, y + 52, "FlinkSQL", 26, INK, 700))
-    s.append(text(1008, y + 82, "serverless en Confluent Cloud", 18, MUTED))
-    s.append(img("confluent-logo.svg", 1418, y + 42, 168, 32))
+    s.append(img("flink.svg", 920, y + 16, 62, 62))
+    s.append(text(1004, y + 42, "FlinkSQL", 24, INK, 700))
+    s.append(text(1004, y + 68, "serverless en Confluent Cloud", 16, MUTED))
+    s.append(img("confluent-logo.svg", 1430, y + 32, 160, 30))
 
     # Three result cards
     cards = [
@@ -202,23 +202,24 @@ def build_cierre() -> str:
         (680, GOOD, "$2k", "ahora", "mismo resultado, menos costo"),
         (1280, CONFLUENT, "−60%", "ahorro", "probado en la migración de BADI"),
     ]
-    cy = 372
+    cy = 272
     for x, color, num, tag, sub in cards:
-        s.append(rect(x, cy, 560, 248, "#FFFFFF", "#E6E9EE", r=24, sw=1.5, extra='filter="url(#shadow)"'))
-        s.append(text(x + 280, cy + 52, tag.upper(), 16, color, 700, "middle", spacing=3))
-        s.append(text(x + 280, cy + 148, num, 92, color, 700, "middle"))
-        s.append(text(x + 280, cy + 204, sub, 20, MUTED, 400, "middle"))
+        s.append(rect(x, cy, 560, 188, "#FFFFFF", "#E6E9EE", r=20, sw=1.5, extra='filter="url(#shadow)"'))
+        s.append(text(x + 280, cy + 40, tag.upper(), 15, color, 700, "middle", spacing=3))
+        s.append(text(x + 280, cy + 112, num, 72, color, 700, "middle"))
+        s.append(text(x + 280, cy + 156, sub, 18, MUTED, 400, "middle"))
+
+    # Original cost screenshot, unmodified (1024×187)
+    s.append(img("costos-badi-mensuales.jpg", 80, 480, 1760, 321, folder=HERE, mime="image/jpeg"))
 
     # PEVE credit band
-    s.append(rect(77, 662, 1766, 232, "url(#accent)", r=30, extra='filter="url(#shadow)"'))
-    s.append(rect(80, 665, 1760, 226, "#0B1F3A", r=28))
-    s.append(text(140, 732, "EL EQUIPO PEVE", 18, "#8FB4FF", 700, spacing=3))
-    s.append(text(140, 812, "se lleva el 25% de esa eficiencia", 46, "#FFFFFF", 700))
-    s.append(text(140, 856, "del ahorro operativo logrado en la migración", 24, "#C5D4EA"))
-    s.append(text(1560, 812, "25%", 120, "#FFFFFF", 700, "middle"))
-    s.append(text(1560, 868, "crédito PEVE", 22, "#8FB4FF", 400, "middle"))
-
-    s.append(text(W / 2, 980, "Tiempo real  ·  Los datos no salen  ·  Una sola plataforma", 24, MUTED, 400, "middle"))
+    s.append(rect(77, 830, 1766, 168, "url(#accent)", r=26, extra='filter="url(#shadow)"'))
+    s.append(rect(80, 833, 1760, 162, "#0B1F3A", r=24))
+    s.append(text(140, 886, "EL EQUIPO PEVE", 16, "#8FB4FF", 700, spacing=3))
+    s.append(text(140, 942, "se lleva el 25% de esa eficiencia", 36, "#FFFFFF", 700))
+    s.append(text(140, 976, "del ahorro operativo logrado en la migración", 20, "#C5D4EA"))
+    s.append(text(1560, 938, "25%", 86, "#FFFFFF", 700, "middle"))
+    s.append(text(1560, 978, "crédito PEVE", 18, "#8FB4FF", 400, "middle"))
     s.append("</svg>")
     return "\n".join(s)
 
