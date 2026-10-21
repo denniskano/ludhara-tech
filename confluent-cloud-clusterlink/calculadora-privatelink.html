@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora Private Link — Confluent Cloud Dedicated</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #171e27;
+    --panel2: #1d2630;
+    --line: #2a3644;
+    --text: #e8edf2;
+    --muted: #8b9aab;
+    --teal: #00c4cc;
+    --teal-dim: #0a3a3d;
+    --warn: #f5a524;
+    --bad: #f25c54;
+    --ok: #3dd68c;
+    --azure: #0078d4;
+    --aws: #ff9900;
+    --gcp: #4285f4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "IBM Plex Sans", "Segoe UI", sans-serif; }
+  header {
+    padding: 28px 32px 18px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #122028 0%, var(--bg) 100%);
+  }
+  header h1 { margin: 0 0 6px; font-size: 22px; font-weight: 650; letter-spacing: -0.02em; }
+  header p { margin: 0; color: var(--muted); max-width: 980px; }
+  header .tag { display: inline-block; margin-top: 10px; font-size: 12px; color: var(--teal); background: var(--teal-dim); padding: 3px 8px; border-radius: 999px; }
+  main { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; padding: 20px 24px 40px; align-items: start; }
+  @media (max-width: 1180px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card h2 { margin: 0 0 12px; font-size: 15px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 820px) { .row { grid-template-columns: 1fr; } }
+  .cluster { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .cluster h3 { margin: 0 0 10px; font-size: 16px; }
+  .cloud-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+  input, select { width: 100%; background: #10161c; color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; font: inherit; }
+  input:focus, select:focus { outline: 1px solid var(--teal); border-color: var(--teal); }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .total { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; color: var(--teal); }
+  .total small { display: block; font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: 0; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 4px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 550; font-size: 11px; text-transform: uppercase; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .sub { color: var(--muted); font-size: 12px; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 999px; margin: 2px 4px 2px 0; }
+  .b-ok { background: #163528; color: var(--ok); }
+  .b-warn { background: #3a2a0c; color: var(--warn); }
+  .b-bad { background: #3a1614; color: var(--bad); }
+  .b-info { background: var(--teal-dim); color: var(--teal); }
+  .note { font-size: 13px; color: var(--text); background: #141b22; border-left: 3px solid var(--teal); padding: 8px 10px; margin: 8px 0; border-radius: 0 6px 6px 0; }
+  .note.warn { border-left-color: var(--warn); }
+  .note.bad { border-left-color: var(--bad); }
+  .note h4 { margin: 0 0 4px; font-size: 13px; }
+  .note p { margin: 0; color: var(--muted); }
+  details { margin-top: 10px; color: var(--muted); font-size: 13px; }
+  details summary { cursor: pointer; color: var(--text); }
+  .sticky { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 16px; }
+  footer { padding: 0 24px 28px; color: var(--muted); font-size: 12px; max-width: 1100px; }
+  footer a { color: var(--teal); }
+  .rates { font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Calculadora Private Link · Confluent Cloud Dedicated</h1>
+  <p>Estima Cluster Linking, endpoints del cloud provider y capacidad CKU para Dedicated clusters con Private Link / Private Service Connect. Las tarifas horarias de Cluster Linking y las regiones premium salen de la documentación oficial. CKU, ingress, egress y storage de Dedicated son editables: Confluent no publica list price de Dedicated.</p>
+  <span class="tag">Dedicated only · GiB · 730 h/mes · UTC</span>
+</header>
+<main>
+  <section>
+    <div class="card" style="margin-bottom:16px">
+      <h2>Clusters Dedicated</h2>
+      <div class="row">
+        <div class="cluster" id="boxA">
+          <h3><span class="cloud-dot" id="dotA"></span>Cluster A · source</h3>
+          <div class="grid2">
+            <div>
+              <label>Cloud</label>
+              <select id="aCloud"></select>
+            </div>
+            <div>
+              <label>Región</label>
+              <select id="aRegion"></select>
+            </div>
+          </div>
+          <div class="grid3">
+            <div>
+              <label>Availability</label>
+              <select id="aAz">
+                <option value="multi">Multi-zone (3 AZ)</option>
+                <option value="single">Single-zone</option>
+              </select>
+            </div>
+            <div>
+              <label>CKU</label>
+              <input id="aCku" type="number" min="1" step="1" value="2">
+            </div>
+            <div>
+              <label>VNets / VPCs cliente</label>
+              <input id="aNets" type="number" min="1" step="1" value="1">
+            </div>
+          </div>
+          <div class="grid3">
+            <div>
+              <label>Produce cliente (GB/mes)</label>
+              <input id="aProd" type="number" min="0" step="1" value="400">
+            </div>
+            <div>
+              <label>Consume cliente (GB/mes)</label>
+              <input id="aCons" type="number" min="0" step="1" value="800">
+            </div>
+            <div>
+              <label>Storage pre-RF (GB)</label>
+              <input id="aStor" type="number" min="0" step="1" value="200">
+            </div>
+          </div>
+          <p class="hint" id="aMeta"></p>
+        </div>
+        <div class="cluster" id="boxB">
+          <h3><span class="cloud-dot" id="dotB"></span>Cluster B · destination</h3>
+          <div class="grid2">
+            <div>
+              <label>Cloud</label>
+              <select id="bCloud"></select>
+            </div>
+            <div>
+              <label>Región</label>
+              <select id="bRegion"></select>
+            </div>
+          </div>
+          <div class="grid3">
+            <div>
+              <label>Availability</label>
+              <select id="bAz">
+                <option value="multi">Multi-zone (3 AZ)</option>
+                <option value="single">Single-zone</option>
+              </select>
+            </div>
+            <div>
+              <label>CKU</label>
+              <input id="bCku" type="number" min="1" step="1" value="2">
+            </div>
+            <div>
+              <label>VNets / VPCs cliente</label>
+              <input id="bNets" type="number" min="1" step="1" value="1">
+            </div>
+          </div>
+          <div class="grid3">
+            <div>
+              <label>Produce cliente (GB/mes)</label>
+              <input id="bProd" type="number" min="0" step="1" value="0">
+            </div>
+            <div>
+              <label>Consume cliente (GB/mes)</label>
+              <input id="bCons" type="number" min="0" step="1" value="400">
+            </div>
+            <div>
+              <label>Storage pre-RF (GB)</label>
+              <input id="bStor" type="number" min="0" step="1" value="200">
+            </div>
+          </div>
+          <p class="hint" id="bMeta"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h2>Cluster Linking y tarifas Dedicated</h2>
+      <div class="grid3">
+        <div>
+          <label>Dirección del link</label>
+          <select id="direction">
+            <option value="uni">Unidirectional A → B</option>
+            <option value="bi">Bidirectional (2 links)</option>
+            <option value="none">Sin Cluster Linking</option>
+          </select>
+        </div>
+        <div>
+          <label>Mirror A → B (GB/mes)</label>
+          <input id="gbAb" type="number" min="0" step="1" value="500">
+        </div>
+        <div>
+          <label>Mirror B → A (GB/mes)</label>
+          <input id="gbBa" type="number" min="0" step="1" value="0">
+        </div>
+      </div>
+      <p class="hint">Cluster Linking cobra el objeto del link aunque no haya mirror topics ni throughput. El GB incluye metadata (configs, offsets, ACLs).</p>
+      <details>
+        <summary>Tarifas Dedicated editables (no son list price público)</summary>
+        <div class="grid3 rates" style="margin-top:10px">
+          <div>
+            <label>CKU ($/hora) base</label>
+            <input id="pCku" type="number" min="0" step="0.01" value="1.50">
+          </div>
+          <div>
+            <label>Kafka ingress ($/GB) base</label>
+            <input id="pIn" type="number" min="0" step="0.001" value="0.10">
+          </div>
+          <div>
+            <label>Kafka egress ($/GB) base</label>
+            <input id="pOut" type="number" min="0" step="0.001" value="0.05">
+          </div>
+          <div>
+            <label>Storage ($/GB-mes post-RF)</label>
+            <input id="pStor" type="number" min="0" step="0.01" value="0.08">
+          </div>
+          <div>
+            <label>Multiplier región A</label>
+            <input id="mA" type="number" min="0.5" step="0.05" value="1">
+          </div>
+          <div>
+            <label>Multiplier región B</label>
+            <input id="mB" type="number" min="0.5" step="0.05" value="1">
+          </div>
+          <div>
+            <label>CSP endpoint ($/hora)</label>
+            <input id="pPeHr" type="number" min="0" step="0.001" value="0.01">
+          </div>
+          <div>
+            <label>CSP data processed ($/GB)</label>
+            <input id="pPeGb" type="number" min="0" step="0.001" value="0.01">
+          </div>
+          <div>
+            <label>Horas / mes</label>
+            <input id="hours" type="number" min="1" step="1" value="730">
+          </div>
+        </div>
+        <p class="hint">Sacar CKU / KafkaNetworkWrite / KafkaNetworkRead / KafkaStorage de <code>confluent billing price list --cluster-type dedicated --network-type private-link</code>. El multiplier regional se aplica a precios base; docs: AWS us-east-1 = 1.0×, GCP asia-east2 = 1.2×. Los $2.50 / $5.00 cross-cloud ya son el hourly de private networking; no se les vuelve a aplicar multiplier.</p>
+      </details>
+    </div>
+  </section>
+
+  <aside class="sticky">
+    <div class="card">
+      <h2>Estimado mensual</h2>
+      <div class="total" id="grand">$0<small>USD / mes · Confluent + CSP endpoints</small></div>
+      <div id="badges" style="margin:10px 0 12px"></div>
+      <table>
+        <thead>
+          <tr><th>Concepto</th><th class="num">USD / mes</th></tr>
+        </thead>
+        <tbody id="lines"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Private Link a provisionar</h2>
+      <table>
+        <tbody id="plNeed"></tbody>
+      </table>
+      <p class="hint" id="plHint"></p>
+    </div>
+    <div class="card">
+      <h2>Consideraciones oficiales</h2>
+      <div id="notes"></div>
+    </div>
+  </aside>
+</main>
+<footer>
+  Fuentes: <a href="https://docs.confluent.io/cloud/current/billing/billing-dimensions.html">Billing Dimensions</a> ·
+  <a href="https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/private-networking.html">Cluster Linking private networking</a> ·
+  <a href="https://docs.confluent.io/cloud/current/get-started/regions.html">Regions / Premium</a> ·
+  <a href="https://docs.confluent.io/cloud/current/networking/private-links/azure-privatelink.html">Azure PL</a> ·
+  <a href="https://docs.confluent.io/cloud/current/networking/private-links/aws-privatelink.html">AWS PL</a> ·
+  <a href="https://docs.confluent.io/cloud/current/networking/private-links/gcp-private-service-connect.html">GCP PSC</a> ·
+  <a href="https://docs.confluent.io/cloud/current/clusters/cluster-types.html">CKU limits</a>.
+  Cluster Linking $0.25 / $0.50 / $2.50 / $5.00 y $0.25/GB egress son list prices documentados. Dedicated CKU/ingress/egress/storage y cargos CSP son supuestos editables. GB = GiB (2³⁰).
+</footer>
+<script>
+const REGIONS = {
+  aws: [
+    {id:"us-east-1", name:"us-east-1 · N. Virginia", premium:false, jio:false, mult:1.0},
+    {id:"us-east-2", name:"us-east-2 · Ohio", premium:false, jio:false, mult:1.0},
+    {id:"us-west-2", name:"us-west-2 · Oregon", premium:false, jio:false, mult:1.0},
+    {id:"ca-central-1", name:"ca-central-1 · Canada Central", premium:false, jio:false, mult:1.0},
+    {id:"ca-west-1", name:"ca-west-1 · Calgary", premium:false, jio:false, mult:1.0},
+    {id:"sa-east-1", name:"sa-east-1 · São Paulo", premium:true, jio:false, mult:1.2},
+    {id:"eu-central-1", name:"eu-central-1 · Frankfurt", premium:true, jio:false, mult:1.0},
+    {id:"eu-central-2", name:"eu-central-2 · Zurich", premium:false, jio:false, mult:1.1},
+    {id:"eu-west-1", name:"eu-west-1 · Ireland", premium:false, jio:false, mult:1.0},
+    {id:"eu-west-2", name:"eu-west-2 · London", premium:true, jio:false, mult:1.1},
+    {id:"eu-west-3", name:"eu-west-3 · Paris", premium:false, jio:false, mult:1.0},
+    {id:"eu-north-1", name:"eu-north-1 · Stockholm", premium:false, jio:false, mult:1.0},
+    {id:"eu-south-1", name:"eu-south-1 · Milan", premium:false, jio:false, mult:1.0},
+    {id:"eu-south-2", name:"eu-south-2 · Spain", premium:false, jio:false, mult:1.0},
+    {id:"ap-southeast-1", name:"ap-southeast-1 · Singapore", premium:false, jio:false, mult:1.1},
+    {id:"ap-southeast-2", name:"ap-southeast-2 · Sydney", premium:true, jio:false, mult:1.1},
+    {id:"ap-southeast-3", name:"ap-southeast-3 · Jakarta", premium:false, jio:false, mult:1.1},
+    {id:"ap-northeast-1", name:"ap-northeast-1 · Tokyo", premium:true, jio:false, mult:1.1},
+    {id:"ap-northeast-2", name:"ap-northeast-2 · Seoul", premium:true, jio:false, mult:1.1},
+    {id:"ap-northeast-3", name:"ap-northeast-3 · Osaka", premium:false, jio:false, mult:1.1},
+    {id:"ap-south-1", name:"ap-south-1 · Mumbai", premium:true, jio:false, mult:1.2},
+    {id:"ap-south-2", name:"ap-south-2 · Hyderabad", premium:false, jio:false, mult:1.2},
+    {id:"ap-east-1", name:"ap-east-1 · Hong Kong", premium:false, jio:false, mult:1.2},
+    {id:"me-south-1", name:"me-south-1 · Bahrain", premium:false, jio:false, mult:1.2},
+    {id:"me-central-1", name:"me-central-1 · UAE (no new customers)", premium:true, jio:false, mult:1.2},
+    {id:"af-south-1", name:"af-south-1 · Cape Town", premium:true, jio:false, mult:1.2},
+    {id:"il-central-1", name:"il-central-1 · Tel Aviv", premium:false, jio:false, mult:1.1}
+  ],
+  azure: [
+    {id:"eastus", name:"eastus · Virginia", premium:false, jio:false, mult:1.0},
+    {id:"eastus2", name:"eastus2 · Virginia", premium:false, jio:false, mult:1.0},
+    {id:"centralus", name:"centralus · Iowa", premium:false, jio:false, mult:1.0},
+    {id:"southcentralus", name:"southcentralus · Texas", premium:false, jio:false, mult:1.0},
+    {id:"westus2", name:"westus2 · Washington", premium:false, jio:false, mult:1.0},
+    {id:"westus3", name:"westus3 · Phoenix", premium:false, jio:false, mult:1.0},
+    {id:"canadacentral", name:"canadacentral · Toronto", premium:false, jio:false, mult:1.0},
+    {id:"brazilsouth", name:"brazilsouth · São Paulo", premium:true, jio:false, mult:1.2},
+    {id:"mexicocentral", name:"mexicocentral · Mexico", premium:true, jio:false, mult:1.2},
+    {id:"northeurope", name:"northeurope · Ireland", premium:false, jio:false, mult:1.0},
+    {id:"westeurope", name:"westeurope · Netherlands", premium:false, jio:false, mult:1.0},
+    {id:"uksouth", name:"uksouth · London", premium:true, jio:false, mult:1.1},
+    {id:"francecentral", name:"francecentral · Paris", premium:true, jio:false, mult:1.1},
+    {id:"germanywestcentral", name:"germanywestcentral · Frankfurt", premium:true, jio:false, mult:1.0},
+    {id:"switzerlandnorth", name:"switzerlandnorth · Zurich", premium:true, jio:false, mult:1.1},
+    {id:"norwayeast", name:"norwayeast · Oslo", premium:true, jio:false, mult:1.1},
+    {id:"swedencentral", name:"swedencentral · Sweden", premium:false, jio:false, mult:1.0},
+    {id:"spaincentral", name:"spaincentral · Spain", premium:false, jio:false, mult:1.0},
+    {id:"italynorth", name:"italynorth · Milan", premium:false, jio:false, mult:1.0},
+    {id:"austriaeast", name:"austriaeast · Vienna", premium:false, jio:false, mult:1.1},
+    {id:"australiaeast", name:"australiaeast · NSW", premium:true, jio:false, mult:1.1},
+    {id:"southeastasia", name:"southeastasia · Singapore", premium:false, jio:false, mult:1.1},
+    {id:"eastasia", name:"eastasia · Hong Kong", premium:false, jio:false, mult:1.2},
+    {id:"japaneast", name:"japaneast · Tokyo", premium:true, jio:false, mult:1.1},
+    {id:"koreacentral", name:"koreacentral · Seoul", premium:false, jio:false, mult:1.1},
+    {id:"centralindia", name:"centralindia · Pune", premium:true, jio:false, mult:1.2},
+    {id:"newzealandnorth", name:"newzealandnorth", premium:true, jio:false, mult:1.1},
+    {id:"uaenorth", name:"uaenorth · Dubai", premium:true, jio:false, mult:1.2},
+    {id:"qatarcentral", name:"qatarcentral · Doha", premium:false, jio:false, mult:1.2},
+    {id:"southafricanorth", name:"southafricanorth · Johannesburg", premium:true, jio:false, mult:1.2},
+    {id:"jioindiawest", name:"jioindiawest · Jio (sin Private Link)", premium:false, jio:true, mult:1.2},
+    {id:"jioindiacentral", name:"jioindiacentral · Jio (sin Private Link)", premium:false, jio:true, mult:1.2}
+  ],
+  gcp: [
+    {id:"us-central1", name:"us-central1 · Iowa", premium:false, jio:false, mult:1.0},
+    {id:"us-east1", name:"us-east1 · South Carolina", premium:false, jio:false, mult:1.0},
+    {id:"us-east4", name:"us-east4 · N. Virginia", premium:false, jio:false, mult:1.0},
+    {id:"us-west1", name:"us-west1 · Oregon", premium:false, jio:false, mult:1.0},
+    {id:"us-west2", name:"us-west2 · Los Angeles", premium:false, jio:false, mult:1.0},
+    {id:"us-west4", name:"us-west4 · Las Vegas", premium:false, jio:false, mult:1.0},
+    {id:"us-south1", name:"us-south1 · Dallas", premium:false, jio:false, mult:1.0},
+    {id:"northamerica-northeast1", name:"northamerica-northeast1 · Montreal", premium:false, jio:false, mult:1.0},
+    {id:"northamerica-northeast2", name:"northamerica-northeast2 · Toronto", premium:false, jio:false, mult:1.0},
+    {id:"southamerica-east1", name:"southamerica-east1 · São Paulo", premium:true, jio:false, mult:1.2},
+    {id:"southamerica-west1", name:"southamerica-west1 · Santiago", premium:true, jio:false, mult:1.2},
+    {id:"europe-west1", name:"europe-west1 · Belgium", premium:false, jio:false, mult:1.0},
+    {id:"europe-west2", name:"europe-west2 · London", premium:true, jio:false, mult:1.1},
+    {id:"europe-west3", name:"europe-west3 · Frankfurt", premium:false, jio:false, mult:1.0},
+    {id:"europe-west4", name:"europe-west4 · Netherlands", premium:false, jio:false, mult:1.0},
+    {id:"europe-west6", name:"europe-west6 · Zurich", premium:false, jio:false, mult:1.1},
+    {id:"europe-west8", name:"europe-west8 · Milan", premium:false, jio:false, mult:1.0},
+    {id:"europe-north1", name:"europe-north1 · Finland", premium:false, jio:false, mult:1.0},
+    {id:"europe-southwest1", name:"europe-southwest1 · Madrid", premium:false, jio:false, mult:1.0},
+    {id:"asia-east1", name:"asia-east1 · Taiwan", premium:false, jio:false, mult:1.1},
+    {id:"asia-east2", name:"asia-east2 · Hong Kong (docs 1.2×)", premium:false, jio:false, mult:1.2},
+    {id:"asia-northeast1", name:"asia-northeast1 · Tokyo", premium:false, jio:false, mult:1.1},
+    {id:"asia-south1", name:"asia-south1 · Mumbai", premium:true, jio:false, mult:1.2},
+    {id:"asia-south2", name:"asia-south2 · Delhi", premium:false, jio:false, mult:1.2},
+    {id:"asia-southeast1", name:"asia-southeast1 · Singapore", premium:false, jio:false, mult:1.1},
+    {id:"asia-southeast2", name:"asia-southeast2 · Jakarta", premium:false, jio:false, mult:1.1},
+    {id:"australia-southeast1", name:"australia-southeast1 · Sydney", premium:true, jio:false, mult:1.1},
+    {id:"australia-southeast2", name:"australia-southeast2 · Melbourne", premium:false, jio:false, mult:1.1},
+    {id:"me-west1", name:"me-west1 · Tel Aviv", premium:false, jio:false, mult:1.1},
+    {id:"me-central2", name:"me-central2 · Dammam", premium:false, jio:false, mult:1.2}
+  ]
+};
+
+const CLOUD_LABEL = {aws:"AWS", azure:"Azure", gcp:"Google Cloud"};
+const CLOUD_COLOR = {aws:"#ff9900", azure:"#0078d4", gcp:"#4285f4"};
+const CKU_CAP = {cloud:{aws:252, azure:100, gcp:152}, inMbps:60, outMbps:180, parts:4500};
+const HOURS_DEFAULT = 730;
+
+function $(id){ return document.getElementById(id); }
+function money(n){ return n.toLocaleString("en-US", {style:"currency", currency:"USD", maximumFractionDigits:0}); }
+function money2(n){ return n.toLocaleString("en-US", {style:"currency", currency:"USD", minimumFractionDigits:2, maximumFractionDigits:2}); }
+function num(id){ return Number($(id).value) || 0; }
+function val(id){ return $(id).value; }
+
+function fillClouds(){
+  ["aCloud","bCloud"].forEach((id,i) => {
+    const s = $(id);
+    s.innerHTML = Object.keys(CLOUD_LABEL).map(k => `<option value="${k}">${CLOUD_LABEL[k]}</option>`).join("");
+    s.value = i===0 ? "azure" : "aws";
+  });
+}
+function fillRegions(which){
+  const cloud = val(which+"Cloud");
+  const sel = $(which+"Region");
+  const pref = which==="a" ? "eastus2" : "us-east-1";
+  sel.innerHTML = REGIONS[cloud].map(r => `<option value="${r.id}">${r.name}${r.premium?" · premium":""}${r.jio?" · no PL":""}</option>`).join("");
+  if (REGIONS[cloud].some(r => r.id===pref)) sel.value = pref;
+  const r = region(which);
+  $(which==="a"?"mA":"mB").value = r.mult;
+}
+function region(which){
+  const cloud = val(which+"Cloud");
+  const id = val(which+"Region");
+  return REGIONS[cloud].find(r => r.id===id) || REGIONS[cloud][0];
+}
+function endpointsPerNet(az){ return az==="single" ? 1 : 3; }
+function cspUnits(cloud, az, nets){
+  const per = endpointsPerNet(az);
+  if (cloud==="aws") return {label:"VPC endpoint AZ-hours", units: nets * per, endpoints: nets, azs: per};
+  if (cloud==="azure") return {label:"Private Endpoints", units: nets * per, endpoints: nets * per, azs: per};
+  return {label:"PSC endpoints", units: nets * per, endpoints: nets * per, azs: per};
+}
+function linkHourly(cluster){
+  const dir = val("direction");
+  if (dir==="none") return {rate:0, kind:"—"};
+  const a = {cloud:val("aCloud"), prem:region("a").premium};
+  const b = {cloud:val("bCloud"), prem:region("b").premium};
+  const cross = a.cloud !== b.cloud;
+  const thisPrem = cluster==="a" ? a.prem : b.prem;
+  if (cross) {
+    const rate = thisPrem ? 5.00 : 2.50;
+    return {rate, kind: thisPrem ? "cross-cloud private · premium $5.00" : "cross-cloud private $2.50"};
+  }
+  const rate = 0.50 * (cluster==="a" ? num("mA") : num("mB"));
+  return {rate, kind:"intra-cloud private $0.50 × multiplier"};
+}
+
+function calc(){
+  const hours = num("hours") || HOURS_DEFAULT;
+  const dir = val("direction");
+  const links = dir==="none" ? 0 : dir==="bi" ? 2 : 1;
+  const a = {
+    cloud: val("aCloud"), az: val("aAz"), cku: num("aCku"), nets: num("aNets"),
+    prod: num("aProd"), cons: num("aCons"), stor: num("aStor"),
+    r: region("a"), m: num("mA")
+  };
+  const b = {
+    cloud: val("bCloud"), az: val("bAz"), cku: num("bCku"), nets: num("bNets"),
+    prod: num("bProd"), cons: num("bCons"), stor: num("bStor"),
+    r: region("b"), m: num("mB")
+  };
+  const gbAb = dir==="none" ? 0 : num("gbAb");
+  const gbBa = dir==="bi" ? num("gbBa") : 0;
+
+  const pCku = num("pCku"), pIn = num("pIn"), pOut = num("pOut"), pStor = num("pStor");
+  const pPeHr = num("pPeHr"), pPeGb = num("pPeGb");
+
+  const aCku = a.cku * pCku * a.m * hours;
+  const bCku = b.cku * pCku * b.m * hours;
+  const aIn = a.prod * pIn * a.m;
+  const bInClients = b.prod * pIn * b.m;
+  const aOut = a.cons * pOut * a.m;
+  const bOut = b.cons * pOut * b.m;
+  const aStor = a.stor * 3 * pStor;
+  const bStor = b.stor * 3 * pStor;
+
+  const ha = linkHourly("a");
+  const hb = linkHourly("b");
+  const aLinkHr = ha.rate * links * hours;
+  const bLinkHr = hb.rate * links * hours;
+
+  const clReadAb = gbAb * 0.25 * a.m;
+  const clWriteAb = gbAb * pIn * b.m;
+  const clReadBa = gbBa * 0.25 * b.m;
+  const clWriteBa = gbBa * pIn * a.m;
+
+  const cspA = cspUnits(a.cloud, a.az, a.nets);
+  const cspB = cspUnits(b.cloud, b.az, b.nets);
+  const peA = cspA.units * pPeHr * hours + (a.prod + a.cons) * pPeGb;
+  const peB = cspB.units * pPeHr * hours + (b.prod + b.cons) * pPeGb;
+
+  const confluent = aCku+bCku+aIn+bInClients+aOut+bOut+aStor+bStor+aLinkHr+bLinkHr+clReadAb+clWriteAb+clReadBa+clWriteBa;
+  const csp = peA+peB;
+  const total = confluent + csp;
+
+  const mbps = gb => (gb * 1024) / (hours * 3600);
+  const aNeedIn = mbps(a.prod);
+  const aNeedOut = mbps(a.cons + gbAb);
+  const bNeedIn = mbps(b.prod + gbAb + (dir==="bi"?0:0));
+  const bNeedIn2 = mbps(b.prod + gbAb);
+  const aNeedIn2 = mbps(a.prod + gbBa);
+  const bNeedOut = mbps(b.cons + gbBa);
+  const recA = Math.max(a.az==="multi"?2:1, Math.ceil(Math.max(aNeedIn2/CKU_CAP.inMbps, aNeedOut/CKU_CAP.outMbps)));
+  const recB = Math.max(b.az==="multi"?2:1, Math.ceil(Math.max(bNeedIn2/CKU_CAP.inMbps, bNeedOut/CKU_CAP.outMbps)));
+
+  return {hours, dir, links, a, b, gbAb, gbBa, ha, hb,
+    lines:[
+      ["CKU cluster A", aCku, `${a.cku} CKU × ${money2(pCku*a.m)}/h × ${hours}h`],
+      ["CKU cluster B", bCku, `${b.cku} CKU × ${money2(pCku*b.m)}/h × ${hours}h`],
+      ["Kafka ingress clientes A", aIn, `${a.prod} GB × ${money2(pIn*a.m)}`],
+      ["Kafka ingress clientes B", bInClients, `${b.prod} GB × ${money2(pIn*b.m)}`],
+      ["Kafka egress clientes A", aOut, `${a.cons} GB × ${money2(pOut*a.m)}`],
+      ["Kafka egress clientes B", bOut, `${b.cons} GB × ${money2(pOut*b.m)}`],
+      ["Storage A (×3 RF)", aStor, `${a.stor} GB pre × 3 × ${money2(pStor)}`],
+      ["Storage B (×3 RF)", bStor, `${b.stor} GB pre × 3 × ${money2(pStor)}`],
+      [`Cluster link hourly A × ${links||0}`, aLinkHr, ha.kind],
+      [`Cluster link hourly B × ${links||0}`, bLinkHr, hb.kind],
+      ["ClusterLinkingRead A→B", clReadAb, `${gbAb} GB × $0.25 × ${a.m}`],
+      ["ClusterLinkingWrite A→B", clWriteAb, `${gbAb} GB × dest KafkaNetworkWrite`],
+      ["ClusterLinkingRead B→A", clReadBa, dir==="bi" ? `${gbBa} GB × $0.25 × ${b.m}` : "solo bidirectional"],
+      ["ClusterLinkingWrite B→A", clWriteBa, dir==="bi" ? `${gbBa} GB × dest KafkaNetworkWrite` : "solo bidirectional"],
+      [`CSP ${cspA.label} A`, peA, `${cspA.units} unidades + ${(a.prod+a.cons)} GB`],
+      [`CSP ${cspB.label} B`, peB, `${cspB.units} unidades + ${(b.prod+b.cons)} GB`]
+    ],
+    confluent, csp, total, cspA, cspB, recA, recB, aNeedIn2, aNeedOut, bNeedIn2, bNeedOut
+  };
+}
+
+function render(){
+  const c = calc();
+  $("dotA").style.background = CLOUD_COLOR[c.a.cloud];
+  $("dotB").style.background = CLOUD_COLOR[c.b.cloud];
+  $("grand").innerHTML = money(c.total) + "<small>USD / mes · Confluent " + money(c.confluent) + " + CSP " + money(c.csp) + "</small>";
+
+  $("lines").innerHTML = c.lines.filter(x => x[1] !== 0 || x[0].includes("hourly")).map(([n,v,s]) =>
+    `<tr><td>${n}<div class="sub">${s}</div></td><td class="num">${money2(v)}</td></tr>`
+  ).join("") + `<tr><td><strong>Total</strong></td><td class="num"><strong>${money2(c.total)}</strong></td></tr>`;
+
+  const namePe = cloud => cloud==="aws" ? "VPC endpoint (1, en N AZ)" : cloud==="azure" ? "Private Endpoints" : "PSC endpoints";
+  $("plNeed").innerHTML = `
+    <tr><td>A ${CLOUD_LABEL[c.a.cloud]} ${c.a.r.id}</td><td class="num">${c.cspA.endpoints} ${namePe(c.a.cloud)}</td></tr>
+    <tr><td>B ${CLOUD_LABEL[c.b.cloud]} ${c.b.r.id}</td><td class="num">${c.cspB.endpoints} ${namePe(c.b.cloud)}</td></tr>
+    <tr><td>DNS por cluster</td><td class="num">${c.a.az==="single"?"* + 1 zonal":"* + 3 zonales"}</td></tr>
+    <tr><td>CKU sugerido A / B</td><td class="num">${c.recA} / ${c.recB}</td></tr>`;
+  $("plHint").textContent = c.a.cloud==="aws"
+    ? "AWS: un VPC endpoint con subnet en cada AZ del cluster. Las AZ deben coincidir. No hay PrivateLink Attachment cross-region."
+    : c.a.cloud==="azure"
+    ? "Azure: un Private Endpoint por Service Alias zonal. El PE puede estar en otra región que el Private Link Service."
+    : "GCP: un PSC endpoint por Service Attachment zonal. El attach inicial es same-region; después se puede activar PSC Global Access.";
+
+  const badges = [];
+  const cross = c.a.cloud !== c.b.cloud;
+  if (c.dir!=="none" && cross) badges.push(["b-warn","Cross-cloud private Cluster Linking"]);
+  else if (c.dir!=="none") badges.push(["b-info","Intra-cloud private Cluster Linking"]);
+  if (c.a.r.premium || c.b.r.premium) badges.push(["b-warn","Premium region en el hourly"]);
+  if (c.a.r.jio || c.b.r.jio) badges.push(["b-bad","Jio: no Private Link"]);
+  if (c.a.cku < c.recA || c.b.cku < c.recB) badges.push(["b-bad","CKU por debajo de la guía"]);
+  if (c.a.az==="multi" && c.a.cku<2 || c.b.az==="multi" && c.b.cku<2) badges.push(["b-bad","Multi-zone exige mínimo 2 CKU"]);
+  if (c.dir==="bi") badges.push(["b-info","Bidirectional = 2 links"]);
+  if (!cross) badges.push(["b-ok","Mismo cloud"]);
+  else badges.push(["b-ok","Private-to-private Dedicated es soportado"]);
+  $("badges").innerHTML = badges.map(([k,t]) => `<span class="badge ${k}">${t}</span>`).join("");
+
+  $("aMeta").textContent = metaLine(c.a, c.cspA, "A");
+  $("bMeta").textContent = metaLine(c.b, c.cspB, "B");
+  $("notes").innerHTML = notesHtml(c);
+}
+
+function metaLine(cl, csp, tag){
+  const bits = [
+    cl.r.premium ? "Premium region (cross-cloud private $5.00/h)" : "No premium",
+    cl.r.jio ? "Jio: solo VNet Peering" : "Private Link / PSC available",
+    `multiplier ${cl.m}×`,
+    `${csp.endpoints} endpoint(s) CSP`
+  ];
+  return bits.join(" · ");
+}
+
+function notesHtml(c){
+  const notes = [];
+  const push = (cls, title, body) => notes.push(`<div class="note ${cls}"><h4>${title}</h4><p>${body}</p></div>`);
+
+  if (c.a.r.jio || c.b.r.jio) {
+    push("bad", "Jio Cloud no tiene Private Link",
+      "En jioindiawest / jioindiacentral solo hay VNet Peering para Dedicated. Azure Private Link no está disponible.");
+  }
+  if (c.dir!=="none") {
+    push("", "Misma Confluent Cloud Organization",
+      "Dedicated private → Dedicated private (mismo o distinto cloud) exige la misma organization. Cross-organization no está soportado en private networking.");
+  }
+  if (c.dir!=="none" && c.a.cloud!==c.b.cloud) {
+    push("warn", "Hourly cross-cloud private",
+      "Cuando el link une clouds distintos y ambos usan private networking, el hourly pasa de $0.50 a $2.50 por cluster (o $5.00 si esa región es Premium). El throughput no cambia: ClusterLinkingWrite = KafkaNetworkWrite del destination; ClusterLinkingRead = $0.25/GB. Confluent paga el egress del cloud provider.");
+  } else if (c.dir!=="none") {
+    push("", "Hourly intra-cloud private",
+      "Mismo cloud o algún lado público: $0.50/h por cluster privately networked ($0.25 si fuera internet). Ambos clusters pagan. Bidirectional se cobra como dos links al rate más alto.");
+  }
+  if (c.dir!=="none") {
+    push("", "Se cobra el objeto del link",
+      "Hay cargo aunque no exista mirror topic ni bytes. Confluent no de-duplica links idénticos. El GB incluye metadata (topic configs, consumer offsets, ACLs), así que el throughput facturable puede ser mayor que el produce al source.");
+  }
+  push("", "Private Link no se convierte",
+    "Un Dedicated existente no se puede cambiar a Private Link. Hay que crear una Confluent Cloud Network tipo PRIVATELINK y un cluster nuevo. La opción de DNS (private vs public/chased) tampoco se cambia después.");
+  push("", "DNS y brokers",
+    "Private DNS es la opción recomendada. Hay que crear * (bootstrap) y un record zonal por AZ. No hardcodear nombres de broker: no son estáticos. En Azure el zone name omite el lkc- si viene en el DNS domain.");
+  if (c.a.cloud==="aws" || c.b.cloud==="aws") {
+    push("warn", "AWS: AZ matching y sin PL cross-region",
+      "Las availability zones del VPC cliente deben incluir las del cluster. Cross-region PrivateLink Attachment Connections no están soportadas. use1-az3 en us-east-1 no se usa. Security group: TCP 80, 443 y 9092. Enable DNS resolution + hostnames. En el VPC endpoint, desmarcar Enable DNS name.");
+  }
+  if (c.a.cloud==="azure" || c.b.cloud==="azure") {
+    push("", "Azure: 3 PE en multi-zone",
+      "Multi-zone Dedicated exige tres Private Endpoints, uno por Service Alias zonal. Single-zone: uno. El PE puede crearse en otra región que el Private Link Service. Registrar el subscription ID en Private Link Access.");
+  }
+  if (c.a.cloud==="gcp" || c.b.cloud==="gcp") {
+    push("warn", "GCP: attach same-region",
+      "El Private Service Connect attachment inicial no es cross-region. Después se puede habilitar PSC Global Access en el forwarding rule. Multi-zone = 3 PSC endpoints. Las subnets deben cubrir las zonas del cluster.");
+  }
+  push("warn", "Internet sigue haciendo falta",
+    "Schema Registry, Confluent CLI (control plane) y el provisioning de ksqlDB requieren outbound Internet. ksqlDB ya creado sí habla por Private Link. La Cloud Console necesita config extra. Connectors hacia sources/sinks privados usan Egress Private Link Endpoints, no el inbound PL del cluster.");
+  if (c.a.az==="multi" && c.a.cku<2 || c.b.az==="multi" && c.b.cku<2) {
+    push("bad", "Mínimo 2 CKU en multi-zone",
+      "Single-zone admite 1+ CKU. Multi-zone (3 AZ) exige mínimo 2 CKU. La zone availability no se cambia después de crear el cluster.");
+  }
+  if (c.a.cku < c.recA || c.b.cku < c.recB) {
+    push("bad", "Capacidad CKU",
+      `Guía por CKU: 60 MBps ingress / 180 MBps egress / 4.500 partitions. Mirror cuenta como ingress en el destination y egress en el source. Sugerido: A ${c.recA} CKU, B ${c.recB} CKU.`);
+  }
+  const maxA = CKU_CAP.cloud[c.a.cloud], maxB = CKU_CAP.cloud[c.b.cloud];
+  if (c.a.cku>4 || c.b.cku>4) {
+    push("", "Tope de compra",
+      `Credit card: 4 CKU. Invoice / cloud billing: 24 CKU, más por request. Soft max por cloud: AWS ${maxA}, Azure 100, GCP 152.`);
+  }
+  push("", "Qué no cobra dos veces",
+    "Cluster Linking no suma KafkaNetworkWrite/Read encima de ClusterLinkingWrite/Read. Storage se factura post-replication (RF=3 ≈ 3×). Produce REST v3 suma $0.01/GB extra antes del multiplier. Los descuentos por volumen de Cluster Linking egress son con account team.");
+  return notes.join("");
+}
+
+function bind(){
+  fillClouds();
+  fillRegions("a");
+  fillRegions("b");
+  $("aCloud").addEventListener("change", () => { fillRegions("a"); render(); });
+  $("bCloud").addEventListener("change", () => { fillRegions("b"); render(); });
+  $("aRegion").addEventListener("change", () => { $("mA").value = region("a").mult; render(); });
+  $("bRegion").addEventListener("change", () => { $("mB").value = region("b").mult; render(); });
+  $("direction").addEventListener("change", () => {
+    $("gbBa").disabled = val("direction")!=="bi";
+    $("gbAb").disabled = val("direction")==="none";
+    if (val("direction")!=="bi") $("gbBa").value = 0;
+    render();
+  });
+  document.querySelectorAll("input, select").forEach(el => el.addEventListener("input", render));
+  render();
+}
+bind();
+</script>
+</body>
+</html>
