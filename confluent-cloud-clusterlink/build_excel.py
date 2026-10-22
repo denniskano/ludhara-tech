@@ -158,9 +158,22 @@ def input_cell(ws, row, col, value, number_format=None):
     return cell
 
 
+def as_formula(text):
+    if not isinstance(text, str) or not text:
+        return text
+    if text.startswith("="):
+        return text
+    start = text.lstrip()[:14].upper()
+    if text[0] in "$" or start.startswith((
+        "IF", "INDEX", "MATCH", "SUM", "MAX", "MIN", "TEXT", "TRIM",
+        "OR(", "AND(", "COUNT", "ROUND", "SUBSTITUTE", "IFERROR",
+    )):
+        return "=" + text
+    return text
+
+
 def formula_cell(ws, row, col, formula, number_format=None, money=False):
-    if isinstance(formula, str) and formula and not formula.startswith("="):
-        formula = "=" + formula
+    formula = as_formula(formula)
     cell = ws.cell(row, col, formula)
     cell.font = formula_font
     cell.border = thin
@@ -300,7 +313,7 @@ def build():
         (18, "CSP_PE_HOUR", 0.01, "Azure PE / AWS VPCE-AZ / GCP PSC USD/hora (list US)"),
         (19, "CSP_PE_GB", 0.01, "CSP data processed USD/GB (list US)"),
         (20, "HOURS_MONTH", 730, "Horas / mes (24×365/12)"),
-        (21, "RF", 3, "Replication factor Dedicated. Storage ≈ 3×"),
+        (21, "REPL_FACTOR", 3, "Replication factor Dedicated. Storage ≈ 3x"),
         (22, "CKU_IN_MBPS", 60, "Ingress MBps por CKU (docs cluster types)"),
         (23, "CKU_OUT_MBPS", 180, "Egress MBps por CKU"),
         (24, "CKU_PARTITIONS", 4500, "Partitions pre-replication por CKU"),
@@ -472,11 +485,17 @@ def build():
          f'=IF(COUNTIFS(Regiones!$A$2:$A${last},$B$5,Regiones!$B$2:$B${last},$B$6)=1,"OK","Region no coincide con cloud")'),
         (36, "Región válida B",
          f'=IF(COUNTIFS(Regiones!$A$2:$A${last},$F$5,Regiones!$B$2:$B${last},$F$6)=1,"OK","Region no coincide con cloud")'),
-        (37, "Mismo Organization", "OBLIGATORIO si ambos son private Dedicated"),
+        (37, "Mismo Organization", None),
     ]
     for r, name, formula in diags:
         label(ws, r, 5, name)
-        formula_cell(ws, r, 6, formula)
+        if formula is None:
+            cell = ws.cell(r, 6, "OBLIGATORIO si ambos son private Dedicated")
+            cell.font = formula_font
+            cell.border = thin
+            cell.fill = fill(GRAY)
+        else:
+            formula_cell(ws, r, 6, formula)
         ws.merge_cells(start_row=r, start_column=6, end_row=r, end_column=7)
     ws["F17"].number_format = "0.0"
     ws["F20"].number_format = "0.0"
@@ -507,15 +526,13 @@ def build():
     ws["E40"].font = label_font
     formula_cell(
         ws, 40, 6,
-        '=TRIM(SUBSTITUTE(SUBSTITUTE('
-        'IF(OR($F$16="SI",$F$19="SI"),"Jio: no Private Link · ","")&'
-        'IF(OR($B$8<$F$38,$F$8<$F$39),"CKU por debajo de la guía · ","")&'
-        'IF(OR(AND($B$7="Multi-zone",$B$8<2),AND($F$7="Multi-zone",$F$8<2)),"Multi-zone exige 2 CKU · ","")&'
-        'IF($F$21,"Cross-cloud private Cluster Linking · ","Intra-cloud private · ")&'
-        'IF(OR($F$15="SI",$F$18="SI"),"Premium region $5.00/h · ","")&'
-        'IF($F$22=2,"Bidirectional = 2 links · ","")&'
-        'IF(OR($F$35<>"OK",$F$36<>"OK"),"Region no coincide con cloud","")'
-        '," ·  "," · "), " ·", ""))',
+        '=IF(OR($F$16="SI",$F$19="SI"),"Jio: no Private Link. ","")&'
+        'IF(OR($B$8<$F$38,$F$8<$F$39),"CKU por debajo de la guia. ","")&'
+        'IF(OR(AND($B$7="Multi-zone",$B$8<2),AND($F$7="Multi-zone",$F$8<2)),"Multi-zone exige 2 CKU. ","")&'
+        'IF($F$21,"Cross-cloud private Cluster Linking. ","Intra-cloud private. ")&'
+        'IF(OR($F$15="SI",$F$18="SI"),"Premium region $5.00/h. ","")&'
+        'IF($F$22=2,"Bidirectional = 2 links. ","")&'
+        'IF(OR($F$35<>"OK",$F$36<>"OK"),"Region no coincide con cloud.","")',
     )
     ws.merge_cells("F40:G40")
     ws["F40"].alignment = Alignment(wrap_text=True, vertical="center")
@@ -557,12 +574,12 @@ def build():
          '=$F$11&" GB × "&TEXT(KAFKA_OUT_GB*$F$20,"$0.00")',
          "Confluent"),
         (12, "Storage A (× RF)",
-         "=$B$12*RF*STORAGE_GB_MONTH",
-         '=$B$12&" GB pre × "&RF&" × "&TEXT(STORAGE_GB_MONTH,"$0.00")',
+         "=$B$12*REPL_FACTOR*STORAGE_GB_MONTH",
+         '=$B$12&" GB pre x "&REPL_FACTOR&" x "&TEXT(STORAGE_GB_MONTH,"$0.00")',
          "Confluent"),
         (13, "Storage B (× RF)",
-         "=$F$12*RF*STORAGE_GB_MONTH",
-         '=$F$12&" GB pre × "&RF&" × "&TEXT(STORAGE_GB_MONTH,"$0.00")',
+         "=$F$12*REPL_FACTOR*STORAGE_GB_MONTH",
+         '=$F$12&" GB pre x "&REPL_FACTOR&" x "&TEXT(STORAGE_GB_MONTH,"$0.00")',
          "Confluent"),
         (14, "Cluster link hourly A",
          "=$F$25*$F$22*HOURS_MONTH",
@@ -632,16 +649,16 @@ def build():
     style_header_bar(ws, 26, 9, 12, PANEL)
     ws.merge_cells("I26:L26")
     ws["I27"] = "A"
-    formula_cell(ws, 27, 10, '=$F$31&" × "&$F$33')
+    formula_cell(ws, 27, 10, '=$F$31&" x "&$F$33')
     ws.merge_cells("J27:L27")
     ws["I28"] = "B"
-    formula_cell(ws, 28, 10, '=$F$32&" × "&$F$34')
+    formula_cell(ws, 28, 10, '=$F$32&" x "&$F$34')
     ws.merge_cells("J28:L28")
     ws["I29"] = "DNS por cluster"
     formula_cell(ws, 29, 10, '=IF($B$7="Single-zone","* + 1 zonal (A records)","* + 3 zonales (A/CNAME). No hardcodear brokers.")')
     ws.merge_cells("J29:L29")
     ws["I30"] = "CKU A / B vs guía"
-    formula_cell(ws, 30, 10, '=$B$8&" / "&$F$8&"  (sugerido "&$F$38&" / "&$F$39&")")')
+    formula_cell(ws, 30, 10, '=$B$8&" / "&$F$8&" (sugerido "&$F$38&" / "&$F$39&")"')
     ws.merge_cells("J30:L30")
 
     # Chart data (compact)
