@@ -159,6 +159,8 @@ def input_cell(ws, row, col, value, number_format=None):
 
 
 def formula_cell(ws, row, col, formula, number_format=None, money=False):
+    if isinstance(formula, str) and formula and not formula.startswith("="):
+        formula = "=" + formula
     cell = ws.cell(row, col, formula)
     cell.font = formula_font
     cell.border = thin
@@ -217,7 +219,7 @@ def build():
     wr.sheet_properties.tabColor = "8B9AAB"
 
     for cloud, (a, b) in ranges.items():
-        wb.defined_names.add(DefinedName(cloud, attr_text=f"Regiones!$B${a}:$B${b}"))
+        wb.defined_names.add(DefinedName(f"Cloud_{cloud}", attr_text=f"Regiones!$B${a}:$B${b}"))
     wb.defined_names.add(DefinedName("AllClaves", attr_text=f"Regiones!$G$2:$G${last}"))
     wb.defined_names.add(DefinedName("AllClouds", attr_text="Listas!$A$2:$A$4"))
 
@@ -231,13 +233,13 @@ def build():
     wl["B2"] = "Multi-zone"
     wl["B3"] = "Single-zone"
     wl["C1"] = "Direccion"
-    wl["C2"] = "Unidirectional A → B"
+    wl["C2"] = "Unidirectional"
     wl["C3"] = "Bidirectional"
-    wl["C4"] = "Sin Cluster Linking"
+    wl["C4"] = "None"
     style_header_bar(wl, 1, 1, 3)
     for col, width in zip("ABC", [14, 16, 26]):
         wl.column_dimensions[col].width = width
-    wl.sheet_state = "hidden"
+    wl.sheet_state = "visible"
 
     # --- Tarifas ---
     wt = wb.create_sheet("Tarifas", 0)
@@ -391,7 +393,6 @@ def build():
             input_cell(ws, r, 2, val)
         else:
             input_cell(ws, r, 2, val, int_format)
-        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=3)
 
     # Cluster B
     ws.merge_cells("E4:G4")
@@ -413,21 +414,17 @@ def build():
             input_cell(ws, r, 6, val)
         else:
             input_cell(ws, r, 6, val, int_format)
-        ws.merge_cells(start_row=r, start_column=6, end_row=r, end_column=7)
 
     # Linking
     ws.merge_cells("A14:C14")
     ws["A14"] = "Cluster Linking"
     style_header_bar(ws, 14, 1, 3, TEAL)
     label(ws, 15, 1, "Direccion")
-    input_cell(ws, 15, 2, "Unidirectional A → B")
-    ws.merge_cells("B15:C15")
+    input_cell(ws, 15, 2, "Unidirectional")
     label(ws, 16, 1, "Mirror A → B (GB/mes)")
     input_cell(ws, 16, 2, 500, int_format)
-    ws.merge_cells("B16:C16")
     label(ws, 17, 1, "Mirror B → A (GB/mes)")
     input_cell(ws, 17, 2, 0, int_format)
-    ws.merge_cells("B17:C17")
 
     # Lookups / diagnosis
     ws.merge_cells("E14:G14")
@@ -454,8 +451,8 @@ def build():
         (19, "Jio B (sin PL)", look_jio("$F$5", "$F$6")),
         (20, "Multiplier B", look_mult("$F$5", "$F$6")),
         (21, "Cross-cloud", '=$B$5<>$F$5'),
-        (22, "Links", '=IF($B$15="Sin Cluster Linking",0,IF($B$15="Bidirectional",2,1))'),
-        (23, "GB A→B efectivo", '=IF($B$15="Sin Cluster Linking",0,$B$16)'),
+        (22, "Links", '=IF(OR($B$15="None",$B$15="Sin Cluster Linking"),0,IF($B$15="Bidirectional",2,1))'),
+        (23, "GB A→B efectivo", '=IF(OR($B$15="None",$B$15="Sin Cluster Linking"),0,$B$16)'),
         (24, "GB B→A efectivo", '=IF($B$15="Bidirectional",$B$17,0)'),
         (25, "Hourly A",
          '=IF($F$22=0,0,IF($F$21,IF($F$15="SI",CL_XCLOUD_PREMIUM_HOUR,CL_XCLOUD_HOUR),CL_PRIVATE_HOUR*$F$17))'),
@@ -463,7 +460,7 @@ def build():
          '=IF($F$22=0,0,IF($F$21,IF($F$18="SI",CL_XCLOUD_PREMIUM_HOUR,CL_XCLOUD_HOUR),CL_PRIVATE_HOUR*$F$20))'),
         (27, "AZ por red A", '=IF($B$7="Single-zone",1,3)'),
         (28, "AZ por red B", '=IF($F$7="Single-zone",1,3)'),
-        (29, "Unidades CSP A", '=IF($B$5="AWS",$B$9*$F$27,$B$9*$F$27)'),
+        (29, "Unidades CSP A", '=$B$9*$F$27'),
         (30, "Unidades CSP B", '=$F$9*$F$28'),
         (31, "Endpoints a crear A", '=IF($B$5="AWS",$B$9,$B$9*$F$27)'),
         (32, "Endpoints a crear B", '=IF($F$5="AWS",$F$9,$F$9*$F$28)'),
@@ -510,13 +507,15 @@ def build():
     ws["E40"].font = label_font
     formula_cell(
         ws, 40, 6,
-        '=TEXTJOIN(" · ",TRUE,'
-        'IF(OR($F$16="SI",$F$19="SI"),"Jio: no Private Link",""),'
-        'IF(OR($B$8<$F$38,$F$8<$F$39),"CKU por debajo de la guía",""),'
-        'IF(OR(AND($B$7="Multi-zone",$B$8<2),AND($F$7="Multi-zone",$F$8<2)),"Multi-zone exige 2 CKU",""),'
-        'IF($F$21,"Cross-cloud private Cluster Linking","Intra-cloud private"),'
-        'IF(OR($F$15="SI",$F$18="SI"),"Premium region $5.00/h",""),'
-        'IF($F$22=2,"Bidirectional = 2 links",""))',
+        '=TRIM(SUBSTITUTE(SUBSTITUTE('
+        'IF(OR($F$16="SI",$F$19="SI"),"Jio: no Private Link · ","")&'
+        'IF(OR($B$8<$F$38,$F$8<$F$39),"CKU por debajo de la guía · ","")&'
+        'IF(OR(AND($B$7="Multi-zone",$B$8<2),AND($F$7="Multi-zone",$F$8<2)),"Multi-zone exige 2 CKU · ","")&'
+        'IF($F$21,"Cross-cloud private Cluster Linking · ","Intra-cloud private · ")&'
+        'IF(OR($F$15="SI",$F$18="SI"),"Premium region $5.00/h · ","")&'
+        'IF($F$22=2,"Bidirectional = 2 links · ","")&'
+        'IF(OR($F$35<>"OK",$F$36<>"OK"),"Region no coincide con cloud","")'
+        '," ·  "," · "), " ·", ""))',
     )
     ws.merge_cells("F40:G40")
     ws["F40"].alignment = Alignment(wrap_text=True, vertical="center")
@@ -669,9 +668,9 @@ def build():
     chart.y_axis.title = None
     chart.x_axis.title = None
     chart.shape = 4
-    data = Reference(ws, min_col=10, min_row=32, max_row=36)
+    data = Reference(ws, min_col=10, min_row=33, max_row=36)
     cats = Reference(ws, min_col=9, min_row=33, max_row=36)
-    chart.add_data(data, from_rows=False, titles_from_data=True)
+    chart.add_data(data, from_rows=False, titles_from_data=False)
     chart.set_categories(cats)
     chart.shape = 4
     chart.legend = None
@@ -687,10 +686,10 @@ def build():
     dv_cloud.errorTitle = "Cloud"
     dv_az = DataValidation(type="list", formula1="=Listas!$B$2:$B$3", allow_blank=False)
     dv_dir = DataValidation(type="list", formula1="=Listas!$C$2:$C$4", allow_blank=False)
-    dv_reg_a = DataValidation(type="list", formula1="=INDIRECT($B$5)", allow_blank=False)
+    dv_reg_a = DataValidation(type="list", formula1='=INDIRECT("Cloud_"&$B$5)', allow_blank=False)
     dv_reg_a.error = "Elige una región del cloud de la celda B5. Cambia Cloud primero."
     dv_reg_a.errorTitle = "Region A"
-    dv_reg_b = DataValidation(type="list", formula1="=INDIRECT($F$5)", allow_blank=False)
+    dv_reg_b = DataValidation(type="list", formula1='=INDIRECT("Cloud_"&$F$5)', allow_blank=False)
     dv_reg_b.error = "Elige una región del cloud de la celda F5. Cambia Cloud primero."
     dv_reg_b.errorTitle = "Region B"
     for dv in (dv_cloud, dv_az, dv_dir, dv_reg_a, dv_reg_b):
@@ -748,7 +747,7 @@ def build():
     ws["A20"] = (
         "1. Elige Cloud y Region de A y B (el dropdown de Region depende del Cloud).\n"
         "2. Multi-zone Dedicated exige mínimo 2 CKU y 3 endpoints (Azure/GCP) o 1 VPCE en 3 AZ (AWS).\n"
-        "3. Dirección: Unidirectional cobra 1 link; Bidirectional cobra 2. El objeto se cobra aunque GB = 0.\n"
+        "3. Dirección: Unidirectional = 1 link; Bidirectional = 2; None = 0. El objeto se cobra aunque GB = 0.\n"
         "4. Cross-cloud + ambos private: hourly $2.50, o $5.00 si Premium (hoja Regiones).\n"
         "5. Intra-cloud private: $0.50/h × multiplier de esa región.\n"
         "6. ClusterLinkingWrite = Kafka ingress del destination. No se cobra Kafka ingress extra.\n"
