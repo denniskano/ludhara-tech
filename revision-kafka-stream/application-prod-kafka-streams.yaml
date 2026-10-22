@@ -1,0 +1,106 @@
+# Propuesta para el MS APSY (Quarkus Kafka Streams + EOS).
+# Cambios vs prod actual: transaction.timeout.ms, max.poll.records/interval,
+# linger.ms, batch.size, replication.factor, num.standby.replicas.
+# No tocar processing.guarantee. No setear commit.interval.ms (EOS lo deja en 100 ms).
+# application-id: el del yaml actual. El ERROR del 18-oct usaba otro
+# (cloud-apsy-account-movements-cg-group) — confirmar que es el mismo deploy.
+
+quarkus:
+  profile: prod
+  kafka:
+    devservices:
+      enabled: 'false'
+  devservices:
+    enabled: 'false'
+  log:
+    level: ERROR
+    category:
+      "com.bcp":
+        level: ERROR
+      # Bajar a INFO cuando cierre el incidente de epoch.
+      "org.apache.kafka.streams":
+        level: INFO
+      "org.apache.kafka.clients.consumer.internals.ConsumerCoordinator":
+        level: INFO
+      "org.apache.kafka.clients.consumer.internals.AbstractCoordinator":
+        level: INFO
+      "org.apache.kafka.common.utils.AppInfoParser":
+        level: WARN
+    console:
+      json: false
+  kubernetes-config:
+    secrets:
+      ~: pi-quarkus-fund-persistence-service-secrets
+      enabled: true
+  config:
+    mapping:
+      validate-unknown: false
+    retry:
+      max-attempts: 2
+  kafka-streams:
+    application-id: cloud-apsy-virtual-account-movements-encrypted-cg
+    bootstrap-servers: ${bootstrap.servers}
+    schema-registry-url: ${schema.registry}
+    security:
+      protocol: SASL_SSL
+    sasl:
+      mechanism: PLAIN
+      jaas:
+        config: "org.apache.kafka.common.security.plain.PlainLoginModule required username='${api-key-bootstrap}' password='${secret-key-bootstrap}';"
+    # Readiness no debe matar el pod en rebalance/restore (eso fabrica el siguiente fence).
+    health:
+      enabled: true
+    basic:
+      auth:
+        credentials:
+          source: USER_INFO
+        user:
+          info: '${api-key-schema}:${secret-key-schema}'
+      specific:
+        avro:
+          reader: true
+    default:
+      key:
+        serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+      value:
+        serde: io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
+    topics: azc-apsy-virtual-account-movements
+
+# Prefijo kafka-streams.* → StreamsConfig / consumer. / producer.
+kafka-streams:
+  processing:
+    guarantee: exactly_once_v2
+  # Default Streams ~10 s. Key Vault + SR + produce al Dedicated necesitan más.
+  # Tiene que ser > peor ventana de ProcessEntityHash + to(encrypted/unified).
+  transaction:
+    timeout:
+      ms: 120000
+  consumer:
+    max:
+      poll:
+        # 500 × RTT Key Vault revienta la TX de 10 s. Bajar primero; no solo subir timeout.
+        records: 50
+        interval:
+          ms: 180000
+  producer:
+    linger:
+      ms: 10
+    batch:
+      size: 32768
+  replication:
+    factor: 3
+  num:
+    standby:
+      replicas: 1
+
+keyvault:
+  azure-keyvault-cert-path: ${azure.keyvault.certificate.path}
+  azure-keyvault-client-id: ${azure.keyvault.client.id}
+  azure-keyvault-tenant-id: ${azure.keyvault.tenant.id}
+  azure-keyvault-uri: ${azure.keyvault.uri}
+
+singlecrypto:
+  hash:
+    master-key-name: ${azure.keyvault.hash.master.key.name}
+    wrapped-key-name: ${azure.keyvault.hash.wrapped.key.name}
+    # Unwrap una vez al arrancar. En el mapValues solo HMAC/encrypt local.
