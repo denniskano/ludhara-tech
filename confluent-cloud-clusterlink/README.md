@@ -4,8 +4,24 @@ Calculadora de costos y consideraciones para **Dedicated** clusters con **Privat
 
 - Excel (fórmulas nativas, desplegables): [`calculadora-privatelink.xlsx`](calculadora-privatelink.xlsx)
 - HTML: [`calculadora-privatelink.html`](calculadora-privatelink.html)
+- **📖 Documentación detallada**: [`EXPLICACION_CALCULADORA.md`](EXPLICACION_CALCULADORA.md) - Guía completa in-depth
 
 En Excel: celdas amarillas = input. Cloud filtra Region. Tarifas Dedicated se editan en la hoja **Tarifas**. Regenerar el xlsx: `python3 build_excel.py`.
+
+## Conceptos Clave
+
+### ¿Qué significa CSP?
+
+**CSP = Cloud Service Provider** (Proveedor de Servicios en la Nube)
+
+En esta calculadora, CSP se refiere a los **costos que cobra el proveedor de la nube** (AWS, Azure o GCP) por los servicios de conectividad privada, **separados** de los costos de Confluent:
+
+- **CSP endpoint ($/hora)**: Costo por hora de los endpoints privados (AWS VPC Endpoint, Azure Private Endpoint, GCP PSC endpoint)
+- **CSP data processed ($/GB)**: Costo por GB de datos procesados a través de esos endpoints
+
+El total mensual se descompone en: **Confluent** (CKU, Kafka, Cluster Linking) + **CSP** (endpoints del cloud provider).
+
+Para más detalles, ver [`EXPLICACION_CALCULADORA.md`](EXPLICACION_CALCULADORA.md).
 
 ## Qué estima
 
