@@ -26,6 +26,55 @@ La **Calculadora Private Link para Confluent Cloud Dedicated** es una herramient
 - **Dimensionamiento**: Calcular los CKU necesarios basados en throughput
 - **Infraestructura CSP**: Determinar cuántos endpoints del cloud provider se necesitan
 
+### ⚠️ IMPORTANTE: ¿Qué incluye el TOTAL USD/mes?
+
+**El TOTAL que muestra la calculadora es el COSTO COMPLETO de operación**, no solo Cluster Linking:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  TOTAL USD/MES                          │
+│              (Todo lo que pagarás)                      │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  SUBTOTAL CONFLUENT:                                    │
+│  ✅ CKU (compute de los clusters)                       │
+│  ✅ Kafka ingress/egress (tráfico de clientes)         │
+│  ✅ Storage (almacenamiento)                            │
+│  ✅ Cluster Linking hourly (objeto del link)           │
+│  ✅ ClusterLinkingRead (egress del mirror)             │
+│  ✅ ClusterLinkingWrite (ingress del mirror)           │
+│                                                          │
+│  SUBTOTAL CSP:                                          │
+│  ✅ Endpoints del cloud provider (VPC/PE/PSC)          │
+│  ✅ Data processed (GB a través de endpoints)          │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Si SOLO quieres el costo incremental de Cluster Linking:
+
+Para obtener **únicamente** lo que cuesta agregar Cluster Linking a clusters existentes, suma estas líneas de la tabla de resultados:
+
+```
+Costo SOLO Cluster Linking:
+  ├─ Cluster link hourly A × N
+  ├─ Cluster link hourly B × N
+  ├─ ClusterLinkingRead A→B
+  ├─ ClusterLinkingWrite A→B
+  ├─ ClusterLinkingRead B→A (si bidirectional)
+  └─ ClusterLinkingWrite B→A (si bidirectional)
+```
+
+**Ejemplo**:
+- Total de la calculadora: **$10,500/mes**
+  - Confluent: $9,800 (incluye CKU, Kafka, Storage, Linking)
+  - CSP: $700
+- Costo SOLO Cluster Linking: **$3,825/mes**
+  - Hourly: $3,650
+  - Read/Write: $175
+
+La diferencia ($6,675) es el costo de CKU, Kafka ingress/egress, Storage y CSP que **pagarías de todas formas** aunque no uses Cluster Linking.
+
 ### Versiones Disponibles
 
 1. **HTML** (`calculadora-privatelink.html`): Interfaz web interactiva, funciona en el navegador
@@ -534,6 +583,86 @@ CSP:
 
 TOTAL USD / MES                    $8,460.80
 ```
+
+### Cómo Separar: Costo Total vs Costo Solo Cluster Linking
+
+#### Opción A: TOTAL (lo que muestra la calculadora)
+**$8,460.80/mes** = Costo completo de ejecutar ambos clusters Dedicated con Private Link y Cluster Linking
+
+**Incluye**:
+- ✅ CKU (compute de los clusters)
+- ✅ Kafka ingress/egress (tráfico de clientes)
+- ✅ Storage
+- ✅ Cluster Linking
+- ✅ Endpoints CSP
+
+**Úsalo para**: Presupuesto total, comparar contra no usar Confluent Cloud
+
+---
+
+#### Opción B: COSTO INCREMENTAL de Cluster Linking
+**$3,825.00/mes** = Solo lo que cuesta agregar Cluster Linking
+
+**Incluye**:
+```
+Cluster Linking hourly A + B:    $3,650.00
+ClusterLinkingRead A→B:          $125.00
+ClusterLinkingWrite A→B:         $50.00
+───────────────────────────────────────
+TOTAL Solo Cluster Linking:      $3,825.00
+```
+
+**Excluye** (porque lo pagarías aunque no uses Cluster Linking):
+- ❌ CKU: $4,380
+- ❌ Kafka ingress/egress: $100
+- ❌ Storage: $96
+- ❌ CSP endpoints: $59.80
+
+**Úsalo para**: Justificar agregar Cluster Linking a clusters existentes, comparar contra otras soluciones de replicación
+
+---
+
+#### Comparación Visual
+
+```
+Escenario 1: Clusters SIN Cluster Linking
+┌─────────────────────────────────────┐
+│ CKU                    $4,380.00    │
+│ Kafka ingress/egress   $100.00     │
+│ Storage                $96.00      │
+│ CSP endpoints          $59.80      │
+├─────────────────────────────────────┤
+│ TOTAL                  $4,635.80   │ ← Costo base
+└─────────────────────────────────────┘
+
+Escenario 2: Clusters CON Cluster Linking
+┌─────────────────────────────────────┐
+│ CKU                    $4,380.00    │
+│ Kafka ingress/egress   $100.00     │
+│ Storage                $96.00      │
+│ CSP endpoints          $59.80      │
+│ ─────────────────────────────────   │
+│ Cluster Linking hourly $3,650.00   │ ← Costo incremental
+│ ClusterLinkingRead     $125.00     │ ← Costo incremental
+│ ClusterLinkingWrite    $50.00      │ ← Costo incremental
+├─────────────────────────────────────┤
+│ TOTAL                  $8,460.80   │ ← Lo que muestra la calculadora
+└─────────────────────────────────────┘
+
+Diferencia (costo de agregar Cluster Linking): $3,825.00
+```
+
+#### ¿Cuál usar para tu decisión?
+
+**Usa el TOTAL ($8,460.80)** si:
+- ❓ Estás evaluando el costo completo de la solución
+- ❓ Necesitas presupuesto para un proyecto nuevo
+- ❓ Comparas contra no usar Confluent Cloud
+
+**Usa el INCREMENTAL ($3,825.00)** si:
+- ❓ Ya tienes clusters Dedicated y evalúas agregar Cluster Linking
+- ❓ Comparas Cluster Linking contra otras soluciones de replicación (MirrorMaker, etc.)
+- ❓ Justificas el ROI de agregar Cluster Linking para DR o multi-region
 
 ---
 
@@ -1356,6 +1485,12 @@ confluent billing dimension list
 
 ### Preguntas Frecuentes
 
+**P: ¿El TOTAL USD/mes es solo el costo de Cluster Linking?**
+R: **NO**. El total incluye **TODO**: CKU, Kafka ingress/egress, Storage, Cluster Linking Y endpoints CSP. Es el costo completo de ejecutar los clusters Dedicated con Private Link y Cluster Linking. Si solo quieres el costo incremental de agregar Cluster Linking a clusters existentes, suma únicamente las líneas: "Cluster link hourly", "ClusterLinkingRead" y "ClusterLinkingWrite". Ver sección "Cómo Separar: Costo Total vs Costo Solo Cluster Linking" para detalles.
+
+**P: ¿Los CKU están incluidos en el total o debo agregarlos aparte?**
+R: Los CKU **SÍ están incluidos** en el total. El desglose muestra "CKU cluster A" y "CKU cluster B" como líneas separadas, pero ambos ya están sumados en el total final. No necesitas agregar nada más.
+
 **P: ¿Por qué CSP está separado de Confluent en el total?**
 R: Porque son dos proveedores distintos. Confluent te cobra por su servicio Kafka; el cloud provider (AWS/Azure/GCP) te cobra por sus endpoints de conectividad privada. Son facturas separadas.
 
@@ -1476,6 +1611,21 @@ python3 build_excel.py
 
 Esta calculadora es una herramienta de estimación para **planificación de costos** de Confluent Cloud Dedicated con Private Link y Cluster Linking. 
 
+### ⚠️ Recuerda:
+
+**El TOTAL que muestra la calculadora NO es solo Cluster Linking**, sino el **costo completo** de ejecutar los clusters Dedicated:
+
+```
+TOTAL = CKU + Kafka ingress/egress + Storage + Cluster Linking + CSP endpoints
+```
+
+Si solo necesitas el **costo incremental de agregar Cluster Linking** a clusters existentes, suma únicamente:
+- Cluster link hourly A + B
+- ClusterLinkingRead
+- ClusterLinkingWrite
+
+Ver la sección "Cómo Separar: Costo Total vs Costo Solo Cluster Linking" para ejemplos detallados.
+
 ### Precisión:
 - ✅ **Exacto**: Cluster Linking hourly y egress (list prices documentados)
 - ⚠️ **Estimado**: Dedicated CKU/ingress/egress/storage (no son públicos)
@@ -1486,6 +1636,7 @@ Esta calculadora es una herramienta de estimación para **planificación de cost
 - Dimensionar CKU necesarios
 - Estimar orden de magnitud del costo mensual
 - Identificar componentes más costosos
+- Justificar ROI de agregar Cluster Linking
 
 ### NO uses para:
 - Facturación exacta (usa Confluent Cloud billing dashboard)
