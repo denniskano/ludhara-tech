@@ -1885,7 +1885,7 @@ HEADERS = [
     "Candidata alerta",
     "Severidad sugerida",
     "Condición de alerta",
-    "PromQL borrador (v1, sin rate())",
+    "Query Prometheus (scrape OpenMetrics v1, sin rate())",
     "for",
     "Caveats oficiales / notas",
     "Cardinalidad",
@@ -1997,12 +1997,12 @@ def sheet_leyenda(wb, s):
 
     blurb = [
         ("Propósito", "Clasificar cada métrica temporal_cloud_v1_* por importancia. P1–P3 = candidatas a alerta. Dashboard / No alerta = tablero o denominador."),
-        ("Fuente", f"{FUENTE}  |  corte {CORTE}"),
-        ("Endpoint", f"{ENDPOINT}  (Bearer API key, rol Metrics Read-Only). Descriptores: {DESCRIPTORES}"),
-        ("Convención v1", "Todas se exponen como gauge OpenMetrics. Rate = promedio /s en ventana de 1 min. Value = último agregado. Latency = percentil precalculado en segundos. NO usar rate()."),
+        ("Fuente", f"{FUENTE}  |  corte {CORTE}. Esta es la referencia OpenMetrics vigente. NO usar https://docs.temporal.io/cloud/metrics/reference (catálogo PromQL v0)."),
+        ("Endpoint", f"{ENDPOINT}  (Bearer API key, rol Metrics Read-Only). Descriptores: {DESCRIPTORES}. No es el endpoint PromQL /api/v1/query ni mTLS."),
+        ("Generación", "Solo temporal_cloud_v1_*. OpenMetrics scrape. Rate = promedio /s en ventana de 1 min. Value = último agregado. Latency = percentil precalculado en segundos. NO usar rate()."),
         ("Labels comunes", COMMON_LABELS),
         ("Scrape", "Honor timestamps. Offset ~3 min. Scrape 30s. No habilitar labels opt-in (activity_type, nexus_*, worker_build_id) 24×7 salvo necesidad."),
-        ("PromQL v0", "temporal_cloud_v0_* apagado 5 oct 2026. No copiar alertas con rate() del mixin legado."),
+        ("PromQL legado", "El endpoint PromQL (temporal_cloud_v0_*, mTLS) se deprecó el 2 abr 2026 y se apagó el 5 oct 2026. No hay series v0 en este Excel. La columna Query es PromQL de Grafana contra el scrape v1, no contra el endpoint muerto."),
         ("Umbrales", "Los PromQL son borrador. Ajustar namespace, task queue, workflow type y umbrales por ambiente. No copiar a prod sin validar volumen."),
         ("Capa", "Estas métricas responden: ¿Cloud acepta y despacha trabajo? Worker saturado / lógica de activity → SDK metrics, no este catálogo."),
     ]
@@ -2296,12 +2296,13 @@ def sheet_fuentes(wb, s):
         c.border = s["thin"]
 
     sources = [
-        ("OpenMetrics metrics reference", FUENTE, "Catálogo completo temporal_cloud_v1_* (este Excel)."),
-        ("Set up Cloud metrics with OpenMetrics", "https://docs.temporal.io/cloud/metrics/openmetrics", "API key, rol Metrics Read-Only, scrape."),
+        ("OpenMetrics metrics reference (USAR)", FUENTE, "Catálogo vigente temporal_cloud_v1_*. Única fuente de este Excel."),
+        ("Set up Cloud metrics with OpenMetrics", "https://docs.temporal.io/cloud/metrics/openmetrics", "API key, rol Metrics Read-Only, scrape a metrics.temporal.io."),
         ("OpenMetrics API reference", "https://docs.temporal.io/cloud/metrics/openmetrics/api-reference", "Tipos Rate/Value, labels, honor_timestamps, offset 3 min, /v1/descriptors."),
-        ("Set up metrics for Temporal Cloud", "https://docs.temporal.io/cloud/metrics", "Cuándo usar Cloud vs SDK."),
+        ("Set up metrics for Temporal Cloud", "https://docs.temporal.io/cloud/metrics", "Cuándo usar Cloud vs SDK. Apunta al catálogo OpenMetrics."),
         ("OpenMetrics FAQ", "https://docs.temporal.io/cloud/metrics/openmetrics/faq", "Cardinalidad, series que faltan entre scrapes."),
-        ("Migration guide v0 → v1", "https://docs.temporal.io/cloud/metrics/openmetrics/migration-guide", "No usar rate() en v1. PromQL v0 apagado 5 oct 2026."),
+        ("Migration guide v0 → v1", "https://docs.temporal.io/cloud/metrics/openmetrics/migration-guide", "PromQL endpoint deprecado 2 abr 2026, apagado 5 oct 2026. v0 counters → v1 rates. No rate()."),
+        ("NO USAR — metrics reference PromQL v0", "https://docs.temporal.io/cloud/metrics/reference", "Catálogo legado temporal_cloud_v0_*. Endpoint PromQL + mTLS. Apagado 5 oct 2026."),
         ("Endpoint métricas", ENDPOINT, "Scrape Prometheus-compatible."),
         ("Endpoint descriptores", DESCRIPTORES, "Catálogo programático (misma API key)."),
         ("Standalone Activities", "https://docs.temporal.io/standalone-activity", "Placeholder __standalone_activity en labels."),
