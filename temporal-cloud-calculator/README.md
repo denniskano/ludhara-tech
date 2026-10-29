@@ -43,6 +43,8 @@ Storage: [Temporal Cloud pricing](https://docs.temporal.io/cloud/pricing). GBh =
 
 Es un **estimado de régimen** (mes calendario), no la factura. Temporal documenta hasta ±5% entre métricas y metering.
 
+Storage: **1 GB = 1.000.000 KB** (decimal, alineado a GB-hora del contrato). En Excel los nombres de workflow type deben ser **únicos** (Pasos se agrupa con SUMIF).
+
 Regenerar Excel:
 
 ```bash

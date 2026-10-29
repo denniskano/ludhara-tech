@@ -142,7 +142,7 @@ def sheet_tarifas(wb, s):
         "3. Hoja Resumen: totales del mes. Amarillo = input. Verde = fórmula. No editar verde.",
         "4. Origen Cliente = 1 start_workflow. Signal-With-Start = 1. Schedule = 3 (incluye el start). Ninguno = 0.",
         "5. Child (hijo NO listado) = 2 Actions. Si el hijo es otra fila en Workflows, no uses ese tipo en el padre.",
-        "6. Storage activo = exec × (KB/1024/1024) × horas open. Retenido = exec × GB × días × 24. Régimen mensual, no invoice.",
+        "6. Storage: 1 GB = 1.000.000 KB. Activo = exec × (KB/1e6) × horas open. Retenido = exec × GB × días × 24. Nombres de workflow unicos (SUMIF).",
         "7. Replay no factura. Heartbeat solo si llega al server (SDK ~80% del Heartbeat Timeout).",
         "8. Fuentes: https://docs.temporal.io/cloud/actions  y  https://docs.temporal.io/cloud/pricing",
     ]
@@ -217,7 +217,11 @@ def sheet_workflows(wb, s):
         c = ws.cell(r, 2, exec_n if exec_n != "" else None)
         paint(c, s, s["fill_in"], "#,##0")
         paint(ws.cell(r, 3, origin if sample else ""), s, s["fill_in"])
-        d = ws.cell(r, 4, f'=IF(A{r}="","",IF(C{r}="Cliente",1,IF(C{r}="Signal-With-Start",1,IF(C{r}="Schedule",3,0))))')
+        d = ws.cell(
+            r,
+            4,
+            f'=IF(A{r}="","",IF(C{r}="Signal-With-Start",1,IF(C{r}="Schedule",3,IF(C{r}="Ninguno",0,1))))',
+        )
         paint(d, s, s["fill_out"], "0")
         e = ws.cell(r, 5, dur if dur != "" else None)
         paint(e, s, s["fill_in"], "0.00")
@@ -231,11 +235,11 @@ def sheet_workflows(wb, s):
             f'=IF(A{r}="","",SUMIF(Pasos!$A$2:$A${N_STEPS+1},A{r},Pasos!$I$2:$I${N_STEPS+1}))',
         )
         paint(h, s, s["fill_out"], "0.00")
-        ii = ws.cell(r, 9, f'=IF(A{r}="","",B{r}*(D{r}+H{r}))')
+        ii = ws.cell(r, 9, f'=IF(A{r}="","",MAX(0,N(B{r}))*(D{r}+H{r}))')
         paint(ii, s, s["fill_out"], "#,##0.00")
-        j = ws.cell(r, 10, f'=IF(A{r}="","",B{r}*(F{r}/1024/1024)*E{r})')
+        j = ws.cell(r, 10, f'=IF(A{r}="","",MAX(0,N(B{r}))*(MAX(0,N(F{r}))/1000000)*MAX(0,N(E{r})))')
         paint(j, s, s["fill_out"], "#,##0.000")
-        k = ws.cell(r, 11, f'=IF(A{r}="","",B{r}*(F{r}/1024/1024)*G{r}*24)')
+        k = ws.cell(r, 11, f'=IF(A{r}="","",MAX(0,N(B{r}))*(MAX(0,N(F{r}))/1000000)*MAX(0,N(G{r}))*24)')
         paint(k, s, s["fill_out"], "#,##0.000")
         l = ws.cell(r, 12, f'=IF(A{r}="","",I{r}/1000000*RATE_ACTIONS)')
         paint(l, s, s["fill_out"], '"$"#,##0.00')
@@ -306,7 +310,7 @@ def sheet_pasos(wb, s):
         ii = ws.cell(
             r,
             9,
-            f'=IF(OR(A{r}="",B{r}=""),"",IF(B{r}="Activity",D{r}*(E{r}/100)*(1+N(F{r})+N(G{r})),D{r}*(E{r}/100)*H{r}))',
+            f'=IF(OR(A{r}="",B{r}=""),"",IF(B{r}="Activity",MAX(0,N(D{r}))*(MIN(100,MAX(0,N(E{r})))/100)*(1+MAX(0,N(F{r}))+MAX(0,N(G{r}))),MAX(0,N(D{r}))*(MIN(100,MAX(0,N(E{r})))/100)*H{r}))',
         )
         paint(ii, s, s["fill_out"], "0.000")
         ws.row_dimensions[r].height = 18
@@ -358,7 +362,8 @@ def sheet_resumen(wb, s):
         (9, "Active Storage (GBh)", f"=SUMIF(Workflows!A2:A{last_wf},\"<>\",Workflows!J2:J{last_wf})", f"=B9*RATE_ACTIVE"),
         (10, "Retained Storage (GBh)", f"=SUMIF(Workflows!A2:A{last_wf},\"<>\",Workflows!K2:K{last_wf})", f"=B10*RATE_RETAINED"),
         (11, "GB activo equivalente (GBh / horas mes)", f"=IF(HORAS_MES=0,0,B9/HORAS_MES)", None),
-        (12, "TOTAL USD / mes", f"=N(C6)+N(C9)+N(C10)", f"=B12"),
+        (12, "TOTAL USD / mes", "-", f"=N(C6)+N(C9)+N(C10)"),
+        (13, "Nombres duplicados en Workflows (0 = OK)", f'=SUMPRODUCT((Workflows!A2:A{last_wf}<>"")*(COUNTIF(Workflows!A2:A{last_wf},Workflows!A2:A{last_wf})>1))', None),
     ]
     for r, label, qty, usd in lines:
         ws.cell(r, 1, label)
@@ -378,6 +383,7 @@ def sheet_resumen(wb, s):
     ws["A12"].font = Font(name="Calibri", size=11, bold=True)
     ws["B12"].font = Font(name="Calibri", size=11, bold=True)
     ws["C12"].font = Font(name="Calibri", size=11, bold=True)
+    ws["B13"].number_format = "0"
 
     ws["A14"] = "Costo por workflow type: columnas L-O de la hoja Workflows."
     ws["A14"].font = Font(name="Calibri", size=12, bold=True, color="1B4F72")
