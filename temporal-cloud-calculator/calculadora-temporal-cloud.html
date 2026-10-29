@@ -63,7 +63,7 @@
 <body>
 <header>
   <h1>Calculadora Temporal Cloud · commitment 3 años</h1>
-  <p>Suma varios workflow types. En cada uno, activities / timers / signals / queries se ejecutan solo en un % de los caminos. El mes se estima en Actions + GBh activo + GBh retenido, con las tarifas del contrato (editables).</p>
+  <p>Suma varios workflow types en un solo namespace. Actions se estiman por camino; Event History se calcula del Payload de cada mensaje. Active Storage / Retained Storage usan Workflow Execution Duration y el Namespace Retention Period.</p>
   <span class="tag">OpenMetrics / Actions oficiales · no es list price · no es la factura</span>
 </header>
 <main>
@@ -72,11 +72,35 @@
       <h2>Tarifas del contrato</h2>
       <div class="grid4">
         <div><label>Actions ($ / millón)</label><input class="yellow" id="rateActions" type="number" step="0.01" value="23.16"></div>
-        <div><label>Storage activo ($ / GB-h)</label><input class="yellow" id="rateActive" type="number" step="0.00001" value="0.039"></div>
-        <div><label>Storage retenido ($ / GB-h)</label><input class="yellow" id="rateRetained" type="number" step="0.00001" value="0.00105"></div>
+        <div><label>Active Storage ($ / GB-h)</label><input class="yellow" id="rateActive" type="number" step="0.00001" value="0.039"></div>
+        <div><label>Retained Storage ($ / GB-h)</label><input class="yellow" id="rateRetained" type="number" step="0.00001" value="0.00105"></div>
         <div><label>Horas / mes</label><input class="yellow" id="hoursMonth" type="number" step="1" value="730"></div>
       </div>
-      <p class="hint">List público: Actions desde $50/millón, Active $0.042/GBh, Retained $0.00105/GBh. History en KB decimales (1 GB = 1.000.000 KB). Horas/mes solo convierte GBh a GB equivalente (Temporal usa 744 h para GB incluidos del plan). Retention máx. 90 días en Cloud.</p>
+      <p class="hint">List público: Actions desde $50/millón, Active Storage $0.042/GBh, Retained Storage $0.00105/GBh. 1 GB = 1.000.000 KB. Horas/mes solo convierte GBh a GB equivalente (Temporal usa 744 h para GB incluidos del plan).</p>
+    </section>
+    <section class="card" style="margin-top:12px">
+      <h2>Namespace (uno solo)</h2>
+      <div class="grid2">
+        <div>
+          <label>Namespace Retention Period (días) — solo Retained Storage</label>
+          <input class="yellow" id="retentionDays" type="number" min="0" max="90" step="1" value="30">
+        </div>
+      </div>
+      <p class="hint">No es Active Storage. Active usa Workflow Execution Duration (mientras está Running). Retention Period es cuántos días el namespace guarda el Event History después de close. El detalle de workflows es el namespace de producción. Máx. 90 en Temporal Cloud.</p>
+    </section>
+    <section class="card" style="margin-top:12px">
+      <h2>Otros namespaces (atajo de volumen)</h2>
+      <div class="grid2">
+        <div>
+          <label>% certificación (sobre el total de producción)</label>
+          <input class="yellow" id="pctCert" type="number" min="0" step="0.1" value="15">
+        </div>
+        <div>
+          <label>% desarrollo (sobre el total de producción)</label>
+          <input class="yellow" id="pctDev" type="number" min="0" step="0.1" value="5">
+        </div>
+      </div>
+      <p class="hint">Escala el USD de producción (Actions + Active + Retained). Asume el mismo mix de types, Duration, Retention, retries y heartbeats. Si cert/dev tienen Retention distinta, este atajo no alcanza.</p>
     </section>
 
     <div class="toolbar">
@@ -100,6 +124,10 @@
         <tr><td>Active Storage</td><td class="num" id="totActive">0 GBh</td><td class="num" id="costActive">$0</td></tr>
         <tr><td>Retained Storage</td><td class="num" id="totRet">0 GBh</td><td class="num" id="costRet">$0</td></tr>
         <tr><td>GB activo equivalente</td><td class="num" id="totGbEq">0 GB</td><td class="num">—</td></tr>
+        <tr><td>Producción</td><td class="num">100%</td><td class="num" id="costProd">$0</td></tr>
+        <tr><td>Certificación</td><td class="num" id="lblCert">0%</td><td class="num" id="costCert">$0</td></tr>
+        <tr><td>Desarrollo</td><td class="num" id="lblDev">0%</td><td class="num" id="costDev">$0</td></tr>
+        <tr><td>TOTAL cuenta</td><td class="num" id="lblAccount">—</td><td class="num" id="costAccount">$0</td></tr>
       </table>
       <div class="kpis" style="margin-top:10px">
         <div class="kpi"><span>Actions / ejecución (media)</span><b id="avgAct">0</b></div>
@@ -112,8 +140,9 @@
     </section>
     <section class="card">
       <h2>Cómo se cuenta</h2>
-      <div class="note">Cada paso: <code>veces × (% camino / 100) × Actions unitarias</code>. Activity = 1 schedule + retries + heartbeats que llegan al server (el SDK limita al 80% del Heartbeat Timeout). Replay no factura.</div>
-      <div class="note warn">Child Workflow: 2 Actions en el padre si el hijo <em>no</em> está como fila propia. Si el hijo está listado, pon origen del hijo = Cliente y no dupliques el start. Schedule: 3 Actions (incluye el start).</div>
+      <div class="note">Actions: <code>veces × (% camino / 100) × unidad</code>. Activity = 1 schedule + retries + heartbeats que llegan al server. Replay no factura.</div>
+      <div class="note">Event History (KB) = Payload StartWorkflow + Σ (veces × % × Payload del mensaje × copias en history). Activity persiste input + result (×2) y cada retry vuelve a persistir. Query y Timer no suman Payload al Event History.</div>
+      <div class="note warn">Child Workflow: 2 Actions en el padre si el hijo <em>no</em> está como fila propia. Si el hijo está listado, pon origen del hijo = Cliente y no dupliques el start. Schedule: 3 Actions (incluye el start). Un solo namespace → un Retention Period.</div>
       <details>
         <summary>Fuentes oficiales</summary>
         <p><a href="https://docs.temporal.io/cloud/actions" style="color:#00c4cc">Actions</a> ·
@@ -124,22 +153,22 @@
 </main>
 <footer>
   Tarifas por defecto: commitment 3 años (Actions $23.16/millón, Active $0.039/GBh, Retained $0.00105/GBh). No incluye Support plan, Export, Fairness ni TRU ociosos.
-  Storage activo = ejecuciones × GB de history × horas open. Retenido (steady-state) = ejecuciones × GB × días retention × 24 h. 1 GB = 10^9 bytes (KB ingresados / 1.000.000).
+  Active Storage = ejecuciones × Event History (GB) × Workflow Execution Duration (h). Retained Storage = ejecuciones × Event History (GB) × Namespace Retention Period (días) × 24 h. Event History se calcula de los Payloads. Cert y dev = % del TOTAL de producción; TOTAL cuenta = prod + cert + dev.
 </footer>
 <script>
 const STEP_TYPES = [
-  { id: "activity", label: "Activity", unit: 1, extra: true },
-  { id: "local_activity", label: "Local Activities (1 por WFT)", unit: 1, extra: false },
-  { id: "timer", label: "Timer / timeout SDK", unit: 1, extra: false },
-  { id: "signal", label: "Signal", unit: 1, extra: false },
-  { id: "signal_external", label: "Signal externo", unit: 1, extra: false },
-  { id: "query", label: "Query", unit: 1, extra: false },
-  { id: "update", label: "Update", unit: 1, extra: false },
-  { id: "child", label: "Child (hijo NO listado)", unit: 2, extra: false },
-  { id: "continue_as_new", label: "Continue-As-New", unit: 1, extra: false },
-  { id: "upsert_sa", label: "Upsert Search Attributes", unit: 1, extra: false },
-  { id: "nexus", label: "Nexus Operation (caller)", unit: 1, extra: false },
-  { id: "wft_heartbeat", label: "WFT Heartbeat (LA largas)", unit: 1, extra: false },
+  { id: "activity", label: "Activity", unit: 1, extra: true, historyCopies: 2 },
+  { id: "local_activity", label: "Local Activities (1 por WFT)", unit: 1, extra: false, historyCopies: 1 },
+  { id: "timer", label: "Timer / timeout SDK", unit: 1, extra: false, historyCopies: 0 },
+  { id: "signal", label: "Signal", unit: 1, extra: false, historyCopies: 1 },
+  { id: "signal_external", label: "Signal externo", unit: 1, extra: false, historyCopies: 1 },
+  { id: "query", label: "Query", unit: 1, extra: false, historyCopies: 0 },
+  { id: "update", label: "Update", unit: 1, extra: false, historyCopies: 1 },
+  { id: "child", label: "Child (hijo NO listado)", unit: 2, extra: false, historyCopies: 1 },
+  { id: "continue_as_new", label: "Continue-As-New", unit: 1, extra: false, historyCopies: 1 },
+  { id: "upsert_sa", label: "Upsert Search Attributes", unit: 1, extra: false, historyCopies: 1 },
+  { id: "nexus", label: "Nexus Operation (caller)", unit: 1, extra: false, historyCopies: 1 },
+  { id: "wft_heartbeat", label: "WFT Heartbeat (LA largas)", unit: 1, extra: false, historyCopies: 0 },
 ];
 
 const ORIGIN = {
@@ -152,26 +181,26 @@ const ORIGIN = {
 const DEMO = [
   {
     name: "Pago interbancario",
-    exec: 50000, origin: "client", durationH: 0.4, historyKb: 80, retentionDays: 30,
+    exec: 50000, origin: "client", durationH: 0.4, startPayloadKb: 8,
     steps: [
-      { type: "activity", name: "Validar cuenta", count: 1, pct: 100, retries: 0, heartbeats: 0 },
-      { type: "activity", name: "Débito core", count: 1, pct: 98, retries: 0.3, heartbeats: 4 },
-      { type: "activity", name: "Crédito destino", count: 1, pct: 95, retries: 0.4, heartbeats: 6 },
-      { type: "activity", name: "Notificar", count: 1, pct: 100, retries: 0, heartbeats: 0 },
-      { type: "timer", name: "Espera SLA / AwaitWithTimeout", count: 1, pct: 15, retries: 0, heartbeats: 0 },
-      { type: "signal", name: "Confirmación manual", count: 1, pct: 8, retries: 0, heartbeats: 0 },
-      { type: "query", name: "Consulta estado UI", count: 2, pct: 40, retries: 0, heartbeats: 0 },
+      { type: "activity", name: "Validar cuenta", count: 1, pct: 100, retries: 0, heartbeats: 0, payloadKb: 4 },
+      { type: "activity", name: "Débito core", count: 1, pct: 98, retries: 0.3, heartbeats: 4, payloadKb: 8 },
+      { type: "activity", name: "Crédito destino", count: 1, pct: 95, retries: 0.4, heartbeats: 6, payloadKb: 8 },
+      { type: "activity", name: "Notificar", count: 1, pct: 100, retries: 0, heartbeats: 0, payloadKb: 2 },
+      { type: "timer", name: "Espera SLA / AwaitWithTimeout", count: 1, pct: 15, retries: 0, heartbeats: 0, payloadKb: 0 },
+      { type: "signal", name: "Confirmación manual", count: 1, pct: 8, retries: 0, heartbeats: 0, payloadKb: 1 },
+      { type: "query", name: "Consulta estado UI", count: 2, pct: 40, retries: 0, heartbeats: 0, payloadKb: 2 },
     ],
   },
   {
     name: "Alta de cliente",
-    exec: 8000, origin: "schedule", durationH: 2.5, historyKb: 120, retentionDays: 30,
+    exec: 8000, origin: "schedule", durationH: 2.5, startPayloadKb: 16,
     steps: [
-      { type: "activity", name: "KYC", count: 1, pct: 100, retries: 1, heartbeats: 12 },
-      { type: "activity", name: "Crear producto", count: 1, pct: 85, retries: 0.2, heartbeats: 2 },
-      { type: "timer", name: "Espera documentos", count: 1, pct: 30, retries: 0, heartbeats: 0 },
-      { type: "signal", name: "Documentos listos", count: 1, pct: 30, retries: 0, heartbeats: 0 },
-      { type: "child", name: "Onboarding cards (no listado)", count: 1, pct: 60, retries: 0, heartbeats: 0 },
+      { type: "activity", name: "KYC", count: 1, pct: 100, retries: 1, heartbeats: 12, payloadKb: 20 },
+      { type: "activity", name: "Crear producto", count: 1, pct: 85, retries: 0.2, heartbeats: 2, payloadKb: 8 },
+      { type: "timer", name: "Espera documentos", count: 1, pct: 30, retries: 0, heartbeats: 0, payloadKb: 0 },
+      { type: "signal", name: "Documentos listos", count: 1, pct: 30, retries: 0, heartbeats: 0, payloadKb: 10 },
+      { type: "child", name: "Onboarding cards (no listado)", count: 1, pct: 60, retries: 0, heartbeats: 0, payloadKb: 12 },
     ],
   },
 ];
@@ -194,15 +223,36 @@ function stepActions(s) {
   return p * c * t.unit;
 }
 
+function stepHistoryKb(s) {
+  const t = STEP_TYPES.find((x) => x.id === s.type) || STEP_TYPES[0];
+  const p = Math.min(100, npos(s.pct)) / 100;
+  const copies = t.historyCopies ?? 0;
+  const attempts = s.type === "activity" ? 1 + npos(s.retries) : 1;
+  return p * npos(s.count) * npos(s.payloadKb) * copies * attempts;
+}
+
+function wfHistoryKb(w) {
+  return npos(w.startPayloadKb) + (w.steps || []).reduce((a, s) => a + stepHistoryKb(s), 0);
+}
+
+function namespaceRetentionDays() {
+  return Math.min(90, npos($("retentionDays").value));
+}
+
+function envFactors() {
+  return { cert: npos($("pctCert").value) / 100, dev: npos($("pctDev").value) / 100 };
+}
+
 function wfCompute(w) {
   const originA = ORIGIN[w.origin]?.actions ?? 1;
   const perExec = originA + (w.steps || []).reduce((a, s) => a + stepActions(s), 0);
   const exec = npos(w.exec);
-  const gb = npos(w.historyKb) / 1e6;
+  const historyKb = wfHistoryKb(w);
+  const gb = historyKb / 1e6;
   const active = exec * gb * npos(w.durationH);
-  const retained = exec * gb * npos(w.retentionDays) * 24;
+  const retained = exec * gb * namespaceRetentionDays() * 24;
   const actions = exec * perExec;
-  return { originA, perExec, exec, gb, active, retained, actions };
+  return { originA, perExec, exec, historyKb, gb, active, retained, actions };
 }
 
 function rates() {
@@ -223,7 +273,12 @@ function recalc() {
   const costA = (actions / 1e6) * r.actions;
   const costActive = active * r.active;
   const costRet = retained * r.retained;
-  $("grand").innerHTML = money(costA + costActive + costRet) + "<small>USD / mes calendario</small>";
+  const prod = costA + costActive + costRet;
+  const f = envFactors();
+  const cert = prod * f.cert;
+  const dev = prod * f.dev;
+  const account = prod + cert + dev;
+  $("grand").innerHTML = money(account) + "<small>USD / mes cuenta (prod + cert + dev)</small>";
   $("totExec").textContent = fmtInt(exec);
   $("totAct").textContent = fmtInt(actions) + "  (" + fmt(actions / 1e6, 3) + " M)";
   $("costAct").textContent = money(costA);
@@ -233,6 +288,13 @@ function recalc() {
   $("costRet").textContent = money(costRet);
   const hours = npos($("hoursMonth").value) || 730;
   $("totGbEq").textContent = fmt(active / hours, 4) + " GB";
+  $("costProd").textContent = money(prod);
+  $("lblCert").textContent = fmt(f.cert * 100, 1) + "%";
+  $("costCert").textContent = money(cert);
+  $("lblDev").textContent = fmt(f.dev * 100, 1) + "%";
+  $("costDev").textContent = money(dev);
+  $("lblAccount").textContent = fmt((1 + f.cert + f.dev) * 100, 1) + "%";
+  $("costAccount").textContent = money(account);
   $("avgAct").textContent = exec ? fmt(actions / exec, 2) : "0";
   const nameCount = {};
   workflows.forEach((w) => {
@@ -248,7 +310,7 @@ function recalc() {
     const el = document.querySelector(`[data-wfid="${w.id}"] .wf-meta`);
     if (!el) return;
     const c = wfCompute(w);
-    el.textContent = `${fmtInt(c.exec)} exec · ${fmt(c.perExec,2)} act/exec · ${fmtInt(c.actions)} actions/mes`;
+    el.textContent = `${fmtInt(c.exec)} exec · ${fmt(c.perExec,2)} act/exec · Event History ${fmt(c.historyKb,1)} KB`;
   });
 }
 
@@ -257,11 +319,11 @@ function escapeHtml(s) {
 }
 
 function emptyStep() {
-  return { type: "activity", name: "", count: 1, pct: 100, retries: 0, heartbeats: 0 };
+  return { type: "activity", name: "", count: 1, pct: 100, retries: 0, heartbeats: 0, payloadKb: 4 };
 }
 
 function emptyWf() {
-  return { id: uid(), name: "Nuevo workflow", exec: 1000, origin: "client", durationH: 1, historyKb: 50, retentionDays: 30, steps: [emptyStep()] };
+  return { id: uid(), name: "Nuevo workflow", exec: 1000, origin: "client", durationH: 1, startPayloadKb: 8, steps: [emptyStep()] };
 }
 
 function render() {
@@ -283,17 +345,15 @@ function wfHtml(w) {
     <div class="grid4">
       <div><label>Ejecuciones / mes</label><input class="yellow" data-f="exec" type="number" min="0" step="1" value="${w.exec}"></div>
       <div><label>Origen (Actions de arranque)</label><select data-f="origin">${originOpts}</select></div>
-      <div><label>Duración open (horas)</label><input class="yellow" data-f="durationH" type="number" min="0" step="0.01" value="${w.durationH}"></div>
-      <div><label>History promedio (KB)</label><input class="yellow" data-f="historyKb" type="number" min="0" step="1" value="${w.historyKb}"></div>
+      <div><label>Workflow Execution Duration (h)</label><input class="yellow" data-f="durationH" type="number" min="0" step="0.01" value="${w.durationH}"></div>
+      <div><label>Payload StartWorkflow (KB)</label><input class="yellow" data-f="startPayloadKb" type="number" min="0" step="0.1" value="${w.startPayloadKb ?? 0}"></div>
     </div>
-    <div class="grid4" style="margin-top:6px">
-      <div><label>Retention tras close (días)</label><input class="yellow" data-f="retentionDays" type="number" min="0" step="1" value="${w.retentionDays}"></div>
-      <div></div><div></div><div></div>
-    </div>
+    <p class="hint">Event History se calcula: Payload StartWorkflow + payloads de cada paso. Query y Timer no persisten el mensaje. Activity: input + result (×2), retries incluidos.</p>
     <table class="steps" style="margin-top:10px">
       <thead><tr>
         <th>Paso</th><th>Tipo</th><th class="num">Veces</th><th class="num">% camino</th>
-        <th class="num">Retries (act.)</th><th class="num">Heartbeats (act.)</th><th class="num">Act/exec</th><th></th>
+        <th class="num">Retries (act.)</th><th class="num">Heartbeats (act.)</th>
+        <th class="num">Payload (KB)</th><th class="num">Act/exec</th><th class="num">Hist KB</th><th></th>
       </tr></thead>
       <tbody>${steps}</tbody>
     </table>
@@ -311,7 +371,9 @@ function stepHtml(wid, s, i) {
     <td><input class="yellow" data-sf="pct" type="number" min="0" max="100" step="1" value="${s.pct}"></td>
     <td><input class="yellow" data-sf="retries" type="number" min="0" step="0.1" value="${s.retries}" ${extra?"":"disabled"}></td>
     <td><input class="yellow" data-sf="heartbeats" type="number" min="0" step="0.1" value="${s.heartbeats}" ${extra?"":"disabled"}></td>
+    <td><input class="yellow" data-sf="payloadKb" type="number" min="0" step="0.1" value="${s.payloadKb ?? 0}"></td>
     <td class="num step-act">${fmt(stepActions(s), 2)}</td>
+    <td class="num step-hist">${fmt(stepHistoryKb(s), 2)}</td>
     <td><button class="btn ghost delstep">×</button></td>
   </tr>`;
 }
@@ -344,6 +406,7 @@ function bindWf() {
           if (f === "type") render();
           else {
             tr.querySelector(".step-act").textContent = fmt(stepActions(w.steps[i]), 2);
+            tr.querySelector(".step-hist").textContent = fmt(stepHistoryKb(w.steps[i]), 2);
             recalc();
           }
         });
@@ -355,21 +418,24 @@ function bindWf() {
 
 function persist() {
   try {
-    localStorage.setItem("tc-calc-v1", JSON.stringify({
-      rates: { actions: $("rateActions").value, active: $("rateActive").value, retained: $("rateRetained").value, hours: $("hoursMonth").value },
+    localStorage.setItem("tc-calc-v2", JSON.stringify({
+      rates: { actions: $("rateActions").value, active: $("rateActive").value, retained: $("rateRetained").value, hours: $("hoursMonth").value, retentionDays: $("retentionDays").value, pctCert: $("pctCert").value, pctDev: $("pctDev").value },
       workflows,
     }));
   } catch (err) { /* file:// en Edge/Chrome puede bloquear localStorage */ }
 }
 
 function loadDemo() {
+  $("retentionDays").value = 30;
+  $("pctCert").value = 15;
+  $("pctDev").value = 5;
   workflows = DEMO.map((w) => ({ ...w, id: uid(), steps: w.steps.map((s) => ({ ...s })) }));
 }
 
 $("addWf").onclick = () => { workflows.push(emptyWf()); render(); };
 $("resetDemo").onclick = () => { loadDemo(); render(); };
 $("exportJson").onclick = () => {
-  const blob = new Blob([JSON.stringify({ rates: rates(), hours: n($("hoursMonth").value), workflows }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ rates: { ...rates(), hours: n($("hoursMonth").value), retentionDays: namespaceRetentionDays(), pctCert: npos($("pctCert").value), pctDev: npos($("pctDev").value) }, workflows }, null, 2)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "temporal-cloud-calculator.json"; a.click();
 };
 $("importJson").onclick = () => $("fileJson").click();
@@ -385,20 +451,32 @@ $("fileJson").onchange = (e) => {
           if (data.rates.active != null) $("rateActive").value = data.rates.active;
           if (data.rates.retained != null) $("rateRetained").value = data.rates.retained;
           if (data.rates.hours != null) $("hoursMonth").value = data.rates.hours;
+          if (data.rates.retentionDays != null) $("retentionDays").value = data.rates.retentionDays;
+          if (data.rates.pctCert != null) $("pctCert").value = data.rates.pctCert;
+          if (data.rates.pctDev != null) $("pctDev").value = data.rates.pctDev;
         }
       }
       if (data.hours != null) $("hoursMonth").value = data.hours;
-      workflows = (data.workflows || []).map((w) => ({ ...emptyWf(), ...w, id: uid(), steps: (w.steps || [emptyStep()]) }));
+      if (data.retentionDays != null) $("retentionDays").value = data.retentionDays;
+      if (data.pctCert != null) $("pctCert").value = data.pctCert;
+      if (data.pctDev != null) $("pctDev").value = data.pctDev;
+      workflows = (data.workflows || []).map((w) => ({
+        ...emptyWf(),
+        ...w,
+        id: uid(),
+        startPayloadKb: w.startPayloadKb != null ? w.startPayloadKb : emptyWf().startPayloadKb,
+        steps: (w.steps || [emptyStep()]).map((s) => ({ ...emptyStep(), ...s })),
+      }));
       render();
     } catch (err) { alert("JSON inválido"); }
   };
   reader.readAsText(f);
 };
-["rateActions","rateActive","rateRetained","hoursMonth"].forEach((id) => $(id).addEventListener("input", recalc));
+["rateActions","rateActive","rateRetained","hoursMonth","retentionDays","pctCert","pctDev"].forEach((id) => $(id).addEventListener("input", recalc));
 
 (function init() {
   try {
-    const raw = localStorage.getItem("tc-calc-v1");
+    const raw = localStorage.getItem("tc-calc-v2") || localStorage.getItem("tc-calc-v1");
     if (raw) {
       const data = JSON.parse(raw);
       if (data.rates) {
@@ -406,13 +484,18 @@ $("fileJson").onchange = (e) => {
         if (data.rates.active != null) $("rateActive").value = data.rates.active;
         if (data.rates.retained != null) $("rateRetained").value = data.rates.retained;
         if (data.rates.hours != null) $("hoursMonth").value = data.rates.hours;
+        if (data.rates.retentionDays != null) $("retentionDays").value = data.rates.retentionDays;
+        if (data.rates.pctCert != null) $("pctCert").value = data.rates.pctCert;
+        if (data.rates.pctDev != null) $("pctDev").value = data.rates.pctDev;
       }
-      if (data.workflows?.length) {
+      const modern = data.workflows?.some((w) => w.startPayloadKb != null);
+      if (data.workflows?.length && modern) {
         workflows = data.workflows.map((w) => ({
           ...emptyWf(),
           ...w,
           id: w.id || uid(),
-          steps: Array.isArray(w.steps) ? w.steps : [emptyStep()],
+          startPayloadKb: w.startPayloadKb != null ? w.startPayloadKb : emptyWf().startPayloadKb,
+          steps: (Array.isArray(w.steps) ? w.steps : [emptyStep()]).map((s) => ({ ...emptyStep(), ...s })),
         }));
         render();
         return;
