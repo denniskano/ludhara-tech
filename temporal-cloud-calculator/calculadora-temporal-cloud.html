@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora Temporal Cloud — commitment 3 años</title>
+<style>
+  :root {
+    --bg: #0f1419; --panel: #171e27; --panel2: #1d2630; --line: #2a3644;
+    --text: #e8edf2; --muted: #8b9aab; --teal: #00c4cc; --teal-dim: #0a3a3d;
+    --warn: #f5a524; --bad: #f25c54; --ok: #3dd68c; --yellow: #3a2a0c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 "IBM Plex Sans", "Segoe UI", sans-serif; }
+  header { padding: 24px 28px 16px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, #122028 0%, var(--bg) 100%); }
+  header h1 { margin: 0 0 6px; font-size: 22px; font-weight: 650; letter-spacing: -0.02em; }
+  header p { margin: 0; color: var(--muted); max-width: 980px; }
+  .tag { display: inline-block; margin-top: 10px; font-size: 12px; color: var(--teal); background: var(--teal-dim); padding: 3px 8px; border-radius: 999px; }
+  main { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 18px; padding: 18px 22px 36px; align-items: start; }
+  @media (max-width: 1180px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .card h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  label { display: block; font-size: 11px; color: var(--muted); margin: 6px 0 3px; }
+  input, select, textarea { width: 100%; background: #10161c; color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; font: inherit; }
+  input:focus, select:focus { outline: 1px solid var(--teal); border-color: var(--teal); }
+  input.yellow { background: #241c0c; border-color: #6b5420; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 820px) { .grid4, .grid3 { grid-template-columns: 1fr 1fr; } }
+  .wf { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+  .wf-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .wf-head h3 { margin: 0; flex: 1; font-size: 15px; }
+  .wf-meta { font-size: 12px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 5px 4px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { color: var(--muted); font-weight: 550; font-size: 10px; text-transform: uppercase; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .total { font-size: 34px; font-weight: 700; letter-spacing: -0.03em; color: var(--teal); }
+  .total small { display: block; font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0; margin-top: 2px; }
+  .btn { background: var(--teal-dim); color: var(--teal); border: 1px solid #14585c; border-radius: 7px; padding: 6px 10px; font: inherit; cursor: pointer; }
+  .btn:hover { background: #0e4a4e; }
+  .btn.ghost { background: transparent; color: var(--muted); border-color: var(--line); }
+  .btn.danger { color: var(--bad); border-color: #5a2422; background: #2a1413; }
+  .sticky { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 14px; }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .note { font-size: 12px; background: #141b22; border-left: 3px solid var(--teal); padding: 8px 10px; margin: 8px 0; border-radius: 0 6px 6px 0; color: var(--muted); }
+  .note.warn { border-left-color: var(--warn); }
+  footer { padding: 0 22px 28px; color: var(--muted); font-size: 12px; max-width: 1100px; }
+  footer a { color: var(--teal); }
+  .steps input, .steps select { padding: 4px 6px; font-size: 12px; }
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi { background: #141b22; border-radius: 8px; padding: 8px 10px; }
+  .kpi b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size: 11px; color: var(--muted); }
+  details { color: var(--muted); font-size: 12px; }
+  details summary { cursor: pointer; color: var(--text); }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Calculadora Temporal Cloud · commitment 3 años</h1>
+  <p>Suma varios workflow types. En cada uno, activities / timers / signals / queries se ejecutan solo en un % de los caminos. El mes se estima en Actions + GBh activo + GBh retenido, con las tarifas del contrato (editables).</p>
+  <span class="tag">OpenMetrics / Actions oficiales · no es list price · no es la factura</span>
+</header>
+<main>
+  <div>
+    <section class="card">
+      <h2>Tarifas del contrato</h2>
+      <div class="grid4">
+        <div><label>Actions ($ / millón)</label><input class="yellow" id="rateActions" type="number" step="0.01" value="23.16"></div>
+        <div><label>Storage activo ($ / GB-h)</label><input class="yellow" id="rateActive" type="number" step="0.00001" value="0.039"></div>
+        <div><label>Storage retenido ($ / GB-h)</label><input class="yellow" id="rateRetained" type="number" step="0.00001" value="0.00105"></div>
+        <div><label>Horas / mes</label><input class="yellow" id="hoursMonth" type="number" step="1" value="730"></div>
+      </div>
+      <p class="hint">List público: Actions desde $50/millón, Active $0.042/GBh, Retained $0.00105/GBh. Temporal usa 744 h para convertir GB incluidos del plan; 730 es mes promedio. Retention del namespace (máx. 90 días en Cloud).</p>
+    </section>
+
+    <div class="toolbar">
+      <button class="btn" id="addWf">+ Workflow</button>
+      <button class="btn ghost" id="exportJson">Exportar JSON</button>
+      <button class="btn ghost" id="importJson">Importar JSON</button>
+      <input id="fileJson" type="file" accept="application/json" hidden>
+      <button class="btn ghost" id="resetDemo">Restaurar ejemplo</button>
+    </div>
+    <div id="workflows"></div>
+  </div>
+
+  <aside class="sticky">
+    <section class="card">
+      <h2>Costo mensual estimado</h2>
+      <div class="total" id="grand">$0<small>USD / mes calendario</small></div>
+      <table>
+        <tr><th>Componente</th><th class="num">Cantidad</th><th class="num">USD</th></tr>
+        <tr><td>Workflows (ejecuciones)</td><td class="num" id="totExec">0</td><td class="num">—</td></tr>
+        <tr><td>Actions</td><td class="num" id="totAct">0</td><td class="num" id="costAct">$0</td></tr>
+        <tr><td>Active Storage</td><td class="num" id="totActive">0 GBh</td><td class="num" id="costActive">$0</td></tr>
+        <tr><td>Retained Storage</td><td class="num" id="totRet">0 GBh</td><td class="num" id="costRet">$0</td></tr>
+      </table>
+      <div class="kpis" style="margin-top:10px">
+        <div class="kpi"><span>Actions / ejecución (media)</span><b id="avgAct">0</b></div>
+        <div class="kpi"><span>Tipos de workflow</span><b id="nTypes">0</b></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Por workflow type</h2>
+      <table id="byType"><thead><tr><th>Type</th><th class="num">Exec</th><th class="num">Actions</th><th class="num">USD</th></tr></thead><tbody></tbody></table>
+    </section>
+    <section class="card">
+      <h2>Cómo se cuenta</h2>
+      <div class="note">Cada paso: <code>veces × (% camino / 100) × Actions unitarias</code>. Activity = 1 schedule + retries + heartbeats que llegan al server (el SDK limita al 80% del Heartbeat Timeout). Replay no factura.</div>
+      <div class="note warn">Child Workflow: 2 Actions en el padre si el hijo <em>no</em> está como fila propia. Si el hijo está listado, pon origen del hijo = Cliente y no dupliques el start. Schedule: 3 Actions (incluye el start).</div>
+      <details>
+        <summary>Fuentes oficiales</summary>
+        <p><a href="https://docs.temporal.io/cloud/actions" style="color:#00c4cc">Actions</a> ·
+        <a href="https://docs.temporal.io/cloud/pricing" style="color:#00c4cc">Pricing / storage GBh</a>. Estimado de régimen, no invoice. Metering puede diferir hasta 5%.</p>
+      </details>
+    </section>
+  </aside>
+</main>
+<footer>
+  Tarifas por defecto: commitment 3 años (Actions $23.16/millón, Active $0.039/GBh, Retained $0.00105/GBh). No incluye Support plan, Export, Fairness ni TRU ociosos.
+  Storage activo = ejecuciones × GB de history × horas open. Retenido (steady-state) = ejecuciones × GB × días retention × 24 h.
+</footer>
+<script>
+const STEP_TYPES = [
+  { id: "activity", label: "Activity", unit: 1, extra: true },
+  { id: "local_activity", label: "Local Activities (1 por WFT)", unit: 1, extra: false },
+  { id: "timer", label: "Timer / timeout SDK", unit: 1, extra: false },
+  { id: "signal", label: "Signal", unit: 1, extra: false },
+  { id: "signal_external", label: "Signal externo", unit: 1, extra: false },
+  { id: "query", label: "Query", unit: 1, extra: false },
+  { id: "update", label: "Update", unit: 1, extra: false },
+  { id: "child", label: "Child (hijo NO listado)", unit: 2, extra: false },
+  { id: "continue_as_new", label: "Continue-As-New", unit: 1, extra: false },
+  { id: "upsert_sa", label: "Upsert Search Attributes", unit: 1, extra: false },
+  { id: "nexus", label: "Nexus Operation (caller)", unit: 1, extra: false },
+  { id: "wft_heartbeat", label: "WFT Heartbeat (LA largas)", unit: 1, extra: false },
+];
+
+const ORIGIN = {
+  client: { label: "Cliente (StartWorkflow)", actions: 1 },
+  signal_with_start: { label: "Signal-With-Start", actions: 1 },
+  schedule: { label: "Schedule (3 Actions, incluye start)", actions: 3 },
+  none: { label: "Ninguno (solo pasos)", actions: 0 },
+};
+
+const DEMO = [
+  {
+    name: "Pago interbancario",
+    exec: 50000, origin: "client", durationH: 0.4, historyKb: 80, retentionDays: 30,
+    steps: [
+      { type: "activity", name: "Validar cuenta", count: 1, pct: 100, retries: 0, heartbeats: 0 },
+      { type: "activity", name: "Débito core", count: 1, pct: 98, retries: 0.3, heartbeats: 4 },
+      { type: "activity", name: "Crédito destino", count: 1, pct: 95, retries: 0.4, heartbeats: 6 },
+      { type: "activity", name: "Notificar", count: 1, pct: 100, retries: 0, heartbeats: 0 },
+      { type: "timer", name: "Espera SLA / AwaitWithTimeout", count: 1, pct: 15, retries: 0, heartbeats: 0 },
+      { type: "signal", name: "Confirmación manual", count: 1, pct: 8, retries: 0, heartbeats: 0 },
+      { type: "query", name: "Consulta estado UI", count: 2, pct: 40, retries: 0, heartbeats: 0 },
+    ],
+  },
+  {
+    name: "Alta de cliente",
+    exec: 8000, origin: "schedule", durationH: 2.5, historyKb: 120, retentionDays: 30,
+    steps: [
+      { type: "activity", name: "KYC", count: 1, pct: 100, retries: 1, heartbeats: 12 },
+      { type: "activity", name: "Crear producto", count: 1, pct: 85, retries: 0.2, heartbeats: 2 },
+      { type: "timer", name: "Espera documentos", count: 1, pct: 30, retries: 0, heartbeats: 0 },
+      { type: "signal", name: "Documentos listos", count: 1, pct: 30, retries: 0, heartbeats: 0 },
+      { type: "child", name: "Onboarding cards (no listado)", count: 1, pct: 60, retries: 0, heartbeats: 0 },
+    ],
+  },
+];
+
+let workflows = [];
+
+const $ = (id) => document.getElementById(id);
+const n = (v) => { const x = Number(v); return Number.isFinite(x) ? x : 0; };
+const fmt = (x, d=2) => x.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtInt = (x) => Math.round(x).toLocaleString("en-US");
+const money = (x) => "$" + fmt(x, 2);
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+function stepActions(s) {
+  const t = STEP_TYPES.find((x) => x.id === s.type) || STEP_TYPES[0];
+  const p = n(s.pct) / 100;
+  const c = n(s.count);
+  if (s.type === "activity") return p * c * (t.unit + n(s.retries) + n(s.heartbeats));
+  return p * c * t.unit;
+}
+
+function wfCompute(w) {
+  const originA = ORIGIN[w.origin]?.actions ?? 1;
+  const perExec = originA + w.steps.reduce((a, s) => a + stepActions(s), 0);
+  const exec = n(w.exec);
+  const gb = n(w.historyKb) / 1024 / 1024;
+  const active = exec * gb * n(w.durationH);
+  const retained = exec * gb * n(w.retentionDays) * 24;
+  const actions = exec * perExec;
+  return { originA, perExec, exec, gb, active, retained, actions };
+}
+
+function rates() {
+  return { actions: n($("rateActions").value), active: n($("rateActive").value), retained: n($("rateRetained").value) };
+}
+
+function recalc() {
+  const r = rates();
+  let exec = 0, actions = 0, active = 0, retained = 0;
+  const rows = [];
+  workflows.forEach((w) => {
+    const c = wfCompute(w);
+    const costA = (c.actions / 1e6) * r.actions;
+    const costS = c.active * r.active + c.retained * r.retained;
+    exec += c.exec; actions += c.actions; active += c.active; retained += c.retained;
+    rows.push({ name: w.name || "(sin nombre)", exec: c.exec, actions: c.actions, usd: costA + costS, perExec: c.perExec });
+  });
+  const costA = (actions / 1e6) * r.actions;
+  const costActive = active * r.active;
+  const costRet = retained * r.retained;
+  $("grand").innerHTML = money(costA + costActive + costRet) + "<small>USD / mes calendario</small>";
+  $("totExec").textContent = fmtInt(exec);
+  $("totAct").textContent = fmtInt(actions) + "  (" + fmt(actions / 1e6, 3) + " M)";
+  $("costAct").textContent = money(costA);
+  $("totActive").textContent = fmt(active, 3) + " GBh";
+  $("costActive").textContent = money(costActive);
+  $("totRet").textContent = fmt(retained, 3) + " GBh";
+  $("costRet").textContent = money(costRet);
+  $("avgAct").textContent = exec ? fmt(actions / exec, 2) : "0";
+  $("nTypes").textContent = String(workflows.length);
+  const tb = document.querySelector("#byType tbody");
+  tb.innerHTML = rows.map((x) => `<tr><td>${escapeHtml(x.name)}<div class="hint">${fmt(x.perExec,2)} act/exec</div></td><td class="num">${fmtInt(x.exec)}</td><td class="num">${fmtInt(x.actions)}</td><td class="num">${money(x.usd)}</td></tr>`).join("") || "<tr><td colspan=4 class=hint>Agrega un workflow</td></tr>";
+  persist();
+  workflows.forEach((w) => {
+    const el = document.querySelector(`[data-wfid="${w.id}"] .wf-meta`);
+    if (!el) return;
+    const c = wfCompute(w);
+    el.textContent = `${fmtInt(c.exec)} exec · ${fmt(c.perExec,2)} act/exec · ${fmtInt(c.actions)} actions/mes`;
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function emptyStep() {
+  return { type: "activity", name: "", count: 1, pct: 100, retries: 0, heartbeats: 0 };
+}
+
+function emptyWf() {
+  return { id: uid(), name: "Nuevo workflow", exec: 1000, origin: "client", durationH: 1, historyKb: 50, retentionDays: 30, steps: [emptyStep()] };
+}
+
+function render() {
+  $("workflows").innerHTML = workflows.map((w) => wfHtml(w)).join("");
+  bindWf();
+  recalc();
+}
+
+function wfHtml(w) {
+  const originOpts = Object.entries(ORIGIN).map(([k, v]) => `<option value="${k}" ${w.origin===k?"selected":""}>${v.label}</option>`).join("");
+  const steps = w.steps.map((s, i) => stepHtml(w.id, s, i)).join("");
+  return `<article class="wf" data-wfid="${w.id}">
+    <div class="wf-head">
+      <h3><input data-f="name" value="${escapeHtml(w.name)}" style="font-size:15px;font-weight:650"></h3>
+      <span class="wf-meta"></span>
+      <button class="btn ghost dup">Duplicar</button>
+      <button class="btn danger del">Quitar</button>
+    </div>
+    <div class="grid4">
+      <div><label>Ejecuciones / mes</label><input class="yellow" data-f="exec" type="number" min="0" step="1" value="${w.exec}"></div>
+      <div><label>Origen (Actions de arranque)</label><select data-f="origin">${originOpts}</select></div>
+      <div><label>Duración open (horas)</label><input class="yellow" data-f="durationH" type="number" min="0" step="0.01" value="${w.durationH}"></div>
+      <div><label>History promedio (KB)</label><input class="yellow" data-f="historyKb" type="number" min="0" step="1" value="${w.historyKb}"></div>
+    </div>
+    <div class="grid4" style="margin-top:6px">
+      <div><label>Retention tras close (días)</label><input class="yellow" data-f="retentionDays" type="number" min="0" step="1" value="${w.retentionDays}"></div>
+      <div></div><div></div><div></div>
+    </div>
+    <table class="steps" style="margin-top:10px">
+      <thead><tr>
+        <th>Paso</th><th>Tipo</th><th class="num">Veces</th><th class="num">% camino</th>
+        <th class="num">Retries (act.)</th><th class="num">Heartbeats (act.)</th><th class="num">Act/exec</th><th></th>
+      </tr></thead>
+      <tbody>${steps}</tbody>
+    </table>
+    <button class="btn" style="margin-top:8px" data-addstep>+ Paso</button>
+  </article>`;
+}
+
+function stepHtml(wid, s, i) {
+  const opts = STEP_TYPES.map((t) => `<option value="${t.id}" ${s.type===t.id?"selected":""}>${t.label}</option>`).join("");
+  const extra = s.type === "activity";
+  return `<tr data-si="${i}">
+    <td><input data-sf="name" value="${escapeHtml(s.name)}" placeholder="nombre"></td>
+    <td><select data-sf="type">${opts}</select></td>
+    <td><input class="yellow" data-sf="count" type="number" min="0" step="0.1" value="${s.count}"></td>
+    <td><input class="yellow" data-sf="pct" type="number" min="0" max="100" step="1" value="${s.pct}"></td>
+    <td><input class="yellow" data-sf="retries" type="number" min="0" step="0.1" value="${s.retries}" ${extra?"":"disabled"}></td>
+    <td><input class="yellow" data-sf="heartbeats" type="number" min="0" step="0.1" value="${s.heartbeats}" ${extra?"":"disabled"}></td>
+    <td class="num step-act">${fmt(stepActions(s), 2)}</td>
+    <td><button class="btn ghost delstep">×</button></td>
+  </tr>`;
+}
+
+function findWf(id) { return workflows.find((w) => w.id === id); }
+
+function bindWf() {
+  document.querySelectorAll(".wf").forEach((el) => {
+    const w = findWf(el.dataset.wfid);
+    el.querySelectorAll("[data-f]").forEach((inp) => {
+      inp.addEventListener("input", () => {
+        const f = inp.dataset.f;
+        w[f] = inp.tagName === "SELECT" || f === "name" || f === "origin" ? inp.value : n(inp.value);
+        recalc();
+      });
+    });
+    el.querySelector(".del").onclick = () => { workflows = workflows.filter((x) => x.id !== w.id); render(); };
+    el.querySelector(".dup").onclick = () => {
+      const copy = JSON.parse(JSON.stringify(w)); copy.id = uid(); copy.name = w.name + " (copia)";
+      workflows.push(copy); render();
+    };
+    el.querySelector("[data-addstep]").onclick = () => { w.steps.push(emptyStep()); render(); };
+    el.querySelectorAll("tbody tr").forEach((tr) => {
+      const i = Number(tr.dataset.si);
+      tr.querySelectorAll("[data-sf]").forEach((inp) => {
+        inp.addEventListener("input", () => {
+          const f = inp.dataset.sf;
+          if (f === "type" || f === "name") w.steps[i][f] = inp.value;
+          else w.steps[i][f] = n(inp.value);
+          if (f === "type") render();
+          else {
+            tr.querySelector(".step-act").textContent = fmt(stepActions(w.steps[i]), 2);
+            recalc();
+          }
+        });
+      });
+      tr.querySelector(".delstep").onclick = () => { w.steps.splice(i, 1); render(); };
+    });
+  });
+}
+
+function persist() {
+  localStorage.setItem("tc-calc-v1", JSON.stringify({
+    rates: { actions: $("rateActions").value, active: $("rateActive").value, retained: $("rateRetained").value, hours: $("hoursMonth").value },
+    workflows,
+  }));
+}
+
+function loadDemo() {
+  workflows = DEMO.map((w) => ({ ...w, id: uid(), steps: w.steps.map((s) => ({ ...s })) }));
+}
+
+$("addWf").onclick = () => { workflows.push(emptyWf()); render(); };
+$("resetDemo").onclick = () => { loadDemo(); render(); };
+$("exportJson").onclick = () => {
+  const blob = new Blob([JSON.stringify({ rates: rates(), hours: n($("hoursMonth").value), workflows }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "temporal-cloud-calculator.json"; a.click();
+};
+$("importJson").onclick = () => $("fileJson").click();
+$("fileJson").onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (data.rates) {
+        $("rateActions").value = data.rates.actions ?? data.rates;
+        if (data.rates.active != null) $("rateActive").value = data.rates.active;
+        if (data.rates.retained != null) $("rateRetained").value = data.rates.retained;
+      }
+      if (data.hours) $("hoursMonth").value = data.hours;
+      workflows = (data.workflows || []).map((w) => ({ ...emptyWf(), ...w, id: uid(), steps: (w.steps || [emptyStep()]) }));
+      render();
+    } catch (err) { alert("JSON inválido"); }
+  };
+  reader.readAsText(f);
+};
+["rateActions","rateActive","rateRetained","hoursMonth"].forEach((id) => $(id).addEventListener("input", recalc));
+
+(function init() {
+  try {
+    const raw = localStorage.getItem("tc-calc-v1");
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data.rates) {
+        $("rateActions").value = data.rates.actions;
+        $("rateActive").value = data.rates.active;
+        $("rateRetained").value = data.rates.retained;
+        $("hoursMonth").value = data.rates.hours;
+      }
+      if (data.workflows?.length) { workflows = data.workflows; render(); return; }
+    }
+  } catch {}
+  loadDemo();
+  render();
+})();
+</script>
+</body>
+</html>
