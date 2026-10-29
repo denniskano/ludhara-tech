@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Genera calculadora-temporal-cloud.xlsx (fórmulas nativas, celdas amarillas = input)."""
 
+from pathlib import Path
+
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
-from openpyxl.chart import BarChart, Reference
-from openpyxl.formatting.rule import FormulaRule
+from openpyxl.workbook.properties import CalcProperties
 
 N_WF = 20
 N_STEPS = 150
@@ -224,7 +225,11 @@ def sheet_workflows(wb, s):
         paint(f, s, s["fill_in"], "#,##0")
         g = ws.cell(r, 7, ret if sample else None)
         paint(g, s, s["fill_in"], "0")
-        h = ws.cell(r, 8, f'=IF(A{r}="","",SUMIF(Pasos!$A$2:$A${N_STEPS+1},A{r},Pasos!$I$2:$I${N_STEPS+1}))')
+        h = ws.cell(
+            r,
+            8,
+            f'=IF(A{r}="","",SUMIF(Pasos!$A$2:$A${N_STEPS+1},A{r},Pasos!$I$2:$I${N_STEPS+1}))',
+        )
         paint(h, s, s["fill_out"], "0.00")
         ii = ws.cell(r, 9, f'=IF(A{r}="","",B{r}*(D{r}+H{r}))')
         paint(ii, s, s["fill_out"], "#,##0.00")
@@ -243,17 +248,15 @@ def sheet_workflows(wb, s):
         ws.row_dimensions[r].height = 20
 
     wb.defined_names.add(DefinedName("WF_NAMES", attr_text=f"Workflows!$A$2:$A${last}"))
-    dv = DataValidation(type="list", formula1="=ORIGENES", allow_blank=True)
+    dv = DataValidation(type="list", formula1="=Listas!$A$2:$A$5", allow_blank=True)
     dv.error = "Elige Cliente, Signal-With-Start, Schedule o Ninguno"
     dv.errorTitle = "Origen"
+    dv.showErrorMessage = True
+    dv.showDropDown = False
     ws.add_data_validation(dv)
     dv.add(f"C2:C{last}")
     ws.auto_filter.ref = f"A1:O{last}"
     widths(ws, [28, 18, 22, 14, 16, 20, 16, 18, 16, 14, 14, 14, 14, 14, 14])
-    ws.conditional_formatting.add(
-        f"O2:O{last}",
-        FormulaRule(formula=["O2>0"], fill=PatternFill("solid", fgColor="D5F5E3")),
-    )
     return ws
 
 
@@ -293,7 +296,11 @@ def sheet_pasos(wb, s):
         ws.cell(r, 5).number_format = "0"
         ws.cell(r, 6).number_format = "0.00"
         ws.cell(r, 7).number_format = "0.00"
-        h = ws.cell(r, 8, f'=IF(B{r}="","",IFERROR(VLOOKUP(B{r},TIPO_UNIDAD,2,FALSE),1))')
+        h = ws.cell(
+            r,
+            8,
+            f'=IF(B{r}="","",IFERROR(VLOOKUP(B{r},Listas!$B$2:$C$13,2,0),1))',
+        )
         paint(h, s, s["fill_out"], "0")
         # Activity: veces * pct/100 * (1 + retries + heartbeats)
         ii = ws.cell(
@@ -304,14 +311,18 @@ def sheet_pasos(wb, s):
         paint(ii, s, s["fill_out"], "0.000")
         ws.row_dimensions[r].height = 18
 
-    dv_wf = DataValidation(type="list", formula1="=WF_NAMES", allow_blank=True)
+    dv_wf = DataValidation(type="list", formula1=f"=Workflows!$A$2:$A${N_WF+1}", allow_blank=True)
     dv_wf.error = "Elige un nombre de la hoja Workflows"
     dv_wf.errorTitle = "Workflow"
+    dv_wf.showErrorMessage = True
+    dv_wf.showDropDown = False
     ws.add_data_validation(dv_wf)
     dv_wf.add(f"A2:A{last}")
-    dv_t = DataValidation(type="list", formula1="=TIPOS", allow_blank=True)
+    dv_t = DataValidation(type="list", formula1="=Listas!$B$2:$B$13", allow_blank=True)
     dv_t.error = "Elige un tipo de la hoja Listas"
     dv_t.errorTitle = "Tipo"
+    dv_t.showErrorMessage = True
+    dv_t.showDropDown = False
     ws.add_data_validation(dv_t)
     dv_t.add(f"B2:B{last}")
     ws.auto_filter.ref = f"A1:I{last}"
@@ -356,7 +367,7 @@ def sheet_resumen(wb, s):
         if usd:
             paint(ws.cell(r, 3, usd), s, s["fill_out"], '"$"#,##0.00')
         else:
-            paint(ws.cell(r, 3, "—"), s, s["fill_alt"])
+            paint(ws.cell(r, 3, "-"), s, s["fill_alt"])
 
     ws["B5"].number_format = "#,##0"
     ws["B6"].number_format = "#,##0.00"
@@ -368,36 +379,23 @@ def sheet_resumen(wb, s):
     ws["B12"].font = Font(name="Calibri", size=11, bold=True)
     ws["C12"].font = Font(name="Calibri", size=11, bold=True)
 
-    ws["A14"] = "Costo por workflow type (de la hoja Workflows)"
+    ws["A14"] = "Costo por workflow type: columnas L-O de la hoja Workflows."
     ws["A14"].font = Font(name="Calibri", size=12, bold=True, color="1B4F72")
-    ws["A15"] = "Ver columnas L–O de Workflows. El gráfico usa los primeros 10 types."
-    ws["A15"].font = s["cell"]
+    ws.merge_cells("A14:D14")
 
-    chart = BarChart()
-    chart.type = "col"
-    chart.title = "USD / mes por workflow type"
-    chart.y_axis.title = "USD"
-    data = Reference(wb["Workflows"], min_col=15, min_row=1, max_row=11)
-    cats = Reference(wb["Workflows"], min_col=1, min_row=2, max_row=11)
-    chart.add_data(data, titles_from_data=True)
-    chart.set_categories(cats)
-    chart.shape = 4
-    chart.legend = None
-    ws.add_chart(chart, "A17")
-
-    ws["A34"] = (
-        "Estimado de régimen, no la factura. Temporal documenta hasta ±5% entre métricas OpenMetrics y metering. "
-        "No incluye Support, Export, Fairness ni TRU ociosos. No usar rate() ni series temporal_cloud_v0_*."
+    ws["A16"] = (
+        "Estimado de regimen, no la factura. Temporal documenta hasta 5% de diferencia entre metricas OpenMetrics y metering. "
+        "No incluye Support, Export, Fairness ni TRU ociosos. Abrir en Excel para Windows o Microsoft 365: Habilitar edicion si aparece Vista protegida."
     )
-    ws["A34"].alignment = s["wrap"]
-    ws.merge_cells("A34:D34")
-    ws.row_dimensions[34].height = 36
+    ws["A16"].alignment = s["wrap"]
+    ws.merge_cells("A16:D16")
+    ws.row_dimensions[16].height = 40
     widths(ws, [48, 18, 16, 16])
     return ws
 
 
 def sheet_catalogo(wb, s):
-    ws = wb.create_sheet("Catalogo Actions")
+    ws = wb.create_sheet("Catalogo")
     ws.sheet_properties.tabColor = "155EEF"
     ws.merge_cells("A1:D1")
     t = ws["A1"]
@@ -426,7 +424,7 @@ def sheet_catalogo(wb, s):
         ("Upsert Search Attributes", "upsert_workflow_search_attributes", "1 por comando", "Varios SA en un comando = 1. SA al start no cuentan."),
         ("Nexus Operation (caller)", "schedule_nexus_operation", "1 en caller", "El handler factura sus primitives aparte."),
         ("WFT Heartbeat (LA largas)", "record_workflow_heartbeat", "1", "Local Activities largas que latean el WFT."),
-        ("Replay", "—", "0", "No factura. Solo worker."),
+        ("Replay", "-", "0", "No factura. Solo worker."),
     ]
     for i, row in enumerate(rows):
         r = 4 + i
@@ -446,6 +444,9 @@ def sheet_catalogo(wb, s):
 
 def main():
     wb = Workbook()
+    wb.calculation = CalcProperties(calcMode="auto", fullCalcOnLoad=True, calcId=191029)
+    wb.properties.creator = "ludhara-tech"
+    wb.properties.title = "Calculadora Temporal Cloud"
     s = styles()
     sheet_tarifas(wb, s)
     sheet_listas(wb, s)
@@ -460,7 +461,7 @@ def main():
         if n in banned:
             raise SystemExit(f"defined name forbidden: {n}")
 
-    out = "calculadora-temporal-cloud.xlsx"
+    out = Path(__file__).resolve().parent / "calculadora-temporal-cloud.xlsx"
     wb.save(out)
     print(f"wrote {out}: {N_WF} workflow slots, {N_STEPS} step rows")
 

@@ -18,6 +18,11 @@ List price público de Temporal es distinto (Actions desde $50/millón, Active $
 | [calculadora-temporal-cloud.xlsx](./calculadora-temporal-cloud.xlsx) | Misma lógica en Excel (celdas amarillas = input) |
 | [build_excel.py](./build_excel.py) | Regenera el xlsx |
 
+## Abrir en Windows
+
+- **Excel:** doble clic al `.xlsx`. Si sale Vista protegida (archivo de internet/GitHub), **Habilitar edición**. Recalcula solo (fórmulas nativas, Excel 2016 / Microsoft 365). No hace falta Macros. Hoja **Listas** visible: ahí están los desplegables.
+- **HTML:** clic derecho → Abrir con **Microsoft Edge** o Chrome. No usar Internet Explorer 11. Si lo bajas de GitHub, Edge puede pedir “Permitir contenido bloqueado”; es solo JavaScript local, no hay servidor.
+
 ## Qué cuenta como Action
 
 Fuente: [Temporal Cloud Actions](https://docs.temporal.io/cloud/actions). Replay **no** factura.
