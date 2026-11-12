@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "TarjetaEmitida",
+  "namespace": "tech.ludhara.cuenta360.eventos",
+  "fields": [
+    { "name": "eventoId", "type": "string" },
+    { "name": "tarjetaId", "type": "string" },
+    { "name": "cuentaId", "type": "string" },
+    { "name": "marca", "type": { "type": "enum", "name": "MarcaTarjeta", "symbols": ["VISA", "MASTERCARD", "AMEX"] } },
+    { "name": "ultimosDigitos", "type": "string" },
+    { "name": "ocurridoEn", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

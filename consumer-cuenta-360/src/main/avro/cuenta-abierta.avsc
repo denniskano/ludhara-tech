@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "CuentaAbierta",
+  "namespace": "tech.ludhara.cuenta360.eventos",
+  "fields": [
+    { "name": "eventoId", "type": "string" },
+    { "name": "cuentaId", "type": "string" },
+    { "name": "clienteId", "type": "string" },
+    { "name": "tipoCuenta", "type": { "type": "enum", "name": "TipoCuenta", "symbols": ["AHORROS", "CORRIENTE", "PLAZO_FIJO"] } },
+    { "name": "moneda", "type": "string" },
+    { "name": "ocurridoEn", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

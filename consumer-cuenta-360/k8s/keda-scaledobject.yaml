@@ -1,0 +1,79 @@
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: confluent-cloud
+spec:
+  secretTargetRef:
+    - parameter: sasl
+      name: consumer-cuenta-360-keda
+      key: sasl          # "plaintext"
+    - parameter: username
+      name: consumer-cuenta-360-keda
+      key: username      # API key con Describe sobre los 10 tópicos y los 10 consumer groups
+    - parameter: password
+      name: consumer-cuenta-360-keda
+      key: password
+    - parameter: tls
+      name: consumer-cuenta-360-keda
+      key: tls           # "enable"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: consumer-cuenta-360
+spec:
+  scaleTargetRef:
+    name: consumer-cuenta-360
+  minReplicaCount: 2
+  # Particiones por tópico. Una réplica más no recibiría particiones en ningún grupo.
+  maxReplicaCount: 6
+  pollingInterval: 15
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+            - type: Pods
+              value: 2
+              periodSeconds: 60
+        scaleDown:
+          # Cada bajada rebalancea los 10 grupos: no seguir cada valle del tráfico.
+          stabilizationWindowSeconds: 600
+          policies:
+            - type: Pods
+              value: 1
+              periodSeconds: 120
+  # Un trigger por consumer group. lagThreshold 2500 = 5 s de tráfico a 500 TPS.
+  # KEDA escala por el trigger que pida más réplicas. bootstrapServersFromEnv lee la variable del contenedor.
+  triggers:
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.cuenta-abierta, topic: cuenta-abierta, lagThreshold: "2500", allowIdleConsumers: "false" }
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.cuenta-cerrada, topic: cuenta-cerrada, lagThreshold: "2500", allowIdleConsumers: "false" }
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.movimiento-registrado, topic: movimiento-registrado, lagThreshold: "2500", allowIdleConsumers: "false" }
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.transferencia-enviada, topic: transferencia-enviada, lagThreshold: "2500", allowIdleConsumers: "false" }
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.transferencia-recibida, topic: transferencia-recibida, lagThreshold: "2500", allowIdleConsumers: "false" }
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.pago-servicio-realizado, topic: pago-servicio-realizado, lagThreshold: "2500", allowIdleConsumers: "false" }
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.tarjeta-emitida, topic: tarjeta-emitida, lagThreshold: "2500", allowIdleConsumers: "false" }
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.tarjeta-bloqueada, topic: tarjeta-bloqueada, lagThreshold: "2500", allowIdleConsumers: "false" }
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.cliente-actualizado, topic: cliente-actualizado, lagThreshold: "2500", allowIdleConsumers: "false" }
+    - type: kafka
+      authenticationRef: { name: confluent-cloud }
+      metadata: { bootstrapServersFromEnv: KAFKA_BOOTSTRAP_SERVERS, consumerGroup: cuenta-360.limite-actualizado, topic: limite-actualizado, lagThreshold: "2500", allowIdleConsumers: "false" }

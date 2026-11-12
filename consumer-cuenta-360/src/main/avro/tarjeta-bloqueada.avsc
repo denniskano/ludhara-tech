@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "TarjetaBloqueada",
+  "namespace": "tech.ludhara.cuenta360.eventos",
+  "fields": [
+    { "name": "eventoId", "type": "string" },
+    { "name": "tarjetaId", "type": "string" },
+    { "name": "motivo", "type": { "type": "enum", "name": "MotivoBloqueo", "symbols": ["ROBO", "PERDIDA", "FRAUDE", "SOLICITUD_CLIENTE"] } },
+    { "name": "ocurridoEn", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

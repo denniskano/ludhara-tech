@@ -1,0 +1,25 @@
+{
+  "type": "record",
+  "name": "ClienteActualizado",
+  "namespace": "tech.ludhara.cuenta360.eventos",
+  "fields": [
+    { "name": "eventoId", "type": "string" },
+    { "name": "clienteId", "type": "string" },
+    { "name": "email", "type": ["null", "string"], "default": null },
+    { "name": "telefono", "type": ["null", "string"], "default": null },
+    {
+      "name": "direccion",
+      "type": ["null", {
+        "type": "record",
+        "name": "Direccion",
+        "fields": [
+          { "name": "linea", "type": "string" },
+          { "name": "distrito", "type": "string" },
+          { "name": "ciudad", "type": "string" }
+        ]
+      }],
+      "default": null
+    },
+    { "name": "ocurridoEn", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}

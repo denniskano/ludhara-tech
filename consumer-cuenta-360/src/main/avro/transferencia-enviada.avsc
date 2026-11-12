@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "TransferenciaEnviada",
+  "namespace": "tech.ludhara.cuenta360.eventos",
+  "fields": [
+    { "name": "eventoId", "type": "string" },
+    { "name": "transferenciaId", "type": "string" },
+    { "name": "cuentaOrigenId", "type": "string" },
+    { "name": "cuentaDestino", "type": "string" },
+    { "name": "bancoDestino", "type": "string" },
+    { "name": "montoCentavos", "type": "long" },
+    { "name": "moneda", "type": "string" },
+    { "name": "ocurridoEn", "type": { "type": "long", "logicalType": "timestamp-millis" } }
+  ]
+}
