@@ -1,0 +1,206 @@
+<mxfile host="app.diagrams.net" agent="Cursor" version="22.1.11">
+  <diagram id="camino-eastus2" name="Camino privado eastus2">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="1040" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="Tableflow al data lake y a Databricks · Dedicated eastus2 · Private Link" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="16" width="1400" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Los archivos viajan por Egress Private Link hasta ADLS Gen2. Unity Catalog registra la tabla Delta a mano. Polaris no participa: en Azure el catálogo no tiene Private Link." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="24" y="48" width="1580" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="z1h" value="VNet del banco · eastus2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0F6B4C;strokeColor=#0F6B4C;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="86" width="300" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="z1b" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F3FAF7;strokeColor=#B7D8C9;" vertex="1" parent="1">
+          <mxGeometry x="24" y="118" width="300" height="620" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="z2h" value="Confluent Cloud · Dedicated · eastus2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3D2E7C;strokeColor=#3D2E7C;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="86" width="460" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="z2b" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F7F5FC;strokeColor=#C9C0E6;" vertex="1" parent="1">
+          <mxGeometry x="360" y="118" width="460" height="620" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="z3h" value="Azure Data Lake · ADLS Gen2 · eastus2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0078D4;strokeColor=#0078D4;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="856" y="86" width="400" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="z3b" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#B7D6F2;" vertex="1" parent="1">
+          <mxGeometry x="856" y="118" width="400" height="620" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="z4h" value="Databricks · workspace privado" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E85D04;strokeColor=#E85D04;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1292" y="86" width="360" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="z4b" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#F0C2A8;" vertex="1" parent="1">
+          <mxGeometry x="1292" y="118" width="360" height="620" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prod" value="&lt;b&gt;Productores&lt;/b&gt;&lt;br&gt;&lt;br&gt;Publican el evento&lt;br&gt;con esquema en el&lt;br&gt;Schema Registry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F6B4C;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="44" y="146" width="260" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="peIn" value="&lt;b&gt;Private Endpoint&lt;/b&gt;&lt;br&gt;de entrada&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;El cluster Dedicated&lt;br&gt;no tiene endpoint público.&lt;br&gt;Misma región: eastus2.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E7F6EF;strokeColor=#0F6B4C;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="44" y="280" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="peDb" value="&lt;b&gt;Private Endpoint&lt;/b&gt;&lt;br&gt;del workspace a dfs&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Lo administra el lake,&lt;br&gt;no Confluent. Por aquí&lt;br&gt;viaja la consulta.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E7F6EF;strokeColor=#0F6B4C;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="44" y="430" width="260" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="vnetNote" value="Tres redes distintas. Este Private Link de entrada no escribe el lake." style="text;html=1;align=left;verticalAlign=top;fontSize=11;fontColor=#0F6B4C;" vertex="1" parent="1">
+          <mxGeometry x="44" y="580" width="260" height="48" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="kafka" value="&lt;b&gt;Tópicos Kafka&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Key y value con esquema&lt;br&gt;Avro, Protobuf o JSON Schema&lt;br&gt;APPEND o UPSERT según&lt;br&gt;cleanup.policy&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E07A1F;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="384" y="146" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="sr" value="&lt;b&gt;Schema Registry&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Evolución que Tableflow&lt;br&gt;materializa: backward-&lt;br&gt;transitive. Un cambio&lt;br&gt;incompatible suspende&lt;br&gt;ese tópico.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8A6A2F;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="600" y="146" width="196" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="flink" value="&lt;b&gt;Flink SQL · opcional&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Cura el evento y deja otro&lt;br&gt;tópico. No escribe Delta.&lt;br&gt;En este cluster usa la red&lt;br&gt;privada del environment.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1F7A4D;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="384" y="286" width="412" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="tf" value="&lt;b&gt;Tableflow&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Un formato por tópico. Aquí: &lt;b&gt;Delta&lt;/b&gt;.&lt;br&gt;BYOS obligatorio: el cluster privado&lt;br&gt;no admite Confluent Managed Storage.&lt;br&gt;Commit del orden de 5 minutos.&lt;br&gt;error_handling LOG, SKIP o SUSPEND.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EEFB;strokeColor=#5C4D9A;strokeWidth=2;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="384" y="390" width="412" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="gw" value="&lt;b&gt;Egress Private Link Gateway&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Uno por environment y región (eastus2).&lt;br&gt;Dos access points sobre la cuenta:&lt;br&gt;&lt;b&gt;blob&lt;/b&gt; y &lt;b&gt;dfs&lt;/b&gt;. Se aprueban como plap-…&lt;br&gt;y se crea el DNS que indica la consola.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F3FC;strokeColor=#0078D4;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="384" y="520" width="412" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="cms" value="Confluent Managed Storage no está disponible en este cluster." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#5C4D9A;" vertex="1" parent="1">
+          <mxGeometry x="384" y="648" width="412" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="acct" value="&lt;b&gt;Cuenta ADLS Gen2&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Hierarchical namespace.&lt;br&gt;Misma región que el cluster.&lt;br&gt;Acceso público deshabilitado:&lt;br&gt;sin el gateway, Tableflow no escribe.&lt;br&gt;SSE de Azure, sin config extra.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0078D4;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="876" y="146" width="360" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="box" value="&lt;b&gt;Container exclusivo y vacío&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Tableflow asigna el prefijo.&lt;br&gt;No se elige carpeta de negocio.&lt;/font&gt;&lt;hr&gt;&lt;font face=&quot;Courier New&quot; style=&quot;font-size:11px&quot;&gt;…/&amp;lt;org&amp;gt;/&amp;lt;env&amp;gt;/&amp;lt;lkc&amp;gt;/v1/&amp;lt;tabla&amp;gt;&lt;/font&gt;&lt;hr&gt;Una tabla &lt;b&gt;Delta&lt;/b&gt; por tópico&lt;br&gt;&lt;b&gt;_delta_log/&lt;/b&gt; + Parquet&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Único writer: Tableflow.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0078D4;strokeWidth=2;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="876" y="286" width="360" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="iam" value="&lt;b&gt;Provider integration&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Service principal cspi-…&lt;br&gt;Reader sobre la cuenta.&lt;br&gt;Storage Blob Data Contributor&lt;br&gt;sobre la cuenta (o el container).&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F3FC;strokeColor=#0078D4;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="876" y="508" width="360" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="peStore" value="Private endpoints blob y dfs, aprobados en la cuenta." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#0078D4;" vertex="1" parent="1">
+          <mxGeometry x="876" y="636" width="360" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="uc" value="&lt;b&gt;Unity Catalog&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;External table, solo lectura.&lt;br&gt;Se registra una vez:&lt;/font&gt;&lt;hr&gt;&lt;font face=&quot;Courier New&quot; style=&quot;font-size:11px&quot;&gt;CREATE EXTERNAL TABLE&lt;br&gt;USING DELTA LOCATION&lt;br&gt;'abfss://…'&lt;/font&gt;&lt;hr&gt;&lt;font color=&quot;#555555&quot;&gt;El alta automática exige&lt;br&gt;workspace público. Aquí no.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E85D04;strokeWidth=2;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1312" y="146" width="320" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="sql" value="&lt;b&gt;SQL Warehouse, jobs, ML&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Leen la external table.&lt;br&gt;No ingestan desde Kafka&lt;br&gt;y no escriben el Delta&lt;br&gt;de Tableflow.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E85D04;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1312" y="376" width="320" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="cred" value="&lt;b&gt;Storage credential&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Access Connector con lectura.&lt;br&gt;External location marcada&lt;br&gt;Limit to read-only use.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#E85D04;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=10;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1312" y="508" width="320" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F6B4C;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="prod" target="peIn">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="Kafka" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F6B4C;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=11;fontColor=#0F6B4C;" edge="1" parent="1" source="peIn" target="kafka">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5C4D9A;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="kafka" target="tf">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="escritura" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#0078D4;" edge="1" parent="1" source="gw" target="box">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="tf" target="gw">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="LOCATION" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#E85D04;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=11;fontColor=#E85D04;" edge="1" parent="1" source="box" target="uc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="lectura dfs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F6B4C;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=11;fontColor=#0F6B4C;" edge="1" parent="1" source="peDb" target="box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="174" y="748"/>
+              <mxPoint x="1056" y="748"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="foot" value="&lt;b&gt;Fuera de este dibujo.&lt;/b&gt; El alta automática en Unity Catalog, la catalog integration con Apache Polaris / Snowflake Open Catalog, y el Iceberg REST Catalog de Tableflow. En Azure ninguno de esos planos de catálogo tiene Private Link. La segunda lámina muestra dónde viviría Polaris si el catálogo fuera alcanzable." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#888888;align=left;spacingLeft=12;spacingRight=12;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="790" width="1628" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="&lt;font color=&quot;#0078D4&quot;&gt;&lt;b&gt;━&lt;/b&gt; datos, Private Link de salida&lt;/font&gt; &amp;nbsp;&amp;nbsp; &lt;font color=&quot;#0F6B4C&quot;&gt;&lt;b&gt;━&lt;/b&gt; Private Link de clientes o de lectura&lt;/font&gt; &amp;nbsp;&amp;nbsp; &lt;font color=&quot;#E85D04&quot;&gt;&lt;b&gt;- -&lt;/b&gt; registro de metadata, una vez&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="868" width="1200" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="src" value="Documentación Confluent Cloud, 19 nov 2026. Tableflow overview, Azure private networking, Unity Catalog, regiones." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#888888;" vertex="1" parent="1">
+          <mxGeometry x="24" y="900" width="1200" height="22" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="polaris" name="Polaris, camino no privado">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="Dónde encajaría Apache Polaris · referencia, no es el camino de este cluster" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="16" width="1500" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Polaris guarda metadata Iceberg. No mueve los archivos. Tableflow solo lo publica si puede llamar al catálogo, y esa llamada no existe por Private Link en Azure." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="24" y="48" width="1580" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="banner" value="Este diagrama describe el diseño abierto de la documentación (la guía está escrita para S3). En el Dedicated privado de eastus2 las flechas punteadas de catálogo no están soportadas." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDECEC;strokeColor=#B23B3B;align=left;spacingLeft=12;spacingRight=12;fontSize=13;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="82" width="1628" height="44" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a" value="&lt;b&gt;Tópico Kafka&lt;/b&gt;&lt;br&gt;&lt;br&gt;Esquema en&lt;br&gt;Schema Registry&lt;br&gt;&lt;br&gt;Formato del tópico:&lt;br&gt;&lt;b&gt;Iceberg&lt;/b&gt;, no Delta" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E07A1F;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="24" y="160" width="230" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;Tableflow&lt;/b&gt;&lt;br&gt;&lt;br&gt;Escribe la tabla Iceberg&lt;br&gt;en storage del cliente.&lt;br&gt;&lt;br&gt;El IRC propio queda&lt;br&gt;como catálogo de origen.&lt;br&gt;Con BYOS no entrega&lt;br&gt;credenciales de lectura." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EEFB;strokeColor=#5C4D9A;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="320" y="160" width="280" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;Storage del cliente&lt;/b&gt;&lt;br&gt;&lt;br&gt;Parquet + metadata&lt;br&gt;Iceberg.&lt;br&gt;&lt;br&gt;En este research sería&lt;br&gt;ADLS Gen2 eastus2.&lt;br&gt;La guía oficial del&lt;br&gt;sync usa un bucket S3." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#0078D4;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="670" y="160" width="270" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;Apache Polaris&lt;/b&gt;&lt;br&gt;Snowflake Open Catalog&lt;br&gt;&lt;br&gt;Catálogo REST Iceberg.&lt;br&gt;Recibe la metadata;&lt;br&gt;no copia los datos.&lt;br&gt;&lt;br&gt;URL, warehouse,&lt;br&gt;client id / secret,&lt;br&gt;scope PRINCIPAL_ROLE.&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Cuentas Snowflake nuevas:&lt;br&gt;Confluent deriva a Horizon,&lt;br&gt;que federá el IRC en vez&lt;br&gt;de sincronizar Polaris.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E8;strokeColor=#C48A1A;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="150" width="300" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="e" value="&lt;b&gt;Motores que no son Databricks&lt;/b&gt;&lt;br&gt;&lt;br&gt;Trino, Spark, Snowflake.&lt;br&gt;Descubren la tabla en Polaris&lt;br&gt;y leen los archivos con&lt;br&gt;sus propias credenciales&lt;br&gt;sobre el storage.&lt;br&gt;&lt;br&gt;La tabla es de solo lectura." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#444444;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="160" width="290" height="190" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p1" value="materializa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5C4D9A;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=11;fontColor=#5C4D9A;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="archivos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#0078D4;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3" value="sync de metadata&#10;no soportado en red privada" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#B23B3B;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=11;fontColor=#B23B3B;" edge="1" parent="1" source="b" target="d">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="480"/>
+              <mxPoint x="1160" y="480"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4" value="REST" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#C48A1A;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=11;fontColor=#C48A1A;" edge="1" parent="1" source="d" target="e">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5" value="lee archivos&#10;con credencial propia" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=11;fontColor=#0078D4;" edge="1" parent="1" source="e" target="c">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1505" y="560"/>
+              <mxPoint x="805" y="560"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="why" value="&lt;b&gt;Tres razones para dejarlo fuera del Dedicated eastus2&lt;/b&gt;&lt;br&gt;&lt;br&gt;1. La catalog integration con Polaris / Open Catalog no está soportada por red privada. La misma frase de la documentación incluye a Unity Catalog.&lt;br&gt;2. El Iceberg REST Catalog de Tableflow tiene Private Link solo en AWS. En Azure un motor privado no puede usarlo como sustituto de Polaris.&lt;br&gt;3. El consumidor de este research es Databricks. Unity Catalog registra el Delta con CREATE EXTERNAL TABLE. Polaris sería un segundo catálogo, en el formato cuyo registro privado no está documentado.&lt;br&gt;&lt;br&gt;Horizon, el camino que Confluent recomienda para Snowflake nuevo, también necesita alcanzar el IRC. En Azure privado ese alcance no existe." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#888888;align=left;spacingLeft=14;spacingRight=14;spacingTop=8;fontSize=13;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="24" y="620" width="1628" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="src" value="Documentación Confluent Cloud, 19 nov 2026. Private networking, catálogos, Snowflake Open Catalog / Apache Polaris, Unity Catalog." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#888888;" vertex="1" parent="1">
+          <mxGeometry x="24" y="790" width="1400" height="22" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

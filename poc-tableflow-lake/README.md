@@ -1,0 +1,63 @@
+# Research: Tableflow al data lake y a Databricks en red privada
+
+Cómo materializar tópicos de un cluster **Confluent Cloud Dedicated en Azure eastus2**, ya en red privada (Private Link de entrada), como tablas en un data lake de la misma región, y cómo consultarlas desde Databricks. Incluye el lugar de Apache Polaris en ese diseño.
+
+Consultado el 19 de noviembre de 2026 contra la documentación vigente de Confluent Cloud. No es un runbook: el camino ejecutable de Delta hacia la capa RDV está en [`tableflow-rdv-poc`](../tableflow-rdv-poc/README.md). El mapa más amplio de Kafka hacia el lakehouse está en [`kafka-flink-lakehouse`](../kafka-flink-lakehouse/README.md).
+
+## Decisión para este entorno
+
+Tableflow escribe las tablas en **ADLS Gen2 de eastus2** (Bring Your Own Storage). El tráfico de datos no sale a internet: un Egress Private Link Gateway, con dos access points (`blob` y `dfs`), conecta Tableflow con la cuenta de storage.
+
+Databricks, con el workspace en red privada, **no recibe el alta automática** de esas tablas. Unity Catalog las registra una vez con `CREATE EXTERNAL TABLE ... USING DELTA LOCATION`, y a partir de ahí lee los archivos por su propio acceso privado al lake. Tableflow sigue haciendo los commits.
+
+**Apache Polaris no entra en este camino.** Polaris (y su producto gestionado, Snowflake Open Catalog) es un catálogo Iceberg REST. Confluent puede publicar ahí la metadata de tablas Iceberg, pero esa integración de catálogo no está soportada por red privada, y en Azure el Iceberg REST Catalog propio de Tableflow tampoco tiene Private Link. El catálogo que cierra el diseño es Unity Catalog, con registro manual.
+
+```
+Productores (VNet)
+    │  Private Link de entrada
+    ▼
+Tópicos  ·  Dedicated eastus2
+    │
+    ▼
+Tableflow  ·  formato Delta  ·  BYOS
+    │  Egress Private Link  (blob + dfs)
+    ▼
+ADLS Gen2 eastus2  ·  container exclusivo
+    │  Private Endpoint del workspace
+    ▼
+Databricks  ·  Unity Catalog  ·  external table, solo lectura
+```
+
+## Contenido
+
+| Archivo | Qué responde |
+|---|---|
+| [01-del-topico-al-datalake.md](01-del-topico-al-datalake.md) | Qué mueve Tableflow, Delta frente a Iceberg, storage y reglas de esquema |
+| [02-red-privada-eastus2.md](02-red-privada-eastus2.md) | Qué tráfico queda en Private Link y cuál no, en Dedicated eastus2 |
+| [03-databricks.md](03-databricks.md) | Cómo llega la tabla a Unity Catalog con el workspace en red privada |
+| [04-polaris.md](04-polaris.md) | Qué es Polaris en esta solución y por qué queda fuera del camino privado |
+| [diagramas/arquitectura-tableflow-lake.drawio](diagramas/arquitectura-tableflow-lake.drawio) | Dos láminas: el camino que cierra, y el lugar de Polaris |
+
+## Premisa
+
+| Pieza | Valor en este research |
+|---|---|
+| Cluster | Confluent Cloud Dedicated, red privada, Azure Private Link de entrada |
+| Región | `eastus2` (Virginia). Dedicated, Tableflow, Flink y Schema Registry están disponibles ahí |
+| Storage del lake | ADLS Gen2 con hierarchical namespace, en eastus2, acceso público deshabilitado |
+| Consumidor analítico | Databricks con Unity Catalog, workspace en red privada |
+| Formato propuesto | Delta Lake. Un tópico se habilita en un solo formato (`DELTA` o `ICEBERG`) |
+
+## Fuentes
+
+- [Tableflow overview](https://docs.confluent.io/cloud/current/topics/tableflow/overview.html)
+- [Storage](https://docs.confluent.io/cloud/current/topics/tableflow/concepts/tableflow-storage.html)
+- [Configurar storage, incluido ADLS](https://docs.confluent.io/cloud/current/topics/tableflow/how-to-guides/configure-storage.html)
+- [Schemas](https://docs.confluent.io/cloud/current/topics/tableflow/concepts/tableflow-schemas.html)
+- [Write modes](https://docs.confluent.io/cloud/current/topics/tableflow/concepts/write-modes.html)
+- [Red privada de Tableflow](https://docs.confluent.io/cloud/current/topics/tableflow/operate/tableflow-private-networking.html)
+- [Tableflow con Azure Private Networking](https://docs.confluent.io/cloud/current/topics/tableflow/operate/tableflow-private-networking-azure.html)
+- [Catálogos](https://docs.confluent.io/cloud/current/topics/tableflow/how-to-guides/catalog-integration/overview.html)
+- [Unity Catalog, incluido el workspace privado](https://docs.confluent.io/cloud/current/topics/tableflow/how-to-guides/catalog-integration/integrate-with-unity-catalog.html)
+- [Snowflake Open Catalog / Apache Polaris](https://docs.confluent.io/cloud/current/topics/tableflow/how-to-guides/catalog-integration/integrate-with-snowflake-open-catalog-or-apache-polaris.html)
+- [Regiones de Confluent Cloud](https://docs.confluent.io/cloud/current/get-started/regions.html)

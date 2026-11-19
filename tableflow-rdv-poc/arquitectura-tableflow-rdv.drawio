@@ -1,0 +1,164 @@
+<mxfile host="app.diagrams.net" agent="Cursor" version="22.1.11">
+  <diagram id="tableflow-rdv-poc" name="PoC Tableflow a RDV">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1120" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="PoC: tópicos Kafka a la capa RDV con Tableflow" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="20" y="12" width="1200" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Tableflow escribe cada tópico Avro como una tabla Delta en el Azure Data Lake. Databricks no escribe: solo registra las tablas para consultarlas." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="20" y="44" width="1600" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- Zonas -->
+        <mxCell id="cc-head" value="Confluent Cloud" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3D2E7C;strokeColor=#3D2E7C;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=14;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="20" y="80" width="940" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="cc-body" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F7F5FC;strokeColor=#C9C0E6;" vertex="1" parent="1">
+          <mxGeometry x="20" y="114" width="940" height="760" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="az-head" value="Azure Data Lake · capa RDV" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0078D4;strokeColor=#0078D4;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=14;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="980" y="80" width="500" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="az-body" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#B7D6F2;" vertex="1" parent="1">
+          <mxGeometry x="980" y="114" width="500" height="760" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="db-head" value="Databricks · opcional, solo lectura" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E85D04;strokeColor=#E85D04;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=14;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="80" width="470" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="db-body" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#F0C2A8;dashed=1;dashPattern=8 4;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="114" width="470" height="760" as="geometry"/>
+        </mxCell>
+
+        <!-- Confluent: productor y Flink -->
+        <mxCell id="productor" value="&lt;b&gt;Productor&lt;/b&gt;&lt;br&gt;Owner del dominio&lt;br&gt;&lt;br&gt;Publica el evento&lt;br&gt;de negocio" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E8;strokeColor=#C48A1A;strokeWidth=1.5;fontSize=12;align=center;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="44" y="140" width="210" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="flink" value="&lt;b&gt;Flink SQL&lt;/b&gt;&lt;br&gt;Catálogo = environment&lt;br&gt;Base = cluster Dedicated&lt;br&gt;&lt;br&gt;&lt;b&gt;Paso 1&lt;/b&gt; · 01-ddl-topicos.sql&lt;br&gt;Crea los 4 tópicos y registra&lt;br&gt;los subjects Avro&lt;br&gt;&lt;br&gt;&lt;b&gt;Paso 6&lt;/b&gt; · 02-dml-eventos-prueba.sql&lt;br&gt;13 eventos: un reenvío y&lt;br&gt;dos versiones del mismo cliente" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E7F6EF;strokeColor=#1F7A4D;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;spacingRight=8;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="44" y="290" width="220" height="230" as="geometry"/>
+        </mxCell>
+
+        <!-- Kafka + Schema Registry -->
+        <mxCell id="kafka" value="&lt;b&gt;Cluster Kafka Dedicated&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;changelog.mode = append&lt;br&gt;key y value en Avro&lt;br&gt;value.fields-include = except-key&lt;br&gt;retención del tópico: 7 días&lt;/font&gt;&lt;hr&gt;&lt;b&gt;rdv-poc-cuenta-abierta&lt;/b&gt;&lt;br&gt;tipos simples · 3 filas&lt;br&gt;&lt;b&gt;rdv-poc-movimiento-registrado&lt;/b&gt;&lt;br&gt;decimal y campo opcional · 5 filas&lt;br&gt;&lt;b&gt;rdv-poc-cliente-actualizado&lt;/b&gt;&lt;br&gt;record anidado y array · 3 filas&lt;br&gt;&lt;b&gt;rdv-poc-pago-servicio-realizado&lt;/b&gt;&lt;br&gt;decimal y map · 2 filas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E07A1F;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;spacingTop=6;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="310" y="140" width="300" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="sr" value="&lt;b&gt;Schema Registry&lt;/b&gt;&lt;br&gt;&lt;br&gt;Subjects &amp;lt;tópico&amp;gt;-key&lt;br&gt;y &amp;lt;tópico&amp;gt;-value&lt;br&gt;&lt;br&gt;Tableflow exige&lt;br&gt;&lt;b&gt;BACKWARD_TRANSITIVE&lt;/b&gt;&lt;br&gt;en el subject del value" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#8A6A2F;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="310" y="490" width="300" height="150" as="geometry"/>
+        </mxCell>
+
+        <!-- Tableflow + DLQ -->
+        <mxCell id="tableflow" value="&lt;b&gt;Tableflow&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;Paso 4 · un tópico a la vez&lt;br&gt;Formato Delta&lt;br&gt;Store in your storage&lt;/font&gt;&lt;hr&gt;&lt;b&gt;Paso 5&lt;/b&gt; · ajustar-config.sh&lt;br&gt;error_handling.mode = &lt;b&gt;LOG&lt;/b&gt;&lt;br&gt;metadata = &lt;b&gt;PORTABLE&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;cflt_metadata_topic&lt;br&gt;cflt_metadata_partition&lt;br&gt;cflt_metadata_offset&lt;br&gt;cflt_metadata_timestamp&lt;/font&gt;&lt;br&gt;retention_ms = &lt;b&gt;7 días&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;snapshots, no borra datos&lt;br&gt;commit cada pocos minutos&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EEFB;strokeColor=#5C4D9A;strokeWidth=2;fontSize=12;align=left;spacingLeft=12;spacingTop=4;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="650" y="140" width="286" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="dlq" value="&lt;b&gt;Tópico DLQ&lt;/b&gt;&lt;br&gt;&lt;b&gt;rdv-poc-tableflow-dlq&lt;/b&gt;&lt;br&gt;&lt;br&gt;El registro que falla va aquí&lt;br&gt;y el tópico sigue. Tableflow&lt;br&gt;crea la DLQ si no existe.&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;El default SUSPEND detendría&lt;br&gt;el tópico entero. Se consulta&lt;br&gt;desde Flink y debe quedar vacía.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDECEC;strokeColor=#B23B3B;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="650" y="490" width="286" height="180" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ops" value="&lt;b&gt;Sin conectores ni jobs&lt;/b&gt;&lt;br&gt;&lt;br&gt;No hay código propio.&lt;br&gt;Se configura en el Console,&lt;br&gt;con az y con SQL." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1F7A4D;fontSize=12;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="44" y="548" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="cc-note" value="Los eventos se cargan después de configurar Tableflow, para que ya nazcan con la metadata y el manejo de errores definitivos." style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#5C4D9A;" vertex="1" parent="1">
+          <mxGeometry x="44" y="800" width="890" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Azure -->
+        <mxCell id="account" value="&lt;b&gt;Cuenta ADLS Gen2 del data lake&lt;/b&gt;&lt;br&gt;HNS habilitado · misma región que el cluster&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;No se crea una cuenta nueva. Paso 2.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0078D4;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1004" y="140" width="452" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="container" value="&lt;b&gt;Container exclusivo de Tableflow&lt;/b&gt;&lt;br&gt;&lt;b&gt;rdv&lt;/b&gt; &amp;nbsp;o&amp;nbsp; &lt;b&gt;rdv-kafka&lt;/b&gt; si rdv ya tiene datos&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;Tiene que estar vacío al habilitar Tableflow.&lt;/font&gt;&lt;hr&gt;Ruta que asigna Tableflow&lt;br&gt;(no se puede elegir una carpeta)&lt;br&gt;&lt;font face=&quot;Courier New&quot; style=&quot;font-size:11px&quot;&gt;&amp;lt;container&amp;gt;/&amp;lt;n&amp;gt;/&amp;lt;n&amp;gt;/&amp;lt;org&amp;gt;/&lt;br&gt;&amp;lt;env&amp;gt;/&amp;lt;cluster&amp;gt;/v1/&amp;lt;uuid&amp;gt;&lt;/font&gt;&lt;hr&gt;Una tabla Delta por tópico&lt;br&gt;&lt;b&gt;_delta_log/&lt;/b&gt; + archivos Parquet&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;RDV se reconoce por el catálogo&lt;br&gt;poc_datos.rdv.*, no por la carpeta.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0078D4;strokeWidth=2;fontSize=12;align=left;spacingLeft=12;spacingTop=4;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1004" y="236" width="452" height="268" as="geometry"/>
+        </mxCell>
+        <mxCell id="iam" value="&lt;b&gt;Provider integration&lt;/b&gt;&lt;br&gt;tableflow-rdv-poc · Paso 3&lt;br&gt;&lt;br&gt;Service principal de Confluent (cspi-…)&lt;br&gt;&lt;b&gt;Reader&lt;/b&gt; → la cuenta de storage&lt;br&gt;&lt;b&gt;Storage Blob Data Contributor&lt;/b&gt;&lt;br&gt;→ solo este container&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;Confluent escribe en RDV y no&lt;br&gt;en el resto del lake.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F3FC;strokeColor=#0078D4;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1004" y="544" width="452" height="168" as="geometry"/>
+        </mxCell>
+        <mxCell id="pe" value="&lt;b&gt;Red privada&lt;/b&gt;&lt;br&gt;Solo si publicNetworkAccess = Disabled&lt;br&gt;&lt;br&gt;Egress Private Link Gateway en la región.&lt;br&gt;Dos private endpoints, blob y dfs.&lt;br&gt;Se aprueban en la cuenta (plap-…)&lt;br&gt;y se crean los DNS que indica el Console.&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;Sin ellos, Tableflow no llega al lake.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#666666;strokeWidth=1.5;dashed=1;dashPattern=6 4;fontSize=12;align=left;spacingLeft=12;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1004" y="732" width="452" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Databricks -->
+        <mxCell id="uc" value="&lt;b&gt;Unity Catalog&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;Paso 8 · no escribe en el lake&lt;/font&gt;&lt;hr&gt;Storage credential &lt;b&gt;cred_rdv_poc&lt;/b&gt;&lt;br&gt;External location &lt;b&gt;rdv_poc_tableflow&lt;/b&gt;&lt;br&gt;Limit to read-only use&lt;br&gt;&lt;br&gt;Catálogo &lt;b&gt;poc_datos&lt;/b&gt; · esquema &lt;b&gt;rdv&lt;/b&gt;&lt;hr&gt;poc_datos.rdv.cuenta_abierta&lt;br&gt;poc_datos.rdv.movimiento_registrado&lt;br&gt;poc_datos.rdv.cliente_actualizado&lt;br&gt;poc_datos.rdv.pago_servicio_realizado&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;CREATE TABLE … USING DELTA LOCATION&lt;br&gt;rutas de table-paths.json&lt;br&gt;Sin COMMENT ni TBLPROPERTIES&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E85D04;strokeWidth=2;fontSize=12;align=left;spacingLeft=12;spacingTop=4;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1524" y="140" width="422" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="connector" value="&lt;b&gt;Access Connector&lt;/b&gt;&lt;br&gt;for Azure Databricks&lt;br&gt;&lt;br&gt;Managed identity con un solo rol:&lt;br&gt;&lt;b&gt;Storage Blob Data Reader&lt;/b&gt;&lt;br&gt;sobre la cuenta&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#666666&quot;&gt;Azure rechaza cualquier escritura&lt;br&gt;de Databricks sobre RDV.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#E85D04;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1524" y="472" width="422" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="grants" value="&lt;b&gt;Quién consulta&lt;/b&gt;&lt;br&gt;GRANT USE CATALOG, USE SCHEMA&lt;br&gt;y SELECT a &lt;b&gt;datos-ingenieria&lt;/b&gt;&lt;br&gt;Nadie recibe MODIFY&lt;hr&gt;&lt;b&gt;Paso 9&lt;/b&gt; · 03-dml-validacion.sql&lt;br&gt;Conteos, offsets únicos, tipos&lt;br&gt;complejos, metadata y time travel.&lt;br&gt;El INSERT de prueba debe fallar." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E85D04;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;spacingTop=4;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1524" y="644" width="422" height="168" as="geometry"/>
+        </mxCell>
+
+        <!-- Flechas de datos -->
+        <mxCell id="e-prod-flink" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#1F7A4D;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="productor" target="flink">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-prod-flink-l" value="evento" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#1F7A4D;" vertex="1" connectable="0" parent="e-prod-flink">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-flink-kafka" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#E07A1F;strokeWidth=1.5;exitX=1;exitY=0.35;entryX=0;entryY=0.45;" edge="1" parent="1" source="flink" target="kafka">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-flink-kafka-l" value="Avro append" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#E07A1F;" vertex="1" connectable="0" parent="e-flink-kafka">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-8" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-kafka-sr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#8A6A2F;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="kafka" target="sr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-kafka-sr-l" value="registra subjects" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#8A6A2F;" vertex="1" connectable="0" parent="e-kafka-sr">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-kafka-tf" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#5C4D9A;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="kafka" target="tableflow">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-kafka-tf-l" value="consume" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#5C4D9A;" vertex="1" connectable="0" parent="e-kafka-tf">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-10" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-tf-dlq" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#B23B3B;strokeWidth=1.5;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="tableflow" target="dlq">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-tf-dlq-l" value="registro que falla" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#B23B3B;" vertex="1" connectable="0" parent="e-tf-dlq">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-tf-adls" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#0078D4;strokeWidth=2;exitX=1;exitY=0.42;entryX=0;entryY=0.45;" edge="1" parent="1" source="tableflow" target="container">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-tf-adls-l" value="escribe Delta" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#0078D4;fontStyle=1;" vertex="1" connectable="0" parent="e-tf-adls">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-12" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-iam" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#0078D4;strokeWidth=1.5;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="iam" target="container">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-iam-l" value="roles de escritura" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#0078D4;" vertex="1" connectable="0" parent="e-iam">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-uc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#E85D04;strokeWidth=1.75;exitX=1;exitY=0.4;entryX=0;entryY=0.45;" edge="1" parent="1" source="container" target="uc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-uc-l" value="LOCATION&#xa;solo lectura" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#E85D04;fontStyle=1;" vertex="1" connectable="0" parent="e-uc">
+          <mxGeometry relative="1" as="geometry"><mxPoint y="-14" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-cred" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#E85D04;strokeWidth=1.25;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="connector" target="uc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-cred-l" value="storage credential" style="edgeLabel;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#E85D04;" vertex="1" connectable="0" parent="e-cred">
+          <mxGeometry relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <!-- Pie -->
+        <mxCell id="legend" value="&lt;b&gt;Cómo leerlo.&lt;/b&gt; Flecha continua: datos que se escriben. Flecha punteada: permiso, registro o lectura; nadie más escribe las tablas. La zona de Databricks va punteada porque es opcional.&lt;br&gt;&lt;br&gt;&lt;b&gt;Reglas que la PoC ya cumple.&lt;/b&gt; Campos nuevos opcionales con default null. Se puede ensanchar tipos (int a long, float a double, más precisión en decimal). No se borran columnas ni se agregan campos dentro de un record anidado ya existente. TIMESTAMP_LTZ(3): timestamp-micros se materializa como bigint. En modo append Tableflow agrega la clave como columna, por eso el value usa except-key.&lt;br&gt;&lt;br&gt;&lt;b&gt;Red.&lt;/b&gt; Flink sobre un cluster privado necesita private networking en el environment. La integración automática de Tableflow con Unity Catalog exige un workspace público; por eso las tablas se registran a mano con CREATE TABLE … LOCATION, y funciona igual con un workspace privado." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#D0D0D0;align=left;verticalAlign=top;spacingLeft=14;spacingRight=14;spacingTop=10;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="20" y="894" width="1950" height="130" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
