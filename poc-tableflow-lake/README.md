@@ -36,7 +36,9 @@ Databricks  ·  Unity Catalog  ·  external table, solo lectura
 | [02-red-privada-eastus2.md](02-red-privada-eastus2.md) | Qué tráfico queda en Private Link y cuál no, en Dedicated eastus2 |
 | [03-databricks.md](03-databricks.md) | Cómo llega la tabla a Unity Catalog con el workspace en red privada |
 | [04-polaris.md](04-polaris.md) | Qué es Polaris en esta solución y por qué queda fuera del camino privado |
-| [diagramas/arquitectura-tableflow-lake.drawio](diagramas/arquitectura-tableflow-lake.drawio) | Dos láminas: el camino que cierra, y el lugar de Polaris |
+| [05-caminos-rdv.md](05-caminos-rdv.md) | Los cuatro caminos de un tópico a RDV y a Databricks, y cuándo es Delta o Iceberg |
+| [diagramas/arquitectura-tableflow-lake.drawio](diagramas/arquitectura-tableflow-lake.drawio) | Dos láminas: el camino Delta que cierra, y el lugar de Polaris |
+| [diagramas/caminos-topico-rdv.drawio](diagramas/caminos-topico-rdv.drawio) | Cinco láminas: el mapa y el detalle de cada camino |
 
 ## Premisa
 

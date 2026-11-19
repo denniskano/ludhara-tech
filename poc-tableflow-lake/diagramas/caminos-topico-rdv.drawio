@@ -1,0 +1,297 @@
+<mxfile host="app.diagrams.net" agent="Cursor" version="22.1.11">
+  <diagram id="mapa" name="1. Mapa">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1880" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="De un tópico Dedicated eastus2 a la capa RDV y a Databricks" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=22;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="16" width="1400" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub" value="RDV = un evento, una fila, con tópico, partición, offset y timestamp. Cuatro caminos llegan al lake y a Databricks. La lámina 1 los muestra juntos; las láminas 2 a 5 son el detalle de cada uno." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="24" y="52" width="1800" height="24" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="decide" value="&lt;b&gt;Cómo elegir.&lt;/b&gt; Esquema y sin transformar el evento → &lt;b&gt;A Delta&lt;/b&gt;. Sin esquema, carpeta propia o WORM → &lt;b&gt;B archivos&lt;/b&gt;. Hay que filtrar, deduplicar o joinear en la ingesta → &lt;b&gt;C Databricks escribe&lt;/b&gt;, o Flink cura un tópico y ese entra por A. El lector no es Databricks y exige Iceberg → &lt;b&gt;D&lt;/b&gt;, que en este cluster privado de Azure no cierra el catálogo. UPSERT no es RDV: aplasta a la última clave." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#888888;align=left;spacingLeft=14;spacingRight=14;fontSize=13;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="88" width="1832" height="72" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ah" value="A · Tableflow Delta" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#5C4D9A;strokeColor=#5C4D9A;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="180" width="440" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="ab" value="&lt;b&gt;Cierra en este privado.&lt;/b&gt; Es el camino de RDV cuando el tópico ya tiene contrato y Databricks consulta.&lt;hr&gt;&lt;b&gt;Escribe&lt;/b&gt; Tableflow. Un formato por tópico.&lt;br&gt;&lt;b&gt;En ADLS&lt;/b&gt; tabla Delta. Container vacío y exclusivo. La carpeta la asigna Tableflow.&lt;br&gt;&lt;b&gt;Modo&lt;/b&gt; APPEND. Commit ~5 min.&lt;br&gt;&lt;b&gt;Metadata&lt;/b&gt; columnas cflt_metadata_* (PORTABLE).&lt;br&gt;&lt;b&gt;Esquema&lt;/b&gt; obligatorio. Evolución backward-transitive.&lt;hr&gt;&lt;b&gt;Red&lt;/b&gt; Egress Private Link Gateway.&lt;br&gt;Dos access points: &lt;b&gt;blob&lt;/b&gt; y &lt;b&gt;dfs&lt;/b&gt;.&lt;br&gt;Uno por environment y región.&lt;hr&gt;&lt;b&gt;Databricks&lt;/b&gt; registra una vez&lt;br&gt;CREATE EXTERNAL TABLE USING DELTA LOCATION.&lt;br&gt;Solo lectura. Lee dfs por su private endpoint.&lt;br&gt;El alta automática exige workspace público." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F7F5FC;strokeColor=#C9C0E6;align=left;spacingLeft=12;spacingRight=10;spacingTop=8;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="24" y="216" width="440" height="500" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="bh" value="B · Connect ADLS Gen2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0078D4;strokeColor=#0078D4;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="484" y="180" width="440" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="bb" value="&lt;b&gt;Cierra en este privado.&lt;/b&gt; El crudo es un archivo. La tabla de RDV la arma Databricks después.&lt;hr&gt;&lt;b&gt;Escribe&lt;/b&gt; el sink fully managed ADLS Gen2.&lt;br&gt;También un Connect self-managed en la VNet.&lt;br&gt;&lt;b&gt;En ADLS&lt;/b&gt; Avro, Parquet, JSON o Bytes.&lt;br&gt;No escribe Delta ni Iceberg.&lt;br&gt;La carpeta se elige: topics/tópico/partition o por tiempo.&lt;br&gt;&lt;b&gt;Sin esquema&lt;/b&gt; acepta JSON schemaless y Bytes.&lt;br&gt;Compatibilidad de schema: NONE.&lt;br&gt;Exactly-once si el partitioner es determinista y el container no es WORM.&lt;hr&gt;&lt;b&gt;Red&lt;/b&gt; Egress Private Link Endpoint.&lt;br&gt;Subrecurso &lt;b&gt;dfs&lt;/b&gt;. Con blob el conector da 403.&lt;br&gt;Es otro recurso, distinto del gateway de Tableflow.&lt;hr&gt;&lt;b&gt;Databricks&lt;/b&gt; Auto Loader (cloudFiles) escribe la Delta en Unity Catalog. El archivo también se puede registrar como external Avro, Parquet o JSON." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#B7D6F2;align=left;spacingLeft=12;spacingRight=10;spacingTop=8;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="484" y="216" width="440" height="500" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ch" value="C · Databricks lee el tópico" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E85D04;strokeColor=#E85D04;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="944" y="180" width="440" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="cb" value="&lt;b&gt;Cierra en este privado&lt;/b&gt; con cómputo classic. Databricks es el writer de la RDV.&lt;hr&gt;&lt;b&gt;Structured Streaming&lt;/b&gt; format kafka, en una VNet con Private Endpoint de entrada al Dedicated. Elige las columnas de metadata y escribe Delta managed o external.&lt;br&gt;&lt;br&gt;&lt;b&gt;Lakeflow Connect Kafka&lt;/b&gt; Beta, solo serverless. Streaming table append-only, ya en Unity Catalog. No filtra filas, no elige columnas, no hace SCD2. La metadata entra como struct si se pide source_metadata_column.&lt;hr&gt;&lt;b&gt;Red&lt;/b&gt; el cómputo llama al cluster. No hay egress de Confluent hacia el lake: Databricks escribe ADLS por su propio acceso.&lt;br&gt;&lt;br&gt;En serverless, un notebook no admite Trigger.ProcessingTime. Lakeflow hacia un Dedicated sin endpoint público es un diseño de red aparte.&lt;hr&gt;Si el evento no se transforma, A escribe una vez y este cómputo de ingesta no hace falta." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#F0C2A8;align=left;spacingLeft=12;spacingRight=10;spacingTop=8;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="944" y="216" width="440" height="500" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dh" value="D · Iceberg y Polaris" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C48A1A;strokeColor=#C48A1A;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1404" y="180" width="452" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="db" value="&lt;b&gt;El catálogo no cierra en este privado.&lt;/b&gt; Los archivos Iceberg sí se pueden escribir.&lt;hr&gt;&lt;b&gt;Tableflow Iceberg&lt;/b&gt; deja Parquet + metadata en el mismo ADLS, por el gateway de A.&lt;br&gt;&lt;br&gt;&lt;b&gt;Apache Polaris&lt;/b&gt; es el catálogo REST de esas tablas. No mueve bytes. Snowflake Open Catalog es el mismo protocolo gestionado. Tableflow le publica la metadata.&lt;br&gt;&lt;br&gt;Esa publicación, y el IRC propio de Tableflow, no tienen Private Link en Azure. El IRC privado existe solo en AWS.&lt;hr&gt;&lt;b&gt;Variante que sí gobierna Iceberg&lt;/b&gt; Databricks escribe una managed Iceberg (camino C). El catálogo es Unity Catalog y su Iceberg REST. Polaris no entra.&lt;br&gt;&lt;br&gt;Para RDV de este Databricks, la tabla sigue siendo la Delta de A o de C." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF8E8;strokeColor=#E2C48A;align=left;spacingLeft=12;spacingRight=10;spacingTop=8;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="1404" y="216" width="452" height="500" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="flink" value="&lt;b&gt;Flink no aterriza en el lake.&lt;/b&gt; Cura, deduplica o enriquece y deja otro tópico. Ese tópico entra por A, B o C. &lt;b&gt;Delta Sharing&lt;/b&gt; reparte una tabla que ya existe. &lt;b&gt;JDBC&lt;/b&gt; escribe un RDB. Un job que publica a Kafka va en sentido inverso." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E7F6EF;strokeColor=#0F6B4C;align=left;spacingLeft=14;spacingRight=14;fontSize=13;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="740" width="1832" height="64" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fmt" value="&lt;b&gt;Delta o Iceberg.&lt;/b&gt; Los dos son Parquet con transacciones. Delta cuando el lector es Databricks: Unity Catalog registra la external table y la lectura privada de dfs no pasa por Confluent. Iceberg cuando el lector es Trino, Spark externo o Snowflake y puede hablar con un catálogo REST. En eastus2 privado ese catálogo es Unity Catalog, no Polaris." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#888888;align=left;spacingLeft=14;spacingRight=14;fontSize=13;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="820" width="1832" height="64" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="tabs" value="Láminas: 1 este mapa · 2 detalle A · 3 detalle B · 4 detalle C · 5 detalle D, con Polaris en el dibujo. Documentación Confluent y Azure Databricks, 19 nov 2026." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="24" y="900" width="1600" height="24" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="caso-a" name="2. A Tableflow Delta">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="780" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="A · Tableflow escribe la RDV en Delta" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="16" width="900" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub" value="Único writer: Tableflow. Databricks registra la tabla y la lee. APPEND, para que cada evento siga en RDV." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="24" y="48" width="1400" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a1" value="&lt;b&gt;Tópico&lt;/b&gt;&lt;br&gt;&lt;br&gt;Dedicated eastus2&lt;br&gt;Private Link de entrada&lt;br&gt;&lt;br&gt;Key y value con esquema&lt;br&gt;cleanup.policy = delete&lt;br&gt;changelog.mode = append" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E07A1F;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="24" y="100" width="250" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="&lt;b&gt;Tableflow&lt;/b&gt;&lt;br&gt;&lt;br&gt;Formato Delta&lt;br&gt;BYOS, no storage de Confluent&lt;br&gt;&lt;br&gt;Backward-transitive&lt;br&gt;Metadata PORTABLE&lt;br&gt;error_handling LOG, SKIP o SUSPEND&lt;br&gt;Commit del orden de 5 minutos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EEFB;strokeColor=#5C4D9A;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="340" y="100" width="280" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" value="&lt;b&gt;Egress Private Link Gateway&lt;/b&gt;&lt;br&gt;&lt;br&gt;eastus2, uno por environment&lt;br&gt;&lt;br&gt;Access point blob&lt;br&gt;Access point dfs&lt;br&gt;&lt;br&gt;Se aprueban plap-… en la cuenta&lt;br&gt;y se crea el DNS de la consola" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F3FC;strokeColor=#0078D4;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="680" y="100" width="280" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="&lt;b&gt;ADLS Gen2 · capa RDV&lt;/b&gt;&lt;br&gt;&lt;br&gt;eastus2, HNS, sin acceso público&lt;br&gt;Container exclusivo y vacío&lt;br&gt;&lt;br&gt;_delta_log + Parquet&lt;br&gt;Prefijo asignado por Tableflow&lt;br&gt;&lt;br&gt;Provider integration&lt;br&gt;Reader + Blob Data Contributor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#0078D4;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="90" width="280" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="a5" value="&lt;b&gt;Unity Catalog&lt;/b&gt;&lt;br&gt;&lt;br&gt;CREATE EXTERNAL TABLE&lt;br&gt;USING DELTA&lt;br&gt;LOCATION 'abfss://…'&lt;br&gt;&lt;br&gt;External location de solo lectura&lt;br&gt;Private Endpoint del workspace a dfs&lt;br&gt;&lt;br&gt;SQL, jobs y ML leen.&lt;br&gt;No reingestan el tópico." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#E85D04;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="90" width="280" height="220" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ae1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5C4D9A;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="a1" target="a2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="a2" target="a3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae3" value="escritura" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#0078D4;" edge="1" parent="1" source="a3" target="a4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae4" value="registro, una vez" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E85D04;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=11;fontColor=#E85D04;" edge="1" parent="1" source="a4" target="a5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="anote" value="&lt;b&gt;No usar este camino&lt;/b&gt; si el tópico no tiene esquema, si la carpeta de RDV tiene que ser una ruta de negocio, o si el container ya tiene objetos. Esos casos son la lámina B. El diagrama de red completo de este camino está en arquitectura-tableflow-lake.drawio." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#888888;align=left;spacingLeft=14;spacingRight=12;fontSize=13;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="360" width="1616" height="64" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="caso-b" name="3. B Connect archivos">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="860" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="B · Connect deja archivos en RDV y Auto Loader arma la Delta" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="16" width="1200" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub" value="El sink no crea una tabla. Escribe Avro, Parquet, JSON o Bytes. Databricks convierte eso en la Delta consultable." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="24" y="48" width="1500" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="b1" value="&lt;b&gt;Tópico&lt;/b&gt;&lt;br&gt;&lt;br&gt;Con esquema&lt;br&gt;Avro, Protobuf, JSON Schema&lt;br&gt;&lt;br&gt;o sin esquema&lt;br&gt;JSON o Bytes&lt;br&gt;&lt;br&gt;Tableflow no acepta&lt;br&gt;este segundo grupo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E07A1F;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="24" y="100" width="240" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="&lt;b&gt;ADLS Gen2 Sink&lt;/b&gt;&lt;br&gt;Confluent Cloud, fully managed&lt;br&gt;&lt;br&gt;Salida Avro, Parquet, JSON, Bytes&lt;br&gt;schema.compatibility = NONE&lt;br&gt;&lt;br&gt;Partitioner por partición de Kafka&lt;br&gt;o por tiempo (hora, día)&lt;br&gt;&lt;br&gt;Exactly-once si es determinista&lt;br&gt;y el container no es WORM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F3FC;strokeColor=#0078D4;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="330" y="90" width="300" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="b3" value="&lt;b&gt;Egress Private Link Endpoint&lt;/b&gt;&lt;br&gt;&lt;br&gt;Network Private Link del Dedicated&lt;br&gt;Target: Data Lake Storage Gen2&lt;br&gt;Subrecurso: &lt;b&gt;dfs&lt;/b&gt;&lt;br&gt;&lt;br&gt;blob produce 403&lt;br&gt;&lt;br&gt;No es el gateway de Tableflow,&lt;br&gt;que pide blob y dfs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#0078D4;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="690" y="90" width="280" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="b4" value="&lt;b&gt;Archivos de RDV&lt;/b&gt;&lt;br&gt;&lt;br&gt;topics/&amp;lt;tópico&amp;gt;/partition=n/&lt;br&gt;o dt=yyyy-MM-dd/hr=HH&lt;br&gt;&lt;br&gt;El nombre del objeto lleva&lt;br&gt;tópico, partición y offset inicial&lt;br&gt;&lt;br&gt;Esta carpeta sí se elige" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0078D4;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="90" width="270" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="b5" value="&lt;b&gt;Auto Loader&lt;/b&gt;&lt;br&gt;&lt;br&gt;cloudFiles sobre abfss://&lt;br&gt;Avro, Parquet o JSON&lt;br&gt;&lt;br&gt;Escribe Delta en&lt;br&gt;Unity Catalog&lt;br&gt;&lt;br&gt;Checkpoint en otro path&lt;br&gt;Esa Delta es la RDV que se consulta" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#E85D04;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="80" width="280" height="220" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="be1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="b1" target="b2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="be2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="b2" target="b3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="be3" value="dfs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#0078D4;" edge="1" parent="1" source="b3" target="b4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="be4" value="segundo paso" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E85D04;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=11;fontColor=#E85D04;" edge="1" parent="1" source="b4" target="b5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="bself" value="&lt;b&gt;Variante self-managed.&lt;/b&gt; El mismo conector corre en la VNet del banco y usa el private endpoint de esa VNet hacia dfs. No hace falta el egress de Confluent Cloud. Los archivos y el paso de Auto Loader son los mismos. &lt;b&gt;Atajo sin Delta:&lt;/b&gt; una external table USING PARQUET, AVRO o JSON apunta al directorio. Sirve para mirar el crudo; no reemplaza la Delta si el directorio sigue creciendo." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#888888;align=left;spacingLeft=14;spacingRight=12;fontSize=13;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="360" width="1616" height="78" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="caso-c" name="4. C Databricks lee Kafka">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="C · Databricks lee el tópico y escribe la Delta de RDV" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="16" width="1100" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub" value="El byte sale del cluster hacia el cómputo y Databricks es quien escribe ADLS. Hace falta cuando la ingesta transforma o joinea." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="24" y="48" width="1500" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cH1" value="C1 · Structured Streaming, cómputo classic" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E85D04;strokeColor=#E85D04;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="90" width="1632" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1a" value="&lt;b&gt;VNet del workspace&lt;/b&gt;&lt;br&gt;&lt;br&gt;Private Endpoint de entrada&lt;br&gt;registrado en el Dedicated&lt;br&gt;&lt;br&gt;DNS del bootstrap apunta&lt;br&gt;a ese endpoint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E7F6EF;strokeColor=#0F6B4C;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="24" y="140" width="280" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1b" value="&lt;b&gt;Tópico Dedicated&lt;/b&gt;&lt;br&gt;&lt;br&gt;eastus2, sin endpoint público&lt;br&gt;&lt;br&gt;El job lee format(&quot;kafka&quot;)&lt;br&gt;y proyecta topic, partition,&lt;br&gt;offset y timestamp" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E07A1F;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="360" y="140" width="280" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1c" value="&lt;b&gt;Spark Structured Streaming&lt;/b&gt;&lt;br&gt;&lt;br&gt;Filtro, dedup o join&lt;br&gt;contra otra Delta&lt;br&gt;&lt;br&gt;Trigger.ProcessingTime&lt;br&gt;disponible en classic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#E85D04;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="700" y="140" width="280" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1d" value="&lt;b&gt;Delta de RDV en Unity Catalog&lt;/b&gt;&lt;br&gt;&lt;br&gt;Managed, en el storage del catálogo&lt;br&gt;o external con LOCATION&lt;br&gt;&lt;br&gt;Databricks es el writer&lt;br&gt;APPEND para no perder eventos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#0078D4;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="140" width="300" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="ce1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0F6B4C;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="c1a" target="c1b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ce2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E85D04;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="c1b" target="c1c">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ce3" value="escribe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#0078D4;" edge="1" parent="1" source="c1c" target="c1d">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cH2" value="C2 · Lakeflow Connect Kafka" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#9A3412;strokeColor=#9A3412;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="340" width="1632" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2a" value="&lt;b&gt;Connection de Unity Catalog&lt;/b&gt;&lt;br&gt;&lt;br&gt;Bootstrap y credencial&lt;br&gt;del Dedicated&lt;br&gt;&lt;br&gt;Un cluster por pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9A3412;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="24" y="390" width="280" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2b" value="&lt;b&gt;Pipeline serverless · Beta&lt;/b&gt;&lt;br&gt;&lt;br&gt;Ingesta continua&lt;br&gt;Sin filtro de filas&lt;br&gt;Sin SCD2&lt;br&gt;Sin elección de columnas&lt;br&gt;&lt;br&gt;Metadata solo si se pide&lt;br&gt;source_metadata_column" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#E85D04;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="360" y="390" width="300" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2c" value="&lt;b&gt;Streaming table&lt;/b&gt;&lt;br&gt;&lt;br&gt;Delta append-only&lt;br&gt;ya gobernada por&lt;br&gt;Unity Catalog&lt;br&gt;&lt;br&gt;Es la RDV consultable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#0078D4;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="720" y="390" width="260" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2d" value="&lt;b&gt;Red de C2&lt;/b&gt;&lt;br&gt;&lt;br&gt;Serverless no vive en la VNet.&lt;br&gt;Llegar a un Dedicated sin&lt;br&gt;endpoint público pide un NCC&lt;br&gt;hacia el Private Link service.&lt;br&gt;&lt;br&gt;El patrón cerrado de punta&lt;br&gt;a punta es C1." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#888888;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="390" width="300" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="ce4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E85D04;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="c2a" target="c2b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ce5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="c2b" target="c2c">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cnote" value="En serverless, un notebook o job con Trigger.ProcessingTime falla. El trigger admitido ahí es AvailableNow, o un pipeline de Lakeflow en modo continuo. Si no hay transformación, el camino A evita este cómputo de ingesta." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#E85D04;align=left;spacingLeft=14;spacingRight=12;fontSize=13;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="610" width="1632" height="56" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="caso-d" name="5. D Iceberg y Polaris">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="980" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="D · Iceberg, Polaris y la variante que sí cierra" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="16" width="1100" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub" value="Polaris está en este dibujo. Es el catálogo del camino Iceberg de Tableflow. En el Dedicated privado de Azure esa flecha no está soportada." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="24" y="48" width="1580" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dH1" value="D1 · Tableflow Iceberg + Polaris. No cierra en eastus2 privado" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#B23B3B;strokeColor=#B23B3B;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="86" width="1632" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1a" value="&lt;b&gt;Tópico con esquema&lt;/b&gt;&lt;br&gt;&lt;br&gt;Tableflow en formato&lt;br&gt;&lt;b&gt;Iceberg&lt;/b&gt;, no Delta&lt;br&gt;&lt;br&gt;Un tópico, un formato" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E07A1F;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="24" y="136" width="230" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1b" value="&lt;b&gt;ADLS Gen2&lt;/b&gt;&lt;br&gt;&lt;br&gt;Parquet + metadata Iceberg&lt;br&gt;por el gateway blob + dfs&lt;br&gt;&lt;br&gt;Esta escritura sí es privada" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#0078D4;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="310" y="136" width="250" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1c" value="&lt;b&gt;IRC de Tableflow&lt;/b&gt;&lt;br&gt;&lt;br&gt;Catálogo de origen&lt;br&gt;Con BYOS no entrega&lt;br&gt;credenciales del storage&lt;br&gt;&lt;br&gt;Private Link solo en AWS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDECEC;strokeColor=#B23B3B;strokeWidth=1.5;dashed=1;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="620" y="126" width="240" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1d" value="&lt;b&gt;Apache Polaris&lt;/b&gt;&lt;br&gt;Snowflake Open Catalog&lt;br&gt;&lt;br&gt;Catálogo REST Iceberg&lt;br&gt;Recibe la metadata&lt;br&gt;No copia los archivos&lt;br&gt;&lt;br&gt;Scope PRINCIPAL_ROLE&lt;br&gt;La guía oficial es sobre S3&lt;br&gt;&lt;br&gt;Sync no soportado&lt;br&gt;por red privada" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E8;strokeColor=#C48A1A;strokeWidth=2;dashed=1;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="920" y="110" width="250" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1e" value="&lt;b&gt;Trino, Spark, Snowflake&lt;/b&gt;&lt;br&gt;&lt;br&gt;Descubren la tabla&lt;br&gt;en Polaris y leen&lt;br&gt;ADLS con credencial propia&lt;br&gt;&lt;br&gt;En la VNet privada&lt;br&gt;no alcanzan el catálogo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#888888;strokeWidth=1.5;dashed=1;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="126" width="250" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="de1" value="archivos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#0078D4;" edge="1" parent="1" source="d1a" target="d1b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="de2" value="sin Private Link en Azure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#B23B3B;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=11;fontColor=#B23B3B;" edge="1" parent="1" source="d1b" target="d1c">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="de3" value="sync de metadata" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#C48A1A;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=11;fontColor=#C48A1A;" edge="1" parent="1" source="d1c" target="d1d">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="de4" value="REST" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#888888;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=11;fontColor=#666666;" edge="1" parent="1" source="d1d" target="d1e">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dH2" value="D2 · Iceberg gobernada por Unity Catalog. Esta sí puede vivir en el entorno privado" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0F6B4C;strokeColor=#0F6B4C;fontColor=#ffffff;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="370" width="1632" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2a" value="&lt;b&gt;Mismo tópico&lt;/b&gt;&lt;br&gt;&lt;br&gt;Lo lee el camino C:&lt;br&gt;Structured Streaming&lt;br&gt;en la VNet, por el&lt;br&gt;Private Endpoint de entrada" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E07A1F;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="24" y="420" width="250" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2b" value="&lt;b&gt;Databricks escribe&lt;/b&gt;&lt;br&gt;&lt;br&gt;Tabla managed Iceberg&lt;br&gt;en el storage de&lt;br&gt;Unity Catalog&lt;br&gt;&lt;br&gt;Databricks es el writer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#E85D04;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="340" y="420" width="250" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2c" value="&lt;b&gt;Unity Catalog&lt;/b&gt;&lt;br&gt;&lt;br&gt;Catálogo de la tabla&lt;br&gt;Iceberg REST propio:&lt;br&gt;/api/2.1/unity-catalog/iceberg-rest&lt;br&gt;&lt;br&gt;Credential vending para&lt;br&gt;el storage de la managed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E7F6EF;strokeColor=#0F6B4C;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="660" y="410" width="300" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2d" value="&lt;b&gt;Trino, Spark, Flink&lt;/b&gt;&lt;br&gt;&lt;br&gt;Leen por el REST&lt;br&gt;de Unity Catalog&lt;br&gt;&lt;br&gt;Polaris no participa&lt;br&gt;El workspace tiene que&lt;br&gt;ser alcanzable por el cliente" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F6B4C;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="420" width="260" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="de5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E85D04;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="d2a" target="d2b">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="de6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0F6B4C;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="d2b" target="d2c">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="de7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0F6B4C;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="d2c" target="d2d">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dnote" value="&lt;b&gt;Para la RDV de este Databricks la tabla es Delta&lt;/b&gt; (lámina A o C1). Iceberg se elige cuando un motor distinto de Databricks es el lector. Si ese motor tiene que vivir en la red privada, el catálogo alcanzable es Unity Catalog (D2), no Polaris (D1). Horizon, el reemplazo de Open Catalog para cuentas Snowflake nuevas, también necesita el IRC de Tableflow." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#888888;align=left;spacingLeft=14;spacingRight=12;fontSize=13;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="620" width="1632" height="72" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
