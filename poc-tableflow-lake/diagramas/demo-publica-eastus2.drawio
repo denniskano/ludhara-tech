@@ -1,0 +1,165 @@
+<mxfile host="app.diagrams.net" agent="Cursor" version="22.1.11">
+  <diagram id="demo-alto" name="Alto nivel">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="1040" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t" value="Demo pública de hoy · Basic eastus2" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="16" width="1200" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="s" value="Red pública. Tableflow escribe un Delta en ADLS Gen2. Databricks lo lee con una external table registrada a mano. El SELECT devolvió filas." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="24" y="48" width="1500" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="h1" value="Confluent Cloud · Basic · público · eastus2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3D2E7C;strokeColor=#3D2E7C;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="88" width="480" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F7F5FC;strokeColor=#C9C0E6;" vertex="1" parent="1">
+          <mxGeometry x="24" y="120" width="480" height="560" as="geometry"/>
+        </mxCell>
+        <mxCell id="dg" value="&lt;b&gt;Datagen&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Quickstart TRANSACTIONS, AVRO.&lt;br&gt;Quedó en pausa.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5C4D9A;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="48" y="148" width="432" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="tp" value="&lt;b&gt;Tópico rdv-demo-transactions&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Una partición. cleanup.policy=delete,&lt;br&gt;así que Tableflow hace APPEND.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E07A1F;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="48" y="268" width="432" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="tf" value="&lt;b&gt;Tableflow · Delta&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Único writer. Commit del orden de 5 minutos.&lt;br&gt;Metadata PORTABLE. Errores en LOG.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EEFB;strokeColor=#5C4D9A;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="48" y="388" width="432" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="Sin Private Link. Un Basic no lo tiene." style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#5C4D9A;" vertex="1" parent="1">
+          <mxGeometry x="48" y="500" width="432" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="ci" value="&lt;b&gt;Add catalog integration&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;tableflow-rdv-uc. Publica el tópico&lt;br&gt;en el schema lkc-2ryr1m.&lt;br&gt;&lt;b&gt;En scripts. No se ejecutó.&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8EE;strokeColor=#8A6A2F;strokeWidth=1.5;dashed=1;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="48" y="536" width="432" height="110" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="h2" value="Azure personal · sub-denniskano · eastus2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0078D4;strokeColor=#0078D4;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="560" y="88" width="500" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F4F9FD;strokeColor=#B7D6F2;" vertex="1" parent="1">
+          <mxGeometry x="560" y="120" width="500" height="560" as="geometry"/>
+        </mxCell>
+        <mxCell id="st" value="&lt;b&gt;ADLS Gen2&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;sttfrdvb4f55447. Acceso público&lt;br&gt;habilitado. Hierarchical namespace.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0078D4;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="584" y="148" width="452" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="ct" value="&lt;b&gt;Container rdv-demo&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;_delta_log y Parquet.&lt;br&gt;Tableflow elige la carpeta.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0078D4;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="584" y="268" width="452" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="sp" value="&lt;b&gt;Service principal de Confluent&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Reader y Storage Blob Data Contributor.&lt;br&gt;Es quien deja escribir a Tableflow.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F3FC;strokeColor=#0078D4;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="584" y="400" width="452" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="h3" value="Databricks · workspace público · eastus2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E85D04;strokeColor=#E85D04;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1116" y="88" width="530" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="b3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF8F4;strokeColor=#F0C2A8;" vertex="1" parent="1">
+          <mxGeometry x="1116" y="120" width="530" height="560" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc" value="&lt;b&gt;Unity Catalog&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;dbw_tableflow_rdv_demo.rdv.transactions&lt;br&gt;External table, registrada a mano.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E85D04;strokeWidth=2;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="148" width="482" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="wh" value="&lt;b&gt;Serverless Starter Warehouse&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;El SELECT devolvió filas.&lt;br&gt;cflt_metadata_partition = 0.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E85D04;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="280" width="482" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="ac" value="&lt;b&gt;Access Connector&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Storage Blob Data Reader.&lt;br&gt;External location de solo lectura.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#E85D04;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="400" width="482" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5C4D9A;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="dg" target="tp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5C4D9A;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="tp" target="tf">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="escribe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0078D4;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#0078D4;" edge="1" parent="1" source="tf" target="ct">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="LOCATION" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E85D04;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=12;fontColor=#E85D04;" edge="1" parent="1" source="ct" target="uc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#E85D04;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" parent="1" source="uc" target="wh">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="no corrida" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A6A2F;strokeWidth=1.5;endArrow=block;endFill=1;dashed=1;fontSize=12;fontColor=#8A6A2F;" edge="1" parent="1" source="ci" target="uc">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="264" y="700"/>
+              <mxPoint x="1381" y="700"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="lee" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0F6B4C;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=12;fontColor=#0F6B4C;" edge="1" parent="1" source="ac" target="ct">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="810" y="620"/>
+              <mxPoint x="1381" y="620"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="foot" value="&lt;b&gt;Dos altas.&lt;/b&gt; La línea naranja es el CREATE EXTERNAL TABLE que sí se consultó. La línea ocre es Add catalog integration: Tableflow crearía la tabla en el schema lkc-2ryr1m. Esa quedó en los scripts y no se ejecutó. Después se desaprovisionó Confluent y el resource group." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#888888;align=left;spacingLeft=12;spacingRight=12;fontSize=13;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="760" width="1622" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg" value="&lt;font color=&quot;#0078D4&quot;&gt;&lt;b&gt;━&lt;/b&gt; escritura de Tableflow&lt;/font&gt; &amp;nbsp;&amp;nbsp; &lt;font color=&quot;#0F6B4C&quot;&gt;&lt;b&gt;━&lt;/b&gt; lectura de Databricks&lt;/font&gt; &amp;nbsp;&amp;nbsp; &lt;font color=&quot;#E85D04&quot;&gt;&lt;b&gt;- -&lt;/b&gt; registro manual&lt;/font&gt; &amp;nbsp;&amp;nbsp; &lt;font color=&quot;#8A6A2F&quot;&gt;&lt;b&gt;- -&lt;/b&gt; Add catalog integration, no corrida&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="840" width="1400" height="28" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="demo-detalle" name="Detalle">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="1180" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t2" value="Detalle de la corrida · lo que existió y lo que no se llegó a publicar" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=20;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="16" width="1500" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="Nombres de esta corrida. La columna de la derecha separa el alta que sí se consultó de la integración que solo quedó en los scripts." style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#444444;" vertex="1" parent="1">
+          <mxGeometry x="24" y="48" width="1500" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="c1h" value="Confluent · env-3r253o · lkc-2ryr1m" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3D2E7C;strokeColor=#3D2E7C;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="86" width="500" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="&lt;b&gt;Provider integration&lt;/b&gt; cspi-111q3&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;App c0b63658-19f2-4cb7-96cf-606e3b881cc4&lt;br&gt;Reader + Storage Blob Data Contributor&lt;/font&gt;&lt;hr&gt;&lt;b&gt;Datagen&lt;/b&gt; lcc-6k65o0j, luego en pausa&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;max.interval 5000 es el hueco máximo&lt;/font&gt;&lt;hr&gt;&lt;b&gt;Tópico&lt;/b&gt; rdv-demo-transactions&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Subject rdv-demo-transactions-value&lt;br&gt;Schema Registry en westus2&lt;/font&gt;&lt;hr&gt;&lt;b&gt;Tableflow&lt;/b&gt; fase RUNNING&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;DELTA, PORTABLE, LOG&lt;br&gt;DLQ rdv-demo-tableflow-dlq&lt;br&gt;retention_ms 7 días de snapshots&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5C4D9A;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;spacingTop=8;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="24" y="130" width="500" height="280" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="c2h" value="Azure · rg-tableflow-rdv-demo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0078D4;strokeColor=#0078D4;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="548" y="86" width="520" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="&lt;b&gt;Cuenta&lt;/b&gt; sttfrdvb4f55447&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;HNS, Standard LRS, TLS 1.2&lt;br&gt;publicNetworkAccess Enabled&lt;/font&gt;&lt;hr&gt;&lt;b&gt;Container&lt;/b&gt; rdv-demo, vacío al habilitar&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Luego: 5 commits de _delta_log&lt;br&gt;y 2 Parquet&lt;/font&gt;&lt;hr&gt;&lt;b&gt;Ruta que asignó Tableflow&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Courier New&quot; style=&quot;font-size:11px&quot;&gt;abfss://rdv-demo@sttfrdv…/&lt;br&gt;&amp;lt;seg&amp;gt;/&amp;lt;seg&amp;gt;/&amp;lt;org&amp;gt;/env-3r253o/&lt;br&gt;lkc-2ryr1m/v1/&amp;lt;uuid&amp;gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0078D4;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;spacingTop=8;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="548" y="130" width="520" height="280" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="c3h" value="Databricks · dbw-tableflow-rdv-demo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E85D04;strokeColor=#E85D04;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1092" y="86" width="554" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3" value="&lt;b&gt;Cuenta&lt;/b&gt; tableflow-rdv&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;dennispaitan@outlook.com, la de az login&lt;br&gt;Metastore ya visible en Catalog&lt;/font&gt;&lt;hr&gt;&lt;b&gt;Access Connector&lt;/b&gt; ac-tableflow-rdv-demo&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Storage Blob Data Reader&lt;/font&gt;&lt;hr&gt;&lt;b&gt;cred_rdv_demo&lt;/b&gt; y &lt;b&gt;loc_rdv_demo&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#555555&quot;&gt;Solo lectura, raíz del container&lt;/font&gt;&lt;hr&gt;&lt;b&gt;Tabla consultada&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Courier New&quot; style=&quot;font-size:11px&quot;&gt;dbw_tableflow_rdv_demo.rdv.transactions&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E85D04;strokeWidth=1.5;fontSize=12;align=left;spacingLeft=12;spacingTop=8;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1092" y="130" width="554" height="280" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="okh" value="Alta que sí se ejecutó" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0F6B4C;strokeColor=#0F6B4C;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="440" width="780" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="ok" value="&lt;b&gt;CREATE EXTERNAL TABLE&lt;/b&gt; en el SQL Editor, con el Serverless Starter Warehouse.&lt;br&gt;El LOCATION es la carpeta de Tableflow, no la raíz del container.&lt;br&gt;CREATE CATALOG demo falló: esta cuenta tiene Default Storage y el metastore no tiene storage root.&lt;br&gt;Se usó el catálogo que ya existía, dbw_tableflow_rdv_demo. El SELECT devolvió filas." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3FAF7;strokeColor=#0F6B4C;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;spacingRight=12;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="484" width="780" height="120" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="noh" value="Alta escrita en los scripts y no ejecutada" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#8A6A2F;strokeColor=#8A6A2F;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="828" y="440" width="818" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="no" value="&lt;b&gt;./azure/databricks.sh&lt;/b&gt; dejaría el principal tableflow-rdv-sp, External data access y los permisos.&lt;br&gt;&lt;b&gt;./confluent/desplegar.sh --catalogo&lt;/b&gt; registraría tableflow-rdv-uc.&lt;br&gt;Tableflow crearía el schema &lt;b&gt;lkc-2ryr1m&lt;/b&gt; y su propia external table. No reutiliza rdv.transactions.&lt;br&gt;No se corrió: la demo se desaprovisionó antes." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8EE;strokeColor=#8A6A2F;strokeWidth=1.5;fontSize=13;align=left;spacingLeft=12;spacingRight=12;verticalAlign=middle;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="828" y="484" width="818" height="120" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ordh" value="Orden en que corrió, y cómo se apagó" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#333333;strokeColor=#333333;fontColor=#ffffff;fontStyle=1;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="24" y="634" width="1622" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="ord" value="1. ADLS y container vacío.  2. Provider integration.  3. Service principal y roles; 3 minutos.  4 y 5. Workspace Premium, Access Connector, credencial y external location.  6. Tópico, Datagen y Tableflow.  7. Pausa.  8. Archivos en el container, a los 5 minutos.  9. SELECT.&lt;br&gt;&lt;br&gt;&lt;b&gt;Apagado.&lt;/b&gt; Confluent borró conector, Tableflow, tópicos, subject, provider integration y API key. Azure borró tabla, schema, external location, credencial, el resource group y el service principal del tenant. Quedan la cuenta de Databricks y el metastore. El environment y el cluster no se tocan." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F7F7;strokeColor=#888888;fontSize=13;align=left;spacingLeft=12;spacingRight=12;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="24" y="678" width="1622" height="120" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -43,4 +43,4 @@ Polaris vuelve a la mesa si aparece un lector que no puede usar Unity Catalog (T
 - Confluent publica acceso privado al IRC en Azure, o admite la catalog integration hacia un endpoint privado. Hoy ninguna de las dos está en la documentación.
 - Se acepta, de forma explícita y acotada, que la **metadata** del catálogo viaje por un endpoint alcanzable desde Confluent, mientras los archivos siguen en ADLS por Private Link. Eso relaja la premisa de red privada y hay que decidirlo como excepción de seguridad, no como detalle de implementación.
 
-Hasta entonces, Polaris se queda documentado como el catálogo del camino Iceberg multi-motor, y fuera del diagrama que se puede construir hoy en eastus2.
+Hasta entonces, Polaris se queda fuera del Dedicated privado. La POC pública, en el mismo cluster Basic y con un tópico Iceberg distinto, está en [demo-polaris-eastus2.md](demo-polaris-eastus2.md).

@@ -37,7 +37,17 @@ Databricks  ·  Unity Catalog  ·  external table, solo lectura
 | [03-databricks.md](03-databricks.md) | Cómo llega la tabla a Unity Catalog con el workspace en red privada |
 | [04-polaris.md](04-polaris.md) | Qué es Polaris en esta solución y por qué queda fuera del camino privado |
 | [05-caminos-rdv.md](05-caminos-rdv.md) | Los cuatro caminos de un tópico a RDV y a Databricks, y cuándo es Delta o Iceberg |
+| [demo-basic-eastus2.md](demo-basic-eastus2.md) | Qué aprovisionar y configurar para la demo A en un cluster Basic público de eastus2 |
+| [demo-polaris-eastus2.md](demo-polaris-eastus2.md) | Segunda POC, separada: Tableflow en Iceberg y Apache Polaris en lugar de Unity Catalog |
+| [manual-consolas.md](manual-consolas.md) | Los mismos pasos desde el portal de Azure y la consola de Confluent |
+| [azure/desplegar.sh](azure/desplegar.sh) | Crea el ADLS Gen2 en la suscripción personal e imprime los datos para Confluent |
+| [azure/databricks.sh](azure/databricks.sh) | Crea el workspace Premium, el Access Connector y el external location de solo lectura |
+| [azure/desaprovisionar.sh](azure/desaprovisionar.sh) | Borra la tabla, el external location, la credencial, el resource group y el service principal de Confluent |
+| [confluent/desplegar.sh](confluent/desplegar.sh) | Crea la provider integration, Datagen y Tableflow, e imprime el Application ID y el table location |
+| [confluent/desaprovisionar.sh](confluent/desaprovisionar.sh) | Borra el conector, Tableflow, los tópicos, los subjects de la demo y la provider integration |
 | [diagramas/arquitectura-tableflow-lake.drawio](diagramas/arquitectura-tableflow-lake.drawio) | Dos láminas: el camino Delta que cierra, y el lugar de Polaris |
+| [diagramas/demo-publica-eastus2.drawio](diagramas/demo-publica-eastus2.drawio) | Dos láminas de la demo pública: el alto nivel que cerró el SELECT, y el detalle de lo que se creó |
+| [diagramas/privado-databricks-polaris.drawio](diagramas/privado-databricks-polaris.drawio) | Logos y flujos en red privada: el dato llega a Databricks; a Polaris solo iría metadata, sin Private Link |
 | [diagramas/caminos-topico-rdv.drawio](diagramas/caminos-topico-rdv.drawio) | Cinco láminas: el mapa y el detalle de cada camino |
 
 ## Premisa
