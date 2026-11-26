@@ -47,7 +47,7 @@ Databricks  ·  Unity Catalog  ·  external table, solo lectura
 | [confluent/desaprovisionar.sh](confluent/desaprovisionar.sh) | Borra el conector, Tableflow, los tópicos, los subjects de la demo y la provider integration |
 | [diagramas/arquitectura-tableflow-lake.drawio](diagramas/arquitectura-tableflow-lake.drawio) | Dos láminas: el camino Delta que cierra, y el lugar de Polaris |
 | [diagramas/demo-publica-eastus2.drawio](diagramas/demo-publica-eastus2.drawio) | Dos láminas de la demo pública: el alto nivel que cerró el SELECT, y el detalle de lo que se creó |
-| [diagramas/privado-databricks-polaris.drawio](diagramas/privado-databricks-polaris.drawio) | Logos y flujos en red privada: Flink estandariza el tópico, el dato llega a Databricks y a Polaris solo iría metadata, sin Private Link |
+| [diagramas/privado-databricks-polaris.drawio](diagramas/privado-databricks-polaris.drawio) | Logos y flujos en red privada: Confluent Cloud escribe el lake, Polaris y Gravitino corren en el AKS de la VNet del banco, y Databricks, Trino, Spark o Snowflake leen el archivo |
 | [diagramas/caminos-topico-rdv.drawio](diagramas/caminos-topico-rdv.drawio) | Cinco láminas: el mapa y el detalle de cada camino |
 
 ## Premisa
